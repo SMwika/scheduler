@@ -31,4 +31,4 @@ The app will be built in javascript and jQuery, using various plugins (like SPSe
 
 App Structure
 ----------
-The app has two modules: *Reservation* and *Schedule*.
+The app has two modules: *Reservation* and *Schedule*. Each module will stand alone, and will talk, when necessary, through a series of triggers on the app itself. The app will be known internally as **ptc**, which is short for *parent-teacher conferences*.
