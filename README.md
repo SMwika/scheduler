@@ -19,8 +19,8 @@ Teachers should be allowed to make reservations for themselves. Typically the gr
 
 Teachers who are also parents are also typically given a small window of time ahead of everybody, as they must organize themselves, as well as their children. They are able to block times off as a teacher, and then go login as a parent and reserve times with their children's teacher(s).
 
-Technology Considerations:
---------------------------
+Technology
+----------
 Part of the app will be built to source data from what SharePoint calls an **External Content Type**. This External Content Type produces a list that is sourced from *Education Edge* (EE). The content brought in from Education Edge will be data that connects parents, students, and teachers (3 lists). However, in SharePoint 2010, REST services are not available on external lists like this. Therefore, we will use Marc Anderson's [SPServices](http://spservices.codeplex.com), a library for jQuery and SharePoint Web Services to grab this data.
 
 The app will also source data from SharePoint **Custom Lists**. These will be manually created and maintained to store things like **time slots**, **reservations**, and **conference names** (TBD).
