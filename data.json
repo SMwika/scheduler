@@ -1,0 +1,23 @@
+var conference = [
+	
+	{
+		
+		name: "Michael Brown",
+		division: "MS"
+		times: [
+			{
+				start: "xyz",
+				end: "xyz"
+			},
+			{
+				start: "xyz",
+				end: "xyz"
+			},
+			{
+				start: "xyz",
+				end: "xyz"
+			},
+		]
+	},
+	
+];
