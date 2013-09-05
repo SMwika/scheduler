@@ -27,4 +27,8 @@ The app will also source data from SharePoint **Custom Lists**. These will be ma
 
 Because of some limitations of the amount of queryable SharePoint list items, the reservation app needs to be split into 3 sections, one for each division. All this means is that the app must pull and push data into division-specific lists in order to stay under the item limit imposed on SharePoint lists.
 
-The app will be built in javascript and jQuery, using various plugins (like SPServices) where necessary. The framework will be built on [Backbone.js](http://backbonejs.org). This is a lightweight framework that allows great control of models, views, and collections of data. Also, the app will be optimized using [Grunt.js](http://gruntjs.com/). If necessary, [Marionette.js](http://marionettejs.com/) will be added to keep things a little more modular.
+The app will be built in javascript and jQuery, using various plugins (like SPServices) where necessary. The framework will be built on [Backbone.js](http://backbonejs.org). This is a lightweight framework that allows great control of models, views, and collections of data. [Underscore.js](http://underscorejs.org), a requirement of Backbone, will be used for templating. [Marionette.js](http://marionettejs.com/) will be added to keep things a little more modular. Also, the app will be optimized using [Grunt.js](http://gruntjs.com/). 
+
+App Structure
+----------
+The app has two modules: *Reservation* and *Schedule*.

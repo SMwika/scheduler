@@ -20,8 +20,10 @@ module.exports = function(grunt) {
       scheduler: {
         src: [
             'src/js/libs/jquery-1.9.0.js',
+            'src/js/libs/json2.js',
             'src/js/libs/underscore.js',
             'src/js/libs/backbone.js',
+            'src/js/libs/marionette-1.0.0.js',
             'src/js/libs/jquery.SPServices-0.7.2.js',
 			
             'src/js/templates.js',
