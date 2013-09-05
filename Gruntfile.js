@@ -23,6 +23,8 @@ module.exports = function(grunt) {
             'src/js/libs/underscore.js',
             'src/js/libs/backbone.js',
             'src/js/libs/jquery.SPServices-0.7.2.js',
+			
+            'src/js/templates.js',
             'src/js/app.js'
             ],
         dest: 'dist/js/<%= pkg.name %>.js'
