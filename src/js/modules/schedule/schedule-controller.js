@@ -9,9 +9,7 @@ ptc.module('Schedule', function(Mod, App, Backbone, Marionette, $, _){
 			// then actual schedule
 			var scheduleData = App.request("schedule:getmy");
 			$.when(scheduleData).done(function(data) {
-				var data = new Mod.ApptCollection([
-						{studentName: "Ben", teacher: "test teacher", time: 'another tes'}
-					]);
+				var data = new Mod.ApptCollection(App.sample.schedule);
 				var scheduleView = new Mod.View.ApptList({
 					collection: data
 				});

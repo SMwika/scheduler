@@ -3,7 +3,10 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 	// global config area to store 'session'-level data
 	Mod.Config = {
 		loggedInUser: "Rhonda.Norris",
-		students: []
+		students: [
+			{firstName: "Ben", lastName: "Tedder"},
+			{firstName: "Daniel", lastName: "Tedder"}
+		]
 	};
 	
 

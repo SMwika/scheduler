@@ -4,10 +4,14 @@ body {
 }
 
 
-.region-wrap {
+/* Regions */
+.region-wrap.half {
 	width:50%;
 	display:block;
 	float:left;
+}
+.region-wrap.full {
+	width:100%;
 }
 .region-wrap h2 {
 	margin:0px;
@@ -20,3 +24,31 @@ body {
 	padding:20px;
 	font-size:0.9em;
 }
+
+
+/* New Reservation */
+button#submitRes {
+	padding:8px;
+	border-radius:3px;
+	background:#005baa;
+	color:#fff;
+	font-size:1.2em;
+	cursor:pointer;
+}
+
+/* My Schedule */
+ul.appt-schedule {
+	list-style:none;
+	padding:0px;
+	margin:0px;
+}
+ul.appt-schedule li {
+	border-bottom:1px solid #ccc;
+	padding:0 5px 10px 5px;
+	margin-bottom:10px;
+}
+ul.appt-schedule li:last-child {
+	border:none;
+}
+
+/* Other Stuff Region */

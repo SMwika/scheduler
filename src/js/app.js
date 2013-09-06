@@ -9,13 +9,17 @@ var ptc = new Marionette.Application();
 
 // add regions to app for displaying data
 ptc.addRegions({
-    reservationRegion: "#reservationRegion",
+    studentRegion: "#studentRegion",
+    teacherRegion: "#teacherRegion",
+    timeRegion: "#timeRegion",
+
     scheduleRegion: "#scheduleRegion",
     extraRegion: "#extraRegion"
 });
 
 ptc.on("initialize:after", function () {
 	ptc.trigger("schedule:listAppts");
+	ptc.trigger("reservation:new");
 // when app runs, get ID of logged in person and store in global config
 
 // when logged in person is retrieved, check if that person is a parent (A) or teacher (B)
