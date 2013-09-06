@@ -23,11 +23,24 @@ module.exports = function(grunt) {
             'src/js/libs/json2.js',
             'src/js/libs/underscore.js',
             'src/js/libs/backbone.js',
-            'src/js/libs/marionette-1.0.0.js',
+            'src/js/libs/marionette-1.0.4.js',
             'src/js/libs/jquery.SPServices-0.7.2.js',
 			
             'src/js/templates.js',
-            'src/js/app.js'
+			
+            'src/js/app.js',
+			
+            'src/js/modules/data/data.js',
+			
+            'src/js/modules/reservation/reservation.js',
+            'src/js/modules/reservation/reservation-controller.js',
+            'src/js/modules/reservation/reservation-views.js',
+
+            'src/js/modules/schedule/schedule.js',
+            'src/js/modules/schedule/schedule-controller.js',
+            'src/js/modules/schedule/schedule-views.js',
+			
+            'src/js/app.start.js'
             ],
         dest: 'dist/js/<%= pkg.name %>.js'
       },
@@ -60,7 +73,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-cssmin');
   
   
-  // Template mutlitask
+  // Template multitask
   grunt.registerMultiTask('templates', 'Wraps templates with header and footer, then concats into single file', function () {
         var data = this.data,
             path = require('path'),

@@ -15,17 +15,6 @@ ptc.addRegions({
 });
 
 ptc.on("initialize:after", function () {
-	ptc.trigger("reservation:new");
-	ptc.trigger("schedule:show");
-});
-
-ptc.globalConfig = {
-	
-	loggedInUser: "Rhonda.Norris"
-	
-};
-
-
 
 // when app runs, get ID of logged in person and store in global config
 
@@ -60,4 +49,5 @@ ptc.globalConfig = {
 // -- the reservation time must be available (no double booking)
 // -- the parent should be warned if there is an overlap in time
 
-// if the reservation is a success, tell the user, and display the reservation in the schedule region
+// if the reservation is a success, tell the user, and display the reservation in the schedule region */
+});

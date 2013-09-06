@@ -1,0 +1,30 @@
+{
+    "curly": true,
+    "expr": true,
+    "newcap": false,
+    "quotmark": "double",
+    "regexdash": true,
+    "trailing": false,
+    "undef": true,
+    "unused": true,
+    "maxerr": 100,
+    "eqeqeq": true,
+    "indent": 4,
+
+    "eqnull": true,
+    "evil": false,
+    "sub": true,
+
+    "browser": true,
+    "wsh": true,
+    "devel": true,
+    "jquery": true,
+
+    "predef": [
+		"canopy",
+        "$",
+        "_",
+        "Backbone",
+        "Marionette"
+    ]
+}

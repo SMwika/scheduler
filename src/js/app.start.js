@@ -1,0 +1,3 @@
+$(function() {
+	ptc.start();
+});
