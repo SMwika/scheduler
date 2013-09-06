@@ -2,7 +2,8 @@ $(function () {
     
     var i, z, 
         rawTmpls = [
-           // put templates here:  "test",
+			"loading",
+			"scheduleApptSingle"
         ];
     
     if ( $('body').data('env') === 'dev' ) {

@@ -29,7 +29,6 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 			
 			// check if the user is, in fact, set
 			if(!user || user == 0) {
-			
 				// function to get the logged in user
 				user = ""
 			}

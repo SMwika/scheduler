@@ -19177,7 +19177,8 @@ _.extend(Marionette.Module, {
     
     var i, z, 
         rawTmpls = [
-           // put templates here:  "test",
+			"loading",
+			"scheduleApptSingle"
         ];
     
     if ( $('body').data('env') === 'dev' ) {
@@ -19230,7 +19231,40 @@ ptc.addRegions({
 });
 
 ptc.on("initialize:after", function () {
+//	ptc.trigger("schedule:listAppts");
+// when app runs, get ID of logged in person and store in global config
 
+// when logged in person is retrieved, check if that person is a parent (A) or teacher (B)
+
+
+// (A) If Parent *************************************
+	// if person is a parent, get students and store in global config
+	// begin fetching the list of teachers for that student asynchronously, store in config
+	// display the list of students
+	
+	// as each student displays, show a drop-down menu to the right of the name with a list of teachers
+	// -- make first selection in drop-down menu empty
+	// when a teacher is selected, trigger the app to show a
+	// list of available times next to the selected teacher's name
+	// when a time is selected, enable the "Submit Reservation" button
+
+	
+	
+// (B) If Teacher *************************************
+	// if person is a teacher, get times of potential conferences
+	// display list of times of potential conferences in a drop-down menu
+	// upon selecting a time, enable the "Submit Reservation" button
+
+	
+	
+// On Submission *************************************
+
+// upon submitting the form, double check the reservation table for 2 things:
+// -- the student cannot have two reservations with the same teacher
+// -- the reservation time must be available (no double booking)
+// -- the parent should be warned if there is an overlap in time
+
+// if the reservation is a success, tell the user, and display the reservation in the schedule region */
 });
 ;ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 	
@@ -19263,7 +19297,6 @@ ptc.on("initialize:after", function () {
 			
 			// check if the user is, in fact, set
 			if(!user || user == 0) {
-			
 				// function to get the logged in user
 				user = ""
 			}
@@ -19288,6 +19321,20 @@ ptc.on("initialize:after", function () {
 		}
 	}
 	
+});;ptc.module("Common", function(Mod, App, Backbone, Marionette){
+	
+	Mod.Loading = Marionette.ItemView.extend({
+		template: "#loading",
+		
+		serializeData: function() {
+			return {
+				title: this.options.title || "Loading Data",
+				message: this.options.message || "please wait...data is loading"
+			};
+		}
+	});
+	
+	
 });;ptc.module('Reservation', function(Mod, App, Backbone, Marionette, $, _){
 	
 	
@@ -19301,22 +19348,10 @@ ptc.on("initialize:after", function () {
 	};
 	
 });;;ptc.module('Schedule', function(Mod, App, Backbone, Marionette, $, _){
-	
-	Mod.Controller = {
-		showSchedule: function() {
-			// show loading view first...
-			
-			// then actual schedule
-			var user = App.Data.Config.loggedInUser,
-				scheduleData = App.request("schedule:getmy", user);
-				$.when(scheduleData).done(function(data) {
-					var scheduleView = new Mod.View.ListAll({
-						collection: data
-					});
-				});
-		}
-	};
-	
+
+	App.on("schedule:listAppts", function() {
+		API.showSchedule();
+	});
 	App.reqres.setHandler("schedule:getmy", function(user) {
 		return API.getSchedule(user);
 	});
@@ -19324,18 +19359,23 @@ ptc.on("initialize:after", function () {
 	var API = {
 		getSchedule: function(user) {
 			// go get schedule for the provided userID
+			// 
+		},
+		showSchedule: function() {
+			Mod.Controller.showSchedule();
 		}
 	};
 	
 });;ptc.module('Schedule', function(Mod, App, Backbone, Marionette, $, _){
 
 	Mod.Controller = {
-		showSchedule: function(user) {
+		showSchedule: function() {
 			// show loading view first...
+			var loadingView = new App.Common.Loading();
+			App.scheduleRegion.show(loadingView);
 			
 			// then actual schedule
 			var scheduleData = App.request("schedule:getmy");
-				
 			$.when(scheduleData).done(function(data) {
 				var scheduleView = new Mod.View.ListAll({
 					collection: data
@@ -19348,8 +19388,24 @@ ptc.on("initialize:after", function () {
 	
 });;ptc.module('Schedule.View', function(Mod, App, Backbone, Marionette, $, _){
 	
-	Mod.ListAll = Marionette.CollectionView.extend({
+	Mod.ApptItem = Marionette.ItemView.extend({
+		tagName: "li",
+		className: "appt",
+		template: "#scheduleApptSingle",
 		
+		events: {
+			"click a.js-delete": "deleteClicked"
+		},
+		
+		deleteClicked: function(e) {
+			e.preventDefault();
+			this.trigger("appt:delete", this.model);
+		}
+	});
+	Mod.ApptList = Marionette.CollectionView.extend({
+		tagName: "ul",
+		className: "appt-schedule",
+		itemView: Mod.ApptItem
 	});
 	
 });;$(function() {

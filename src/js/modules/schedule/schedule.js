@@ -1,20 +1,11 @@
 ptc.module('Schedule', function(Mod, App, Backbone, Marionette, $, _){
-	
-	Mod.Controller = {
-		showSchedule: function() {
-			// show loading view first...
-			
-			// then actual schedule
-			var user = App.Data.Config.loggedInUser,
-				scheduleData = App.request("schedule:getmy", user);
-				$.when(scheduleData).done(function(data) {
-					var scheduleView = new Mod.View.ListAll({
-						collection: data
-					});
-				});
-		}
-	};
-	
+
+	App.on("schedule:listAppts", function() {
+		API.showSchedule();
+	});
+	App.on("schedule:appt:delete", function(appt) {
+		API.deleteAppt(appt);
+	});
 	App.reqres.setHandler("schedule:getmy", function(user) {
 		return API.getSchedule(user);
 	});
@@ -22,6 +13,13 @@ ptc.module('Schedule', function(Mod, App, Backbone, Marionette, $, _){
 	var API = {
 		getSchedule: function(user) {
 			// go get schedule for the provided userID
+			// 
+		},
+		showSchedule: function() {
+			Mod.Controller.showSchedule();
+		},
+		deleteAppt: function(appt) {
+			Mod.Controller.deleteAppt(appt);
 		}
 	};
 	

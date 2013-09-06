@@ -15,7 +15,7 @@ ptc.addRegions({
 });
 
 ptc.on("initialize:after", function () {
-
+	ptc.trigger("schedule:listAppts");
 // when app runs, get ID of logged in person and store in global config
 
 // when logged in person is retrieved, check if that person is a parent (A) or teacher (B)
@@ -35,7 +35,6 @@ ptc.on("initialize:after", function () {
 	
 	
 // (B) If Teacher *************************************
-
 	// if person is a teacher, get times of potential conferences
 	// display list of times of potential conferences in a drop-down menu
 	// upon selecting a time, enable the "Submit Reservation" button

@@ -1,0 +1,1 @@
+{{ studentName }} | {{ teacher }} | {{ time }} <a href="" class="js-delete-appt">delete</a>

@@ -1,5 +1,5 @@
-Scheduler
-=========
+Parent-Teacher Conference Scheduler
+===================================
 
 Scheduling solution for SharePoint Parent-Teacher Conferences. Consists of two sets of requirements. Those for parents and those for teachers.
 

@@ -32,7 +32,9 @@ module.exports = function(grunt) {
 			
             'src/js/modules/data/data.js',
 			
-            'src/js/modules/reservation/reservation.js',
+            'src/js/modules/common/loading.js',
+        
+    		'src/js/modules/reservation/reservation.js',
             'src/js/modules/reservation/reservation-controller.js',
             'src/js/modules/reservation/reservation-views.js',
 
