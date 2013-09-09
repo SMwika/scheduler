@@ -30,5 +30,16 @@ Because of some limitations of the amount of queryable SharePoint list items, th
 The app will be built in javascript and jQuery, using various plugins (like SPServices) where necessary. The framework will be built on [Backbone.js](http://backbonejs.org). This is a lightweight framework that allows great control of models, views, and collections of data. [Underscore.js](http://underscorejs.org), a requirement of Backbone, will be used for templating. [Marionette.js](http://marionettejs.com/) will be added to keep things a little more modular. Also, the app will be optimized using [Grunt.js](http://gruntjs.com/). 
 
 App Structure
-----------
+-------------
 The app has three modules: *Data*, *Reservation*, and *Schedule*. Each module will be self-contained and will talk (when necessary) through a series of triggers on the app itself. The app will be known internally as **ptc**, which is short for *parent-teacher conferences*.
+
+When the app loads, data should go and be fetched, showing the user what's being fetched. Once all data has been fetched, then the actual app is initiated.
+
+Data to be fetched before the app initiates:
+* logged in user
+* students of logged in user
+* schedule (if any) of students
+* teachers of students
+* times of teachers
+
+These 5 items should display loading statuses as they are brought in, so the user knows why they are waiting.

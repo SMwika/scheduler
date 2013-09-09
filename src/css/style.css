@@ -6,7 +6,12 @@ body {
 
 /* Regions */
 .region-wrap.half {
-	width:50%;
+	width:40%;
+	display:block;
+	float:left;
+}
+.region-wrap.status {
+	width:20%;
 	display:block;
 	float:left;
 }
@@ -25,7 +30,22 @@ body {
 	font-size:0.9em;
 }
 
-
+/* Statuses */
+.status-bar {
+	list-style:none;
+	padding:0px;
+	margin:0px;
+}
+.status-bar li {
+	font-size:10px;
+	color:#666;
+	display:block;
+	padding:2px;
+	border-bottom:1px solid #ccc;
+}
+.status-bar li:last-child {
+	border-bottom:none;
+}
 /* New Reservation */
 button#submitRes {
 	padding:8px;

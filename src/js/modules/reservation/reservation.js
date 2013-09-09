@@ -19,10 +19,13 @@ ptc.module('Reservation', function(Mod, App, Backbone, Marionette, $, _){
 			if(!students || students == 0) {
 				fetchstudents = App.request("user:getstudents");
 				$.when(fetchstudents).done(function(studentList) {
-					students = studentList
+					console.log('hi');
+					if(studentList) {						
+						students = studentList
+					}
+					Mod.Controller.listStudents(students);
 				});
 			}
-			Mod.Controller.listStudents(students);
 		},
 		listTeachers: function() {
 			Mod.Controller.listTeachers();

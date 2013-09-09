@@ -18,8 +18,13 @@ ptc.addRegions({
 });
 
 ptc.on("initialize:after", function () {
-	ptc.trigger("schedule:listAppts");
-	ptc.trigger("reservation:new");
+	var datafetch = ptc.request("data:getinitial");
+	$.when(datafetch).done(function(){
+		ptc.trigger("user:message", "successfully retrieved all data");
+	//	ptc.trigger("schedule:listAppts");
+		//ptc.trigger("reservation:new");
+	});
+
 // when app runs, get ID of logged in person and store in global config
 
 // when logged in person is retrieved, check if that person is a parent (A) or teacher (B)

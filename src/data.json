@@ -6,5 +6,7 @@ ptc.sample = {
 	{studentName: "Ben", teacher: "test teacher", room: "3424", time: 'Oct 8, 1:15 - 1:30pm'},
 	{studentName: "Ben", teacher: "test teacher", room: "3424", time: 'Oct 8, 1:15 - 1:30pm'},
 	{studentName: "Ben", teacher: "test teacher", room: "3424", time: 'Oct 8, 1:15 - 1:30pm'},
-	{studentName: "Ben", teacher: "test teacher", room: "3424", time: 'Oct 8, 1:15 - 1:30pm'}		]
+	{studentName: "Ben", teacher: "test teacher", room: "3424", time: 'Oct 8, 1:15 - 1:30pm'}		],
+	
+	
 }
