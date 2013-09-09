@@ -1,0 +1,1 @@
+<button id="submitRes" class="js-submit-form" value="submit">Submit Reservation</button>

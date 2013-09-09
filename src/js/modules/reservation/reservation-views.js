@@ -44,13 +44,10 @@ ptc.module('Reservation.Views', function(Mod, App, Backbone, Marionette, $, _){
 		className: "teacher",
 		template: "#singleTeacher",
 		
-		events: {
-		//	"click a.js-show-teachers": "showTeachersClicked"
-		},
-		
-		showTeachersClicked: function(e) {
-			e.preventDefault();
+		onRender: function() {
+			$(this.el).attr("data-teacherlogon", this.model.get("teacherLogon"));
 		}
+
 	});
 	Mod.TeacherList = Marionette.CollectionView.extend({
 		tagName: "select",
@@ -58,6 +55,51 @@ ptc.module('Reservation.Views', function(Mod, App, Backbone, Marionette, $, _){
 		itemView: Mod.TeacherItem,
 		onRender: function() {
 			this.$el.prepend("<option></option>");
+		},
+		events: {
+			"change": "optionSelected"
+		},
+		optionSelected: function(e) {
+			var teacherLogon = $(e.target).find(":selected").data("teacherlogon");
+			var teacherName = $(e.target).find(":selected").val();
+			App.Reservation.NewReservation.teacherName = teacherName;
+			App.trigger("times:list", teacherLogon);
 		}
+		
+	});	
+	
+	
+	Mod.TimeItem = Marionette.ItemView.extend({
+		tagName: "option",
+		className: "time",
+		template: "#singleTimeSlot",
+		
+		onRender: function() {
+			$(this.el)
+				.attr("data-start", this.model.get("startTime"))
+				.attr("data-end", this.model.get("endTime"));
+		}
+
+	});
+	Mod.TimeList = Marionette.CollectionView.extend({
+		tagName: "select",
+		className: "time-list",
+		itemView: Mod.TimeItem,
+		onRender: function() {
+			this.$el.prepend("<option></option>");
+		},
+		events: {
+			"change": "optionSelected"
+		},
+		optionSelected: function(e) {
+			var startTime = $(e.target).find(":selected").data("start");
+			var endTime = $(e.target).find(":selected").data("end");
+			console.log(startTime, endTime);
+			App.Reservation.NewReservation.startTime = startTime;
+			App.Reservation.NewReservation.endTime = endTime;
+			
+			App.trigger("submit:enable");
+		}
+		
 	});	
 });

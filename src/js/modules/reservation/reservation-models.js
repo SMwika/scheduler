@@ -39,5 +39,17 @@ ptc.module("Reservation", function(Mod, App, Backbone){
 	Mod.TeacherCollection = Backbone.Collection.extend({
 		model: Mod.Teacher
 	});
+	
+	// Time Model and Collection ****************************************
+	Mod.Time = Backbone.Model.extend({
+		defaults: {
+			startTime: "",
+			endTime: ""
+		}
+	});
+	
+	Mod.TimeCollection = Backbone.Collection.extend({
+		model: Mod.Time
+	});
 
 });

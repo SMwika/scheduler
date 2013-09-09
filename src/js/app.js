@@ -12,7 +12,8 @@ ptc.addRegions({
     studentRegion: "#studentRegion",
     teacherRegion: "#teacherRegion",
     timeRegion: "#timeRegion",
-
+	submitRegion: "#submitRegion",
+	
     scheduleRegion: "#scheduleRegion",
     extraRegion: "#extraRegion"
 });

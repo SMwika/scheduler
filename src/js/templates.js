@@ -5,7 +5,9 @@ $(function () {
 			"loading",
 			"scheduleApptSingle",
 			"singleStudent",
-			"singleTeacher"
+			"singleTeacher",
+			"singleTimeSlot",
+			"submitForm"
         ];
     
     if ( $('body').data('env') === 'dev' ) {
