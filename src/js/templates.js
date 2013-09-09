@@ -3,7 +3,9 @@ $(function () {
     var i, z, 
         rawTmpls = [
 			"loading",
-			"scheduleApptSingle"
+			"scheduleApptSingle",
+			"singleStudent",
+			"singleTeacher"
         ];
     
     if ( $('body').data('env') === 'dev' ) {

@@ -1,21 +1,26 @@
-ptc.module('Reservation', function(Mod, App, Backbone, Marionette, $, _){
+ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 
 	Mod.Controller = {
 		startNewReservation: function() {
 			App.trigger("students:list");
 		},
-		listStudents: function(studentList) {
-			var loading = new App.Common.Loading();
-			App.studentRegion.show(loading);
-			
-			var i, studentCount = studentList.length;
-			if(studentCount > 0) {
-
-			}		
+		listStudents: function() {
+			var data = new Mod.StudentCollection(App.Data.Config.students),
+				studentList = new Mod.Views.StudentList({
+					collection: data
+				});
+			// show view in schedule region
+			App.studentRegion.show(studentList);
 		},
-		listTeachers: function(resLayout) {
-			var loading = new App.Common.Loading();
-			App.teacherRegion.show(loading);			
+		listTeachers: function(ID) {
+			var teacherArray = App.Data.Config.teachers,
+				filtered = _.where(teacherArray, {studentID: ID}),
+				data = new Mod.TeacherCollection(filtered),
+				teacherList = new Mod.Views.TeacherList({
+					collection: data
+				});
+			// show view in schedule region
+			App.teacherRegion.show(teacherList);			
 		}
 		
 	};

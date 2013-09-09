@@ -11,9 +11,16 @@
 		<div class="region-wrap half">
 			<h2>New Reservation</h2>
 			<div id="reservationRegionHolder" class="region">
+				<h3>Students</h3>
 				<div id="studentRegion"></div>
-				<div id="teacherRegion"></div>
-				<div id="timeRegion"></div>
+				<h3>Teachers</h3>
+				<div id="teacherRegion">
+					// select a student from above
+				</div>
+				<h3>Times</h3>
+				<div id="timeRegion">
+					// select a teacher from above
+				</div>
 				<button id="submitRes" value="submit">Submit Reservation</button>
 			</div>
 		</div>
@@ -59,6 +66,7 @@
 
 	<script src="src/js/modules/reservation/reservation.js" type="text/javascript"></script>
 	<script src="src/js/modules/reservation/reservation-controller.js" type="text/javascript"></script>
+	<script src="src/js/modules/reservation/reservation-models.js" type="text/javascript"></script>
 	<script src="src/js/modules/reservation/reservation-views.js" type="text/javascript"></script>
 	
 	<script src="src/js/modules/schedule/schedule.js" type="text/javascript"></script>

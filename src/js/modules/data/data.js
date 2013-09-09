@@ -113,8 +113,8 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 			// each student should have an ID, name, and familyCode
 			var defer = $.Deferred(),
 				schedule = [
-					{ID: "12", studentName: "Ben Tedder", TeacherName: "Science", startTime: "2013-02-23", endTime: "2020-23-42", roomNumber: "2311"},
-					{ID: "23", studentName: "Daniel Tedder", familyCode: "Math", startTime: "2013-02-23", endTime: "2020-23-42", roomNumber: "2311"}
+					{ID: "12", studentName: "Ben Tedder", teacherName: "Science", startTime: "2013-02-23", endTime: "2020-23-42", roomNumber: "2311"},
+					{ID: "23", studentName: "Daniel Tedder", teacherName: "Math", familyCode: "Math", startTime: "2013-02-23", endTime: "2020-23-42", roomNumber: "2311"}
 				];
 			// get students of user	using SPServices and the user's LogonName		
 			// studentList = [{studentID: "234258", fullName: "Ben Tedder", familyCode: "Ted234"}, {studentID: "23453258", fullName: "Daniel Tedder", familyCode: "Ted234"}];

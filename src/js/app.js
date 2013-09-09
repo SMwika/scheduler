@@ -21,8 +21,8 @@ ptc.on("initialize:after", function () {
 	var datafetch = ptc.request("data:getinitial");
 	$.when(datafetch).done(function(){
 		ptc.trigger("user:message", "successfully retrieved all data");
-	//	ptc.trigger("schedule:listAppts");
-		//ptc.trigger("reservation:new");
+		ptc.trigger("schedule:listAppts");
+		ptc.trigger("reservation:new");
 	});
 
 // when app runs, get ID of logged in person and store in global config

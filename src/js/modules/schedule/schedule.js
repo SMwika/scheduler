@@ -9,9 +9,6 @@ ptc.module('Schedule', function(Mod, App, Backbone, Marionette, $, _){
 	
 	
 	var API = {
-		getSchedule: function(user) {
-			
-		},
 		showSchedule: function() {
 			Mod.Controller.showSchedule();
 		},

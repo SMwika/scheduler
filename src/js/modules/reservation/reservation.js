@@ -6,8 +6,8 @@ ptc.module('Reservation', function(Mod, App, Backbone, Marionette, $, _){
 	App.on("students:list", function() {
 		API.listStudents();
 	});
-	App.on("teachers:list", function() {
-		API.listTeachers();
+	App.on("teachers:list", function(studentID) {
+		API.listTeachers(studentID);
 	});
 	App.on("times:list", function() {
 		API.listTimes();
@@ -15,20 +15,10 @@ ptc.module('Reservation', function(Mod, App, Backbone, Marionette, $, _){
 	
 	var API = {
 		listStudents: function() {
-			var students = App.Data.Config.students;
-			if(!students || students == 0) {
-				fetchstudents = App.request("user:getstudents");
-				$.when(fetchstudents).done(function(studentList) {
-					console.log('hi');
-					if(studentList) {						
-						students = studentList
-					}
-					Mod.Controller.listStudents(students);
-				});
-			}
+			Mod.Controller.listStudents();
 		},
-		listTeachers: function() {
-			Mod.Controller.listTeachers();
+		listTeachers: function(studentID) {
+			Mod.Controller.listTeachers(studentID);
 		},
 		listTimes: function() {
 			Mod.Controller.listTimes();
