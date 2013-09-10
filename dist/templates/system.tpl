@@ -13,7 +13,7 @@
 
 <!-- singleStudent -->
 <script id="singleStudent" type="text/template">
-{{ fullName }} <a href="" class="js-show-teachers">Reserve a time</a>
+{{ fullName }}
 </script>
 
 <!-- singleTeacher -->
@@ -23,7 +23,7 @@
 
 <!-- singleTimeSlot -->
 <script id="singleTimeSlot" type="text/template">
-{{ startTime }} - {{ endTime }}
+{{ startTime }}-{{ endTime }}
 </script>
 
 <!-- submitForm -->
