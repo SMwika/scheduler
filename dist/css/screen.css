@@ -1,16 +1,30 @@
 /*!
- scheduler Build version 0.0.1, 09-05-2013
+ scheduler Build version 0.0.1, 09-09-2013
 */
 body {
 	background: #efefef;
 	font-family: "Helvetica", "Arial", sans-serif;
 }
 
-
-.region-wrap {
-	width:50%;
+a {
+	color:#005baa;
+}
+a:hover {
+	color:#b80000;
+}
+/* Regions */
+.region-wrap.half {
+	width:40%;
 	display:block;
 	float:left;
+}
+.region-wrap.status {
+	width:20%;
+	display:block;
+	float:left;
+}
+.region-wrap.full {
+	width:100%;
 }
 .region-wrap h2 {
 	margin:0px;
@@ -23,3 +37,63 @@ body {
 	padding:20px;
 	font-size:0.9em;
 }
+
+/* Statuses */
+.status-bar {
+	list-style:none;
+	padding:0px;
+	margin:0px;
+}
+.status-bar li {
+	font-size:10px;
+	color:#666;
+	display:block;
+	padding:2px;
+	border-bottom:1px solid #ccc;
+}
+.status-bar li:last-child {
+	border-bottom:none;
+}
+/* New Reservation */
+ul.student-list {
+	padding:0px;
+	list-style:none;
+	margin:0px;
+}
+
+ul.student-list li {
+	padding:0 0 10px 0;
+	margin-bottom:10px;
+	display:block;
+	border-bottom:1px solid #ccc;
+	position:relative;
+}
+ul.student-list li a {
+	position:absolute;
+	right:0;
+}
+button#submitRes {
+	padding:8px;
+	border-radius:3px;
+	background:#005baa;
+	color:#fff;
+	font-size:1.2em;
+	cursor:pointer;
+}
+
+/* My Schedule */
+ul.appt-schedule {
+	list-style:none;
+	padding:0px;
+	margin:0px;
+}
+ul.appt-schedule li {
+	border-bottom:1px solid #ccc;
+	padding:0 5px 10px 5px;
+	margin-bottom:10px;
+}
+ul.appt-schedule li:last-child {
+	border:none;
+}
+
+/* Other Stuff Region */

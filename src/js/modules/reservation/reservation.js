@@ -2,6 +2,7 @@ ptc.module('Reservation', function(Mod, App, Backbone, Marionette, $, _){
 	
 	Mod.NewReservation = {
 		studentID: '',
+		studentName: '',
 		teacherName: '',
 		teacherLogon: '',
 		startTime: '',
@@ -29,13 +30,16 @@ ptc.module('Reservation', function(Mod, App, Backbone, Marionette, $, _){
 		listStudents: function() {
 			App.teacherRegion.close();
 			App.timeRegion.close();
+			App.submitRegion.close();
 			Mod.Controller.listStudents();
 		},
 		listTeachers: function(studentID) {
 			App.timeRegion.close();
+			App.submitRegion.close();
 			Mod.Controller.listTeachers(studentID);
 		},
 		listTimes: function(teacherLogon) {
+			App.submitRegion.close();
 			Mod.Controller.listTimes(teacherLogon);
 		},
 		newReservation: function() {

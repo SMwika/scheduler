@@ -8,7 +8,6 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 		times: [],
 		schedule: []
 	};
-
 	
 	App.on("user:message", function(message) {
 		var statustemplate = $("#loading").html();

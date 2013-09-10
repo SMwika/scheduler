@@ -20,30 +20,48 @@ ptc.module('Reservation.Views', function(Mod, App, Backbone, Marionette, $, _){
 	});
 	
 	Mod.StudentItem = Marionette.ItemView.extend({
-		tagName: "li",
+		tagName: "option",
 		className: "student",
 		template: "#singleStudent",
-		
-		events: {
-			"click a.js-show-teachers": "showTeachersClicked"
-		},
-		
-		showTeachersClicked: function(e) {
-			e.preventDefault();
-			App.trigger("teachers:list", this.model.get("studentID"));
+		onRender: function() {
+			$(this.el)
+				.attr("data-studentid", "ID" + this.model.get("studentID"))
+				.attr("data-fullname", this.model.get("fullName"));
 		}
+
 	});
 	Mod.StudentList = Marionette.CollectionView.extend({
-		tagName: "ul",
+		tagName: "select",
 		className: "student-list",
-		itemView: Mod.StudentItem
+		itemView: Mod.StudentItem,
+		onRender: function() {
+			this.$el.prepend("<option></option>");
+		},
+		events: {
+			"change": "optionSelected"
+		},
+		optionSelected: function(e) {
+			if(!e.target.value || e.target.value == 0) {
+				console.log("no name selected");
+				App.teacherRegion.close();
+				App.timeRegion.close();
+				App.submitRegion.close();
+			} else {
+				var studentID = $(e.target).find(":selected").data("studentid");
+				var studentName = $(e.target).find(":selected").data("fullname");
+				studentID = studentID.substr(2);
+				App.Reservation.NewReservation.studentID = studentID;
+				App.Reservation.NewReservation.studentName = studentName;
+				App.trigger("teachers:list", studentID);
+			}
+		}
 	});
 	
 	Mod.TeacherItem = Marionette.ItemView.extend({
 		tagName: "option",
 		className: "teacher",
 		template: "#singleTeacher",
-		
+				
 		onRender: function() {
 			$(this.el).attr("data-teacherlogon", this.model.get("teacherLogon"));
 		}
@@ -60,10 +78,17 @@ ptc.module('Reservation.Views', function(Mod, App, Backbone, Marionette, $, _){
 			"change": "optionSelected"
 		},
 		optionSelected: function(e) {
-			var teacherLogon = $(e.target).find(":selected").data("teacherlogon");
-			var teacherName = $(e.target).find(":selected").val();
-			App.Reservation.NewReservation.teacherName = teacherName;
-			App.trigger("times:list", teacherLogon);
+			if(!e.target.value || e.target.value == 0) {
+				console.log("no name selected");
+				App.timeRegion.close();
+				App.submitRegion.close();
+			} else {
+				var teacherLogon = $(e.target).find(":selected").data("teacherlogon");
+				var teacherName = $(e.target).find(":selected").val();
+				App.Reservation.NewReservation.teacherName = teacherName;
+				App.Reservation.NewReservation.teacherLogon = teacherLogon;
+				App.trigger("times:list", teacherLogon);
+			}
 		}
 		
 	});	
@@ -92,13 +117,18 @@ ptc.module('Reservation.Views', function(Mod, App, Backbone, Marionette, $, _){
 			"change": "optionSelected"
 		},
 		optionSelected: function(e) {
-			var startTime = $(e.target).find(":selected").data("start");
-			var endTime = $(e.target).find(":selected").data("end");
-			console.log(startTime, endTime);
-			App.Reservation.NewReservation.startTime = startTime;
-			App.Reservation.NewReservation.endTime = endTime;
-			
-			App.trigger("submit:enable");
+			if(!e.target.value || e.target.value == 0) {
+				console.log("no name selected");
+				App.submitRegion.close();
+			} else {
+				var startTime = $(e.target).find(":selected").data("start");
+				var endTime = $(e.target).find(":selected").data("end");
+				console.log(startTime, endTime);
+				App.Reservation.NewReservation.startTime = startTime;
+				App.Reservation.NewReservation.endTime = endTime;
+				
+				App.trigger("submit:enable");
+			}
 		}
 		
 	});	

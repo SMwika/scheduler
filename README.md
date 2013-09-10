@@ -1,7 +1,7 @@
 Parent-Teacher Conference Scheduler
 ===================================
 
-Scheduling solution for SharePoint Parent-Teacher Conferences. Consists of two sets of requirements. Those for parents and those for teachers.
+Scheduling solution for SharePoint Parent-Teacher Conferences. This application consists of two sets of requirements. Those for parents and those for teachers.
 
 Parent Requirements
 -------------------
@@ -52,4 +52,4 @@ A user's schedule shows all the reservations retrieved that match the familyCode
 
 Creating a new reservation
 --------------------------
-When a user logs into the app they are presented with a list of their students (if the user is a parent). When the user clicks "Reserve a time" next to a student's name, they are presented with a drop-down menu of teachers of that student. When a teacher/conference is selected, the user is then presented with a list of available time slots as a drop-down menu. Selecting a time-slot enables the submit button. Each step of the way the reservation details are being saved to an object at App.Reservation.NewReservation.
+When a user logs into the app they are presented with a drop-down list of their students (if the user is a parent). When the user selects a student's name, they are presented with a drop-down menu of teachers of that student. When a teacher/conference is selected, the user is then presented with a list of available time slots as a drop-down menu. Selecting a time-slot enables the submit button. Each step of the way the reservation details are being saved to an object: *App.Reservation.NewReservation*

@@ -11,6 +11,10 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 					collection: data
 				});
 			Mod.NewReservation.familyCode = App.Data.Config.loggedInUser.familyCode;
+			
+			studentList.on("show", function() {
+				this.$el.before("Select a student: ");
+			});
 			// show view in student region
 			App.studentRegion.show(studentList);
 		},
@@ -22,7 +26,9 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 				teacherList = new Mod.Views.TeacherList({
 					collection: data
 				});
-			Mod.NewReservation.studentID = studentID;
+				teacherList.on("show", function() {
+					this.$el.before("Select a teacher: ");
+				});
 			// show view in teacher region
 			App.teacherRegion.show(teacherList);			
 		},
@@ -34,8 +40,9 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 				timeList = new Mod.Views.TimeList({
 					collection: data
 				});
-				
-			Mod.NewReservation.teacherLogon = teacherLogon;
+				timeList.on("show", function() {
+					this.$el.before("Select a time slot: ");
+				});
 			// show view in time region
 			App.timeRegion.show(timeList);
 		},

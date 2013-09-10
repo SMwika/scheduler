@@ -31,15 +31,15 @@ module.exports = function(grunt) {
             'src/js/app.js',
 			
             'src/js/modules/data/data.js',
-			
-            'src/js/modules/common/loading.js',
-        
+			        
     		'src/js/modules/reservation/reservation.js',
             'src/js/modules/reservation/reservation-controller.js',
+            'src/js/modules/reservation/reservation-models.js',
             'src/js/modules/reservation/reservation-views.js',
 
             'src/js/modules/schedule/schedule.js',
             'src/js/modules/schedule/schedule-controller.js',
+            'src/js/modules/schedule/schedule-models.js',
             'src/js/modules/schedule/schedule-views.js',
 			
             'src/js/app.start.js'

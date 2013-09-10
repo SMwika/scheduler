@@ -1,5 +1,5 @@
 /*!
- scheduler Build version 0.0.1, 09-05-2013
+ scheduler Build version 0.0.1, 09-09-2013
 */
 /*!
  * jQuery JavaScript Library v1.9.0
@@ -19178,7 +19178,11 @@ _.extend(Marionette.Module, {
     var i, z, 
         rawTmpls = [
 			"loading",
-			"scheduleApptSingle"
+			"scheduleApptSingle",
+			"singleStudent",
+			"singleTeacher",
+			"singleTimeSlot",
+			"submitForm"
         ];
     
     if ( $('body').data('env') === 'dev' ) {
@@ -19225,13 +19229,23 @@ var ptc = new Marionette.Application();
 
 // add regions to app for displaying data
 ptc.addRegions({
-    reservationRegion: "#reservationRegion",
+    studentRegion: "#studentRegion",
+    teacherRegion: "#teacherRegion",
+    timeRegion: "#timeRegion",
+	submitRegion: "#submitRegion",
+	
     scheduleRegion: "#scheduleRegion",
     extraRegion: "#extraRegion"
 });
 
 ptc.on("initialize:after", function () {
-//	ptc.trigger("schedule:listAppts");
+	var datafetch = ptc.request("data:getinitial");
+	$.when(datafetch).done(function(){
+		ptc.trigger("user:message", "successfully retrieved all data");
+		ptc.trigger("schedule:listAppts");
+		ptc.trigger("reservation:new");
+	});
+
 // when app runs, get ID of logged in person and store in global config
 
 // when logged in person is retrieved, check if that person is a parent (A) or teacher (B)
@@ -19270,99 +19284,456 @@ ptc.on("initialize:after", function () {
 	
 	// global config area to store 'session'-level data
 	Mod.Config = {
-		loggedInUser: "Rhonda.Norris",
-		students: []
+		loggedInUser: "",
+		students: [],
+		teachers: [],
+		times: [],
+		schedule: []
 	};
 	
-
+	App.on("user:message", function(message) {
+		var statustemplate = $("#loading").html();
+		$(".status-bar").append(_.template(statustemplate, {'message': message}));
+	});
+	
 	// data endpoints/requests
+	App.reqres.setHandler("data:getinitial", function() {
+		return API.getInitialData();
+	});
 	App.reqres.setHandler("user:getloggedin", function() {
 		return API.getLoggedInUser();
 	});
-	App.reqres.setHandler("user:getstudents", function() {
-		return API.getStudents();
+	App.reqres.setHandler("user:getstudents", function(userLogon) {
+		return API.getStudents(userLogon);
 	});
-	App.reqres.setHandler("student:getteachers", function(student) {
-		return API.getTeachers(student);
+	App.reqres.setHandler("student:getteachers", function(studentList) {
+		return API.getTeachers(studentList);
 	});
-	App.reqres.setHandler("teacher:gettimes", function(teacher) {
-		return API.getTimes(teacher);
+	App.reqres.setHandler("teacher:gettimes", function(teacherList) {
+		return API.getTimes(teacherList);
+	});
+	App.reqres.setHandler("schedule:getmy", function(familyCode) {
+		return API.getSchedule(familyCode);
 	});
 
 	
 	// local controller that manages data requests
 	var API = {
-		getLoggedInUser: function() {
-			var user = Mod.Config.loggedInUser;
-			
-			// check if the user is, in fact, set
-			if(!user || user == 0) {
-				// function to get the logged in user
-				user = ""
-			}
-			return user;
-		},
-		
-		getStudents: function() {
-			var self = this,
-				studentList = [],
+		getInitialData: function() {
+			var status = 0,
+				defer = $.Deferred(),
 				user = App.request("user:getloggedin");
+			
+			$.when(user).done(function(userLogon) {
+			App.trigger("user:message", "get logged in user");
 				
-			studentList = ["ben", "daniel"];
-			Mod.Config.students = studentList;
+				Mod.Config.loggedInUser = userLogon;
+				
+				var schedule = App.request("schedule:getmy", userLogon.familyCode);
+				
+				$.when(schedule).done(function(scheduleList) {
+					App.trigger("user:message", "get schedule");
+					Mod.Config.schedule = scheduleList;
+				});
+
+				var students = App.request("user:getstudents", userLogon.familyCode);
+				$.when(students).done(function(studentList) {
+					App.trigger("user:message", "get students");
+					
+					Mod.Config.students = studentList;
+					
+					
+					var teachers = App.request("student:getteachers", studentList);
+					$.when(teachers).done(function(teacherList) {
+						App.trigger("user:message", "get teachers");
+					
+						Mod.Config.teachers = teacherList;
+
+						var times = App.request("teacher:gettimes", teacherList);
+						$.when(times).done(function(timeList) {
+							App.trigger("user:message", "get available time slots");
+							
+							Mod.Config.times = timeList;
+							
+							defer.resolve();
+						});
+					});
+				});
+			});
+			return defer.promise();
+		},
+		getLoggedInUser: function() {
+			var defer = $.Deferred();
+			// get user
+			var userLogon = {
+				username: "Mark.Tedder",
+				familyCode: "Ted234"
+			}
+			
+			defer.resolve(userLogon);
+			return defer.promise();
 		},
 		
-		getTeachers: function(student) {
-			console.log("teachers of " + student);
+		getStudents: function(userLogon) {
+			// this should just get a list of all students of the user
+			// the list should be formatted as an array of objects
+			// each student should have an ID, name, and familyCode
+			var defer = $.Deferred(),
+				studentList = [
+					{studentID: "234258", fullName: "Ben Tedder", familyCode: "Ted234"},
+					{studentID: "23453258", fullName: "Daniel Tedder", familyCode: "Ted234"}
+				];
+			// get students of user	using SPServices and the user's LogonName		
+			// studentList = [{studentID: "234258", fullName: "Ben Tedder", familyCode: "Ted234"}, {studentID: "23453258", fullName: "Daniel Tedder", familyCode: "Ted234"}];
+			defer.resolve(studentList);
+			return defer.promise();
+		},
+		getSchedule: function(familyCode) {
+			// this should just get a list of all students of the user
+			// the list should be formatted as an array of objects
+			// each student should have an ID, name, and familyCode
+			var defer = $.Deferred(),
+				schedule = [
+					{ID: "12", studentName: "Ben Tedder", teacherName: "Science", startTime: "2013-02-23", endTime: "2020-23-42", roomNumber: "2311"},
+					{ID: "23", studentName: "Daniel Tedder", teacherName: "Math", familyCode: "Math", startTime: "2013-02-23", endTime: "2020-23-42", roomNumber: "2311"}
+				];
+			// get students of user	using SPServices and the user's LogonName		
+			// studentList = [{studentID: "234258", fullName: "Ben Tedder", familyCode: "Ted234"}, {studentID: "23453258", fullName: "Daniel Tedder", familyCode: "Ted234"}];
+			defer.resolve(schedule);
+			return defer.promise();
 		},
 		
-		getTimes: function(teacher) {
-			console.log("times for " + teacher);
+		getTeachers: function(studentList) {
+			var defer = $.Deferred(),
+				i,
+				counter = 0,
+				total = studentList.length,
+				teacherList = [
+					{studentID: '234258', teacherLogon: 'jim.stewart', teacherName:"Math"},
+					{studentID: '23453258', teacherLogon: 'james.dean', teacherName:"Science"},
+					{studentID: '234258', teacherLogon: 'james.dean', teacherName:"Science"}
+				];
+		
+				// iterate through each student
+				for(i = 0; i < total; i++) {
+					// with each iteration, iterate counter, so we can resolve once counter is done
+					counter++;
+					// SPServices query for teachers of studentList[i].studentID
+					// teacherList.push(['studentID', 'teacherLogon', 'teacherName']);
+					if(counter == total) {
+						defer.resolve(teacherList);
+					}
+				}
+			return defer.promise();
+		},
+		
+		getTimes: function(teacherList) {
+			var defer = $.Deferred(),
+				i,
+				counter = 0,
+				total = teacherList.length,
+				timeList = [
+					{teacherLogon: 'jim.stewart', startTime: '2013-08-20', endTime: '2013-08-21'},
+					{teacherLogon: 'james.dean', startTime: '2013-08-22', endTime: '2013-08-22'},
+					{teacherLogon: 'jim.stewart', startTime: '2013-08-23', endTime: '2013-08-23'},
+					{teacherLogon: 'jim.stewart', startTime: '2013-08-24', endTime: '2013-08-25'},
+				];
+				
+			// iterate through each teacher
+			for(i = 0; i < total; i++) {
+				// with each iteration, iterate counter, so we can resolve once counter is done
+				counter++;
+				// SPServices query for times of teacherList[i].teacherLogon
+				// timeList.push(['teacherLogon', 'startTime', 'endTime']);
+				if(counter == total) {
+					defer.resolve(timeList);
+				}
+			}
+			return defer.promise();
 		}
 	}
+});;ptc.module('Reservation', function(Mod, App, Backbone, Marionette, $, _){
 	
-});;ptc.module("Common", function(Mod, App, Backbone, Marionette){
+	Mod.NewReservation = {
+		studentID: '',
+		teacherName: '',
+		teacherLogon: '',
+		startTime: '',
+		endTime: '',
+		familyCode: ''
+	}
 	
-	Mod.Loading = Marionette.ItemView.extend({
-		template: "#loading",
+	App.on("reservation:new", function() {
+		API.newReservation();
+	});
+	App.on("students:list", function() {
+		API.listStudents();
+	});
+	App.on("teachers:list", function(studentID) {
+		API.listTeachers(studentID);
+	});
+	App.on("times:list", function(teacherLogon) {
+		API.listTimes(teacherLogon);
+	});
+	App.on("submit:enable", function() {
+		API.enableSubmit();
+	});
+	
+	var API = {
+		listStudents: function() {
+			App.teacherRegion.close();
+			App.timeRegion.close();
+			Mod.Controller.listStudents();
+		},
+		listTeachers: function(studentID) {
+			App.timeRegion.close();
+			Mod.Controller.listTeachers(studentID);
+		},
+		listTimes: function(teacherLogon) {
+			Mod.Controller.listTimes(teacherLogon);
+		},
+		newReservation: function() {
+			Mod.Controller.startNewReservation();
+		},
+		enableSubmit: function() {
+			Mod.Controller.enableSubmit();
+		}
+	};
+	
+});;ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
+
+	Mod.Controller = {
+		startNewReservation: function() {
+			App.trigger("students:list");
+		},
 		
-		serializeData: function() {
-			return {
-				title: this.options.title || "Loading Data",
-				message: this.options.message || "please wait...data is loading"
-			};
+		listStudents: function() {
+			var data = new Mod.StudentCollection(App.Data.Config.students),
+				studentList = new Mod.Views.StudentList({
+					collection: data
+				});
+			Mod.NewReservation.familyCode = App.Data.Config.loggedInUser.familyCode;
+			// show view in student region
+			App.studentRegion.show(studentList);
+		},
+		
+		listTeachers: function(studentID) {
+			var teacherArray = App.Data.Config.teachers,
+				filtered = _.where(teacherArray, {studentID: studentID}),
+				data = new Mod.TeacherCollection(filtered),
+				teacherList = new Mod.Views.TeacherList({
+					collection: data
+				});
+			Mod.NewReservation.studentID = studentID;
+			// show view in teacher region
+			App.teacherRegion.show(teacherList);			
+		},
+		
+		listTimes: function(teacherLogon) {
+			var timeArray = App.Data.Config.times,
+				filtered = _.where(timeArray, {teacherLogon: teacherLogon}),
+				data = new Mod.TimeCollection(filtered),
+				timeList = new Mod.Views.TimeList({
+					collection: data
+				});
+				
+			Mod.NewReservation.teacherLogon = teacherLogon;
+			// show view in time region
+			App.timeRegion.show(timeList);
+		},
+		
+		enableSubmit: function() {
+			var submitArea = Marionette.ItemView.extend({
+				template: "#submitForm",
+				events: {
+					"click .js-submit-form": "submitFormClicked"
+				},
+				submitFormClicked: function(e) {
+					e.preventDefault();
+					console.log(Mod.NewReservation);
+				}
+			});
+			
+			//console.log(submitArea);
+			App.submitRegion.show(new submitArea());
+		}
+		
+	};
+	
+});;ptc.module("Reservation", function(Mod, App, Backbone){
+
+	// Appointment Model and Collection ************************************
+	Mod.Appt = Backbone.Model.extend({
+		defaults: {
+			studentName: '',
+			teacher: '',
+			time: ''
 		}
 	});
 	
+	Mod.ApptCollection = Backbone.Collection.extend({
+		model: Mod.Appt
+	});
 	
-});;ptc.module('Reservation', function(Mod, App, Backbone, Marionette, $, _){
 	
+	// Student Model and Collection ****************************************
+	Mod.Student = Backbone.Model.extend({
+		defaults: {
+			fullName: "",
+			studentID: "",
+			familyCode: ""
+		}
+	});
 	
+	Mod.StudentCollection = Backbone.Collection.extend({
+		model: Mod.Student
+	});
 	
+	// Teacher Model and Collection ****************************************
+	Mod.Teacher = Backbone.Model.extend({
+		defaults: {
+			fullName: "",
+			studentID: "",
+			familyCode: ""
+		}
+	});
 	
-});;ptc.module('Reservation', function(Mod, App, Backbone, Marionette, $, _){
+	Mod.TeacherCollection = Backbone.Collection.extend({
+		model: Mod.Teacher
+	});
+	
+	// Time Model and Collection ****************************************
+	Mod.Time = Backbone.Model.extend({
+		defaults: {
+			startTime: "",
+			endTime: ""
+		}
+	});
+	
+	Mod.TimeCollection = Backbone.Collection.extend({
+		model: Mod.Time
+	});
 
-	Mod.Controller = {
+});;ptc.module('Reservation.Views', function(Mod, App, Backbone, Marionette, $, _){
+	
+	Mod.Layout = Marionette.Layout.extend({
+		template: "#reservationLayout",
+		
+		regions: {
+			studentRegion: "#resStudents",
+			teacherRegion: "#resTeachers",
+			timeRegion: "#resTimes",
+		},
+		
+		events: {
+			"click button": "buttonClicked"
+		},
+		
+		buttonClicked: function(e) {
+			e.preventDefault();
+			console.log("clicked!");
+		}
+	});
+	
+	Mod.StudentItem = Marionette.ItemView.extend({
+		tagName: "li",
+		className: "student",
+		template: "#singleStudent",
+		
+		events: {
+			"click a.js-show-teachers": "showTeachersClicked"
+		},
+		
+		showTeachersClicked: function(e) {
+			e.preventDefault();
+			App.trigger("teachers:list", this.model.get("studentID"));
+		}
+	});
+	Mod.StudentList = Marionette.CollectionView.extend({
+		tagName: "ul",
+		className: "student-list",
+		itemView: Mod.StudentItem
+	});
+	
+	Mod.TeacherItem = Marionette.ItemView.extend({
+		tagName: "option",
+		className: "teacher",
+		template: "#singleTeacher",
+		
+		onRender: function() {
+			$(this.el).attr("data-teacherlogon", this.model.get("teacherLogon"));
+		}
 
+	});
+	Mod.TeacherList = Marionette.CollectionView.extend({
+		tagName: "select",
+		className: "teacher-list",
+		itemView: Mod.TeacherItem,
+		onRender: function() {
+			this.$el.prepend("<option></option>");
+		},
+		events: {
+			"change": "optionSelected"
+		},
+		optionSelected: function(e) {
+			var teacherLogon = $(e.target).find(":selected").data("teacherlogon");
+			var teacherName = $(e.target).find(":selected").val();
+			App.Reservation.NewReservation.teacherName = teacherName;
+			App.trigger("times:list", teacherLogon);
+		}
+		
+	});	
 	
-	};
 	
-});;;ptc.module('Schedule', function(Mod, App, Backbone, Marionette, $, _){
+	Mod.TimeItem = Marionette.ItemView.extend({
+		tagName: "option",
+		className: "time",
+		template: "#singleTimeSlot",
+		
+		onRender: function() {
+			$(this.el)
+				.attr("data-start", this.model.get("startTime"))
+				.attr("data-end", this.model.get("endTime"));
+		}
+
+	});
+	Mod.TimeList = Marionette.CollectionView.extend({
+		tagName: "select",
+		className: "time-list",
+		itemView: Mod.TimeItem,
+		onRender: function() {
+			this.$el.prepend("<option></option>");
+		},
+		events: {
+			"change": "optionSelected"
+		},
+		optionSelected: function(e) {
+			var startTime = $(e.target).find(":selected").data("start");
+			var endTime = $(e.target).find(":selected").data("end");
+			console.log(startTime, endTime);
+			App.Reservation.NewReservation.startTime = startTime;
+			App.Reservation.NewReservation.endTime = endTime;
+			
+			App.trigger("submit:enable");
+		}
+		
+	});	
+});;ptc.module('Schedule', function(Mod, App, Backbone, Marionette, $, _){
 
 	App.on("schedule:listAppts", function() {
 		API.showSchedule();
 	});
-	App.reqres.setHandler("schedule:getmy", function(user) {
-		return API.getSchedule(user);
+	App.on("schedule:appt:delete", function(appt) {
+		API.deleteAppt(appt);
 	});
 	
+	
 	var API = {
-		getSchedule: function(user) {
-			// go get schedule for the provided userID
-			// 
-		},
 		showSchedule: function() {
 			Mod.Controller.showSchedule();
+		},
+		deleteAppt: function(appt) {
+			Mod.Controller.deleteAppt(appt);
 		}
 	};
 	
@@ -19370,22 +19741,41 @@ ptc.on("initialize:after", function () {
 
 	Mod.Controller = {
 		showSchedule: function() {
-			// show loading view first...
-			var loadingView = new App.Common.Loading();
-			App.scheduleRegion.show(loadingView);
-			
-			// then actual schedule
-			var scheduleData = App.request("schedule:getmy");
-			$.when(scheduleData).done(function(data) {
-				var scheduleView = new Mod.View.ListAll({
-					collection: data
-				});
-				// show view in schedule region
-				App.scheduleRegion.show(scheduleView);
+			var data = new Mod.ApptCollection(App.Data.Config.schedule);
+			var scheduleView = new Mod.View.ApptList({
+				collection: data
+			});
+			// show view in schedule region
+			App.scheduleRegion.show(scheduleView);
+		},
+		deleteAppt: function(appt) {
+			appt.destroy({
+				success: function() {
+					console.log("deleted");
+				},
+				error: function() {
+					console.log("error destroying the event");
+				}
 			});
 		}
 	};
 	
+});;ptc.module("Schedule", function(Mod, App, Backbone){
+
+	// Model and Collection **********************************************
+	Mod.Appt = Backbone.Model.extend({
+		defaults: {
+			studentName: '',
+			teacher: '',
+			time: '',
+			room: ''
+		}
+	});
+	
+	Mod.ApptCollection = Backbone.Collection.extend({
+		model: Mod.Appt
+	});
+
 });;ptc.module('Schedule.View', function(Mod, App, Backbone, Marionette, $, _){
 	
 	Mod.ApptItem = Marionette.ItemView.extend({
@@ -19394,12 +19784,12 @@ ptc.on("initialize:after", function () {
 		template: "#scheduleApptSingle",
 		
 		events: {
-			"click a.js-delete": "deleteClicked"
+			"click a.js-delete-appt": "deleteClicked"
 		},
 		
 		deleteClicked: function(e) {
 			e.preventDefault();
-			this.trigger("appt:delete", this.model);
+			App.trigger("schedule:appt:delete", this.model);
 		}
 	});
 	Mod.ApptList = Marionette.CollectionView.extend({
