@@ -43,3 +43,13 @@ Data to be fetched before the app initiates:
 * times of teachers
 
 These 5 items should display loading statuses as they are brought in, so the user knows why they are waiting.
+
+Once the data is loaded, the app will then initiate the schedule, and begin listing data for creating a new reservation.
+
+Managing the Schedule
+---------------------
+A user's schedule shows all the reservations retrieved that match the familyCode of the user. This query is done server-side before reservations are brought in. They are filtered by Family Code and then brought in to the app as JSON-formatted data.
+
+Creating a new reservation
+--------------------------
+When a user logs into the app they are presented with a list of their students (if the user is a parent). When the user clicks "Reserve a time" next to a student's name, they are presented with a drop-down menu of teachers of that student. When a teacher/conference is selected, the user is then presented with a list of available time slots as a drop-down menu. Selecting a time-slot enables the submit button. Each step of the way the reservation details are being saved to an object at App.Reservation.NewReservation.
