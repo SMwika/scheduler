@@ -65,3 +65,7 @@ A big part of the scheduling application is to check for duplication. There are 
 2. When reserving a time slot, the app should check to see if that time slot for that teacher is in fact still available. If it is not, the user should get an error saying it's not available, and that they should try another slot.
 3. When reserving a time slot, the app should check to see if that teacher and that student already have a reservation. If so, the user should be alerted that they have already created a reservation for this teacher for their student.
 4. When reserving a time slot, the app should check to see if there is already a time slot reserved for that familyCode. If there is, the user should be presented with a warning, but not prohibited from completing the reservation. There are cases where parents may "double book" themselves so one parent can visit one teacher, and the other parent can visit another, for example.
+
+Modifying the App
+-----------------
+This app has been built to be as flexible as possible. As such, the **app-config.js** file *should* be all you need to edit. This allows the admin to put the different types of dates and classifications of conferences in. Then the app itself generates the times. Also, this file has all of the database calls (SharePoint in this case).
