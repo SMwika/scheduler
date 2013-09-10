@@ -1,14 +1,14 @@
-ptc.module('Reservation', function(Mod, App, Backbone, Marionette, $, _){
+ptc.module("Reservation", function(Mod, App){
 	
 	Mod.NewReservation = {
-		studentID: '',
-		studentName: '',
-		teacherName: '',
-		teacherLogon: '',
-		startTime: '',
-		endTime: '',
-		familyCode: ''
-	}
+		studentID: "",
+		studentName: "",
+		teacherName: "",
+		teacherLogon: "",
+		startTime: "",
+		endTime: "",
+		familyCode: ""
+	};
 	
 	App.on("reservation:new", function() {
 		API.newReservation();

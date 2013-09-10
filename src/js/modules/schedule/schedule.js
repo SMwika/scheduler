@@ -1,4 +1,4 @@
-ptc.module('Schedule', function(Mod, App, Backbone, Marionette, $, _){
+ptc.module("Schedule", function(Mod, App){
 
 	App.on("schedule:listAppts", function() {
 		API.showSchedule();

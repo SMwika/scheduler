@@ -1,4 +1,4 @@
-ptc.module('Schedule.View', function(Mod, App, Backbone, Marionette, $, _){
+ptc.module("Schedule.View", function(Mod, App, Backbone, Marionette){
 	
 	Mod.ApptItem = Marionette.ItemView.extend({
 		tagName: "li",

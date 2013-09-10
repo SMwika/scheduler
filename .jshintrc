@@ -21,10 +21,11 @@
     "jquery": true,
 
     "predef": [
-		"canopy",
+		"ptc",
         "$",
         "_",
         "Backbone",
-        "Marionette"
+        "Marionette",
+		"moment"
     ]
 }

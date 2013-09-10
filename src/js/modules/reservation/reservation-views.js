@@ -1,4 +1,4 @@
-ptc.module('Reservation.Views', function(Mod, App, Backbone, Marionette, $, _){
+ptc.module('Reservation.Views', function(Mod, App, Backbone, Marionette, $){
 	
 	Mod.Layout = Marionette.Layout.extend({
 		template: "#reservationLayout",

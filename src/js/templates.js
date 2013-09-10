@@ -10,17 +10,17 @@ $(function () {
 			"submitForm"
         ];
     
-    if ( $('body').data('env') === 'dev' ) {
+    if ( $("body").data("env") === "dev" ) {
         
         // Dev env, load all scripts
         z = rawTmpls.length;
         
         var appendTmpl = function (tmpl) {
             $.ajax({
-                url: 'src/templates/'+tmpl+'.tpl',
+                url: "src/templates/"+tmpl+".tpl",
                 async: false,
                 success: function (data) {
-                    $('#templates').append("<script type=\"text/template\" id=\""+tmpl+"\">"+data+"</script>"); 
+                    $("#templates").append("<script type=\"text/template\" id=\""+tmpl+"\">"+data+"</script>"); 
                 }
             });
         };
@@ -34,10 +34,10 @@ $(function () {
         
         // Production, load compiled
         $.ajax({
-            url: 'dist/templates/system.tpl',
+            url: "dist/templates/system.tpl",
             async: false,
             success: function (data) {
-                $('#templates').append(data); 
+                $("#templates").append(data); 
             }
         });
         

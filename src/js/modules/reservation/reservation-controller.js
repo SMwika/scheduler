@@ -31,9 +31,9 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 				teacherList = new Mod.Views.TeacherList({
 					collection: data
 				});
-				teacherList.on("show", function() {
-					this.$el.before("Select a teacher: ");
-				});
+			teacherList.on("show", function() {
+				this.$el.before("Select a teacher: ");
+			});
 			// show view in teacher region
 			App.teacherRegion.show(teacherList);			
 		},
@@ -45,9 +45,9 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 				timeList = new Mod.Views.TimeList({
 					collection: data
 				});
-				timeList.on("show", function() {
-					this.$el.before("Select a time slot: ");
-				});
+			timeList.on("show", function() {
+				this.$el.before("Select a time slot: ");
+			});
 			// show view in time region
 			App.timeRegion.show(timeList);
 		},

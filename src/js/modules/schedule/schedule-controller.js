@@ -1,4 +1,4 @@
-ptc.module('Schedule', function(Mod, App, Backbone, Marionette, $, _){
+ptc.module("Schedule", function(Mod, App){
 
 	Mod.Controller = {
 		showSchedule: function() {

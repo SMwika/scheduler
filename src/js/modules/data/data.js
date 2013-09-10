@@ -1,6 +1,6 @@
 ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 	
-	// global config area to store 'session'-level data
+	// global config area to store "session"-level data
 	Mod.Config = {
 		loggedInUser: "",
 		students: [],
@@ -11,7 +11,7 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 	
 	App.on("user:message", function(message) {
 		var statustemplate = $("#loading").html();
-		$(".status-bar").append(_.template(statustemplate, {'message': message}));
+		$(".status-bar").append(_.template(statustemplate, {"message": message}));
 	});
 	
 	// data endpoints/requests
@@ -35,7 +35,8 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 			
 			var user = App.request("user:getloggedin");
 			$.when(user).done(function(userLogon) {
-			App.trigger("user:message", "get logged in user");
+				
+				App.trigger("user:message", "get logged in user");
 				
 				Mod.Config.loggedInUser = userLogon;
 				
@@ -71,5 +72,5 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 			});
 			return defer.promise();
 		}
-	}
+	};
 });
