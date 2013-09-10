@@ -25,10 +25,12 @@ module.exports = function(grunt) {
             'src/js/libs/backbone.js',
             'src/js/libs/marionette-1.0.4.js',
             'src/js/libs/jquery.SPServices-0.7.2.js',
+            'src/js/libs/moment.js',
 			
             'src/js/templates.js',
 			
             'src/js/app.js',
+            'src/js/app-config.js',
 			
             'src/js/modules/data/data.js',
 			        

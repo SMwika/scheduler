@@ -1,1 +1,1 @@
-{{ startTime }} - {{ endTime }}
+{{ startTime }}-{{ endTime }}

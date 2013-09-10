@@ -5,6 +5,11 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 			App.trigger("students:list");
 		},
 		
+		createReservation: function() {
+			var reservation = new Mod.Appt(Mod.NewReservation);
+			console.log(reservation);
+		},
+		
 		listStudents: function() {
 			var data = new Mod.StudentCollection(App.Data.Config.students),
 				studentList = new Mod.Views.StudentList({
@@ -55,7 +60,7 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 				},
 				submitFormClicked: function(e) {
 					e.preventDefault();
-					console.log(Mod.NewReservation);
+					App.trigger("reservation:create");
 				}
 			});
 			

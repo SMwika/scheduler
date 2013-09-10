@@ -123,7 +123,6 @@ ptc.module('Reservation.Views', function(Mod, App, Backbone, Marionette, $, _){
 			} else {
 				var startTime = $(e.target).find(":selected").data("start");
 				var endTime = $(e.target).find(":selected").data("end");
-				console.log(startTime, endTime);
 				App.Reservation.NewReservation.startTime = startTime;
 				App.Reservation.NewReservation.endTime = endTime;
 				

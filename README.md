@@ -1,7 +1,6 @@
 Parent-Teacher Conference Scheduler
 ===================================
-
-Scheduling solution for SharePoint Parent-Teacher Conferences. This application consists of two sets of requirements. Those for parents and those for teachers.
+This is a scheduling solution for Parent-Teacher Conferences. This application consists of two sets of requirements, those for parents and those for teachers. The app itself is meant to function inside of SharePoint, but the data connection points have been decoupled enough that it shouldn't matter what system is being used. However, the data must be retrieved in certain formats, or must be converted once in the app to be usable by the app.
 
 Parent Requirements
 -------------------

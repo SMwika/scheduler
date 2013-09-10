@@ -13,6 +13,9 @@ ptc.module('Reservation', function(Mod, App, Backbone, Marionette, $, _){
 	App.on("reservation:new", function() {
 		API.newReservation();
 	});
+	App.on("reservation:create", function() {
+		API.createReservation();
+	});
 	App.on("students:list", function() {
 		API.listStudents();
 	});
@@ -44,6 +47,9 @@ ptc.module('Reservation', function(Mod, App, Backbone, Marionette, $, _){
 		},
 		newReservation: function() {
 			Mod.Controller.startNewReservation();
+		},
+		createReservation: function() {
+			Mod.Controller.createReservation();
 		},
 		enableSubmit: function() {
 			Mod.Controller.enableSubmit();
