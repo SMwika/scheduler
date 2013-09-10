@@ -50,6 +50,19 @@ Managing the Schedule
 ---------------------
 A user's schedule shows all the reservations retrieved that match the familyCode of the user. This query is done server-side before reservations are brought in. They are filtered by Family Code and then brought in to the app as JSON-formatted data.
 
+When a user clicks **delete**, the model is destroyed. This is accomplished through Backbone's model.destroy() method. This removes it from SharePoint, and removes it from view once server-side removal is successful.
+
+When a user creates a new reservation, it is added to the schedule on the server, and also to the schedule view.
+
 Creating a new reservation
 --------------------------
-When a user logs into the app they are presented with a drop-down list of their students (if the user is a parent). When the user selects a student's name, they are presented with a drop-down menu of teachers of that student. When a teacher/conference is selected, the user is then presented with a list of available time slots as a drop-down menu. Selecting a time-slot enables the submit button. Each step of the way the reservation details are being saved to an object: *App.Reservation.NewReservation*
+When a user logs into the app they are presented with a drop-down list of their students (if the user is a parent). When the user selects a student's name, they are presented with a drop-down menu of teachers of that student. When a teacher/conference is selected, the user is then presented with a list of available time slots as a drop-down menu. Selecting a time-slot enables the submit button. Each step of the way the reservation details are being saved to an object: **App.Reservation.NewReservation**.
+
+Checking for duplication
+------------------------
+A big part of the scheduling application is to check for duplication. There are several different areas where duplication *can*, but *shouldn't*, occur.
+
+1. When selecting a time slot for a specific teacher, only the **available** time slots should be shown in the drop-down menu. Any time slots already reserved should not show in this menu.
+2. When reserving a time slot, the app should check to see if that time slot for that teacher is in fact still available. If it is not, the user should get an error saying it's not available, and that they should try another slot.
+3. When reserving a time slot, the app should check to see if that teacher and that student already have a reservation. If so, the user should be alerted that they have already created a reservation for this teacher for their student.
+4. When reserving a time slot, the app should check to see if there is already a time slot reserved for that familyCode. If there is, the user should be presented with a warning, but not prohibited from completing the reservation. There are cases where parents may "double book" themselves so one parent can visit one teacher, and the other parent can visit another, for example.

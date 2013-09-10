@@ -43,14 +43,11 @@ a:hover {
 }
 .status-bar li {
 	font-size:10px;
-	color:#666;
+	color:#bbb;
 	display:block;
 	padding:2px;
-	border-bottom:1px solid #ccc;
 }
-.status-bar li:last-child {
-	border-bottom:none;
-}
+
 /* New Reservation */
 ul.student-list {
 	padding:0px;
@@ -71,13 +68,15 @@ ul.student-list li a {
 }
 button#submitRes {
 	padding:8px;
-	border-radius:3px;
 	background:#005baa;
+	border:0px;
 	color:#fff;
-	font-size:1.2em;
+	font-size:1em;
 	cursor:pointer;
 }
-
+button#submitRes:hover {
+	background:#006dcc;
+}
 /* My Schedule */
 ul.appt-schedule {
 	list-style:none;
