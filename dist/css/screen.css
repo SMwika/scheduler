@@ -12,6 +12,10 @@ a {
 a:hover {
 	color:#b80000;
 }
+#wrapper {
+	width:90%;
+	margin:0 auto;
+}
 /* Regions */
 .region-wrap.half {
 	width:40%;
@@ -46,7 +50,7 @@ a:hover {
 }
 .status-bar li {
 	font-size:10px;
-	color:#bbb;
+	color:#666;
 	display:block;
 	padding:2px;
 }

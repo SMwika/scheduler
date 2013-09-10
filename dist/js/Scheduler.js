@@ -20847,17 +20847,17 @@ _.extend(Marionette.Module, {
 			"submitForm"
         ];
     
-    if ( $('body').data('env') === 'dev' ) {
+    if ( $("body").data("env") === "dev" ) {
         
         // Dev env, load all scripts
         z = rawTmpls.length;
         
         var appendTmpl = function (tmpl) {
             $.ajax({
-                url: 'src/templates/'+tmpl+'.tpl',
+                url: "src/templates/"+tmpl+".tpl",
                 async: false,
                 success: function (data) {
-                    $('#templates').append("<script type=\"text/template\" id=\""+tmpl+"\">"+data+"</script>"); 
+                    $("#templates").append("<script type=\"text/template\" id=\""+tmpl+"\">"+data+"</script>"); 
                 }
             });
         };
@@ -20871,10 +20871,10 @@ _.extend(Marionette.Module, {
         
         // Production, load compiled
         $.ajax({
-            url: 'dist/templates/system.tpl',
+            url: "dist/templates/system.tpl",
             async: false,
             success: function (data) {
-                $('#templates').append(data); 
+                $("#templates").append(data); 
             }
         });
         
@@ -20909,93 +20909,89 @@ ptc.on("initialize:after", function () {
 		ptc.trigger("reservation:new");
 	});
 });
-;ptc.module('Config', function(Mod, App, Backbone, Marionette, $, _){
+;ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 
 	// set these settings on a per-conference basis
-	Mod.Settings =  {
-		timeSlots: [
-			{
-				category: "ES",
-				duration: 30,		// conference duration in minutes
-				dates: [ 			// in 24hr Beijing time
-					{
-						startDateTime: "2013-10-21 12:00",
-						endDateTime: "2013-10-21 20:00"
-					},
-					{
-						startDateTime: "2013-10-22 08:00",
-						endDateTime: "2013-10-22 15:30"
-					}
-				]
-				
-			},
-			{
-				category: "MS",
-				duration: 15,		// conference duration in minutes
-				dates: [ 			// in 24hr Beijing time
-					{
-						startDateTime: "2013-10-21 12:00",
-						endDateTime: "2013-10-21 20:00"
-					},
-					{
-						startDateTime: "2013-10-22 08:00",
-						endDateTime: "2013-10-22 15:30"
-					}
-				]
-				
-			},
-			{
-				category: "HS",
-				duration: 10,		// conference duration in minutes
-				dates: [ 			// in 24hr Beijing time
-					{
-						startDateTime: "2013-10-21 12:00",
-						endDateTime: "2013-10-21 20:00"
-					},
-					{
-						startDateTime: "2013-10-22 08:00",
-						endDateTime: "2013-10-22 15:30"
-					}
-				]
-				
-			}
-		]
+	Mod.Settings = {
+		timeSlots: [{
+			category: "ES",
+			duration: 30, // conference duration in minutes
+			dates: [ // in 24hr Beijing time
+				{
+					startDateTime: "2013-10-21 12:00",
+					endDateTime: "2013-10-21 20:00"
+				}, {
+					startDateTime: "2013-10-22 08:00",
+					endDateTime: "2013-10-22 15:30"
+				}
+			]
+
+		}, {
+			category: "MS",
+			duration: 15, // conference duration in minutes
+			dates: [ // in 24hr Beijing time
+				{
+					startDateTime: "2013-10-21 12:00",
+					endDateTime: "2013-10-21 20:00"
+				}, {
+					startDateTime: "2013-10-22 08:00",
+					endDateTime: "2013-10-22 15:30"
+				}
+			]
+
+		}, {
+			category: "HS",
+			duration: 10, // conference duration in minutes
+			dates: [ // in 24hr Beijing time
+				{
+					startDateTime: "2013-10-21 12:00",
+					endDateTime: "2013-10-21 20:00"
+				}, {
+					startDateTime: "2013-10-22 08:00",
+					endDateTime: "2013-10-22 15:30"
+				}
+			]
+
+		}]
 	},
-		
+
 	// generated below
 	Mod.TimeSlots = [];
-	
-	App.on("times:generate", function() {
+
+	App.on("times:generate", function () {
 		API.generateTimeSlots();
 	});
-	App.reqres.setHandler("user:getloggedin", function() {
+	App.reqres.setHandler("user:getloggedin", function () {
 		return API.getLoggedInUser();
 	});
-	App.reqres.setHandler("user:getstudents", function(userLogon) {
+	App.reqres.setHandler("user:getstudents", function (userLogon) {
 		return API.getStudents(userLogon);
 	});
-	App.reqres.setHandler("student:getteachers", function(studentList) {
+	App.reqres.setHandler("student:getteachers", function (studentList) {
 		return API.getTeachers(studentList);
 	});
-	App.reqres.setHandler("teacher:gettimes", function(teacherList) {
+	App.reqres.setHandler("teacher:gettimes", function (teacherList) {
 		return API.getTimes(teacherList);
 	});
-	App.reqres.setHandler("schedule:getmy", function(familyCode) {
+	App.reqres.setHandler("schedule:getmy", function (familyCode) {
 		return API.getSchedule(familyCode);
-	});	
-	API = {
-		generateTimeSlots: function() {
+	});
+	
+	var API = {
+		generateTimeSlots: function () {
 			var i, j, k,
-				times = Mod.Settings.timeSlots, timesLength = times.length,
+				times = Mod.Settings.timeSlots,
+				timesLength = times.length,
 				appts = [];
-			for(i = 0; i < timesLength; i++) {
-				var dates = times[i].dates, datesLength = dates.length;
-				for(j = 0; j < datesLength; j++) {
+			for (i = 0; i < timesLength; i++) {
+				var dates = times[i].dates,
+					datesLength = dates.length;
+				for (j = 0; j < datesLength; j++) {
 					var start = moment.utc(dates[j].startDateTime, "YYYY-MM-DD HH:mm"),
 						end = moment.utc(dates[j].endDateTime, "YYYY-MM-DD HH:mm"),
-						diff = end.diff(start, 'm', true),
-						slotCount = diff/times[i].duration;
-					for(k = 0; k <= slotCount; k++) {
+						diff = end.diff(start, "m", true),
+						slotCount = diff / times[i].duration;
+					for (k = 0; k <= slotCount; k++) {
 						var minuteCount = times[i].duration * k,
 							newStart = moment(start).add(minuteCount, "m").format("ddd D MMM h:mm"),
 							newEnd = moment(start).add(minuteCount + times[i].duration, "m").format("h:mm a");
@@ -21010,72 +21006,100 @@ ptc.on("initialize:after", function () {
 			App.trigger("user:message", "generate time slots");
 			Mod.TimeSlots = appts;
 		},
-		getLoggedInUser: function() {
+		getLoggedInUser: function () {
 			var defer = $.Deferred();
 			// get user
 			var userLogon = {
 				username: "Mark.Tedder",
 				familyCode: "Ted234"
-			}
-			
+			};
+
 			defer.resolve(userLogon);
 			return defer.promise();
 		},
-		
-		getStudents: function(userLogon) {
+
+		getStudents: function (userLogon) {
 			// this should just get a list of all students of the user
 			// the list should be formatted as an array of objects
 			// each student should have an ID, name, and familyCode
 			var defer = $.Deferred(),
-				studentList = [
-					{studentID: "234258", fullName: "Ben Tedder", familyCode: "Ted234"},
-					{studentID: "23453258", fullName: "Daniel Tedder", familyCode: "Ted234"}
-				];
+				studentList = [{
+					studentID: "234258",
+					fullName: "Ben Tedder",
+					familyCode: "Ted234"
+				}, {
+					studentID: "23453258",
+					fullName: "Daniel Tedder",
+					familyCode: "Ted234"
+				}];
 			// get students of user	using SPServices and the user's LogonName		
 			// studentList = [{studentID: "234258", fullName: "Ben Tedder", familyCode: "Ted234"}, {studentID: "23453258", fullName: "Daniel Tedder", familyCode: "Ted234"}];
 			defer.resolve(studentList);
 			return defer.promise();
 		},
-		getSchedule: function(familyCode) {
+		getSchedule: function (familyCode) {
 			// this should just get a list of all students of the user
 			// the list should be formatted as an array of objects
 			// each student should have an ID, name, and familyCode
 			var defer = $.Deferred(),
-				schedule = [
-					{ID: "12", studentName: "Ben Tedder", teacherName: "Science", startTime: "2013-02-23", endTime: "2020-23-42", roomNumber: "2311"},
-					{ID: "23", studentName: "Daniel Tedder", teacherName: "Math", familyCode: "Math", startTime: "2013-02-23", endTime: "2020-23-42", roomNumber: "2311"}
-				];
+				schedule = [{
+					ID: "12",
+					studentName: "Ben Tedder",
+					teacherName: "Science",
+					startTime: "2013-02-23",
+					endTime: "2020-23-42",
+					roomNumber: "2311"
+				}, {
+					ID: "23",
+					studentName: "Daniel Tedder",
+					teacherName: "Math",
+					familyCode: "Math",
+					startTime: "2013-02-23",
+					endTime: "2020-23-42",
+					roomNumber: "2311"
+				}];
 			// get students of user	using SPServices and the user's LogonName		
 			// studentList = [{studentID: "234258", fullName: "Ben Tedder", familyCode: "Ted234"}, {studentID: "23453258", fullName: "Daniel Tedder", familyCode: "Ted234"}];
 			defer.resolve(schedule);
 			return defer.promise();
 		},
-		
-		getTeachers: function(studentList) {
+
+		getTeachers: function (studentList) {
 			var defer = $.Deferred(),
 				i,
 				counter = 0,
 				total = studentList.length,
-				teacherList = [
-					{studentID: '234258', teacherLogon: 'jim.stewart', teacherName:"Math", division: "HS"},
-					{studentID: '23453258', teacherLogon: 'james.dean', teacherName:"Science", division: "MS"},
-					{studentID: '234258', teacherLogon: 'james.dean', teacherName:"Science", division: "MS"}
-				];
-		
-				// iterate through each student
-				for(i = 0; i < total; i++) {
-					// with each iteration, iterate counter, so we can resolve once counter is done
-					counter++;
-					// SPServices query for teachers of studentList[i].studentID
-					// teacherList.push(['studentID', 'teacherLogon', 'teacherName']);
-					if(counter == total) {
-						defer.resolve(teacherList);
-					}
+				teacherList = [{
+					studentID: "234258",
+					teacherLogon: "jim.stewart",
+					teacherName: "Math",
+					division: "HS"
+				}, {
+					studentID: "23453258",
+					teacherLogon: "james.dean",
+					teacherName: "Science",
+					division: "MS"
+				}, {
+					studentID: "234258",
+					teacherLogon: "james.dean",
+					teacherName: "Science",
+					division: "MS"
+				}];
+
+			// iterate through each student
+			for (i = 0; i < total; i++) {
+				// with each iteration, iterate counter, so we can resolve once counter is done
+				counter++;
+				// SPServices query for teachers of studentList[i].studentID
+				// teacherList.push(["studentID", "teacherLogon", "teacherName"]);
+				if (counter == total) {
+					defer.resolve(teacherList);
 				}
+			}
 			return defer.promise();
 		},
-		
-		getTimes: function(teacherList) {
+
+		getTimes: function (teacherList) {
 			var defer = $.Deferred(),
 				i, j,
 				counter = 0,
@@ -21083,12 +21107,12 @@ ptc.on("initialize:after", function () {
 				total = list.length,
 				timeList = [],
 				appts = App.Config.TimeSlots;
-				
+
 			// iterate through each teacher
-			for(i = 0; i < total; i++) {
+			for (i = 0; i < total; i++) {
 				// then iterate through all time slots
-				for(j = 0; j < appts.length; j++) {
-					if(appts[j].category === list[i].division) {
+				for (j = 0; j < appts.length; j++) {
+					if (appts[j].category === list[i].division) {
 						timeList.push({
 							teacherLogon: list[i].teacherLogon,
 							startTime: appts[j].startTime,
@@ -21098,20 +21122,20 @@ ptc.on("initialize:after", function () {
 				}
 				// with each iteration, iterate counter, so we can resolve once counter is done
 				counter++;
-				
+
 				// SPServices query for times of teacherList[i].teacherLogon
-				// timeList.push(['teacherLogon', 'startTime', 'endTime']);
-				if(counter == total) {
+				// timeList.push(["teacherLogon", "startTime", "endTime"]);
+				if (counter == total) {
 					defer.resolve(timeList);
 				}
 			}
 			return defer.promise();
 		}
-	}
+	};
 
 });;ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 	
-	// global config area to store 'session'-level data
+	// global config area to store "session"-level data
 	Mod.Config = {
 		loggedInUser: "",
 		students: [],
@@ -21122,7 +21146,7 @@ ptc.on("initialize:after", function () {
 	
 	App.on("user:message", function(message) {
 		var statustemplate = $("#loading").html();
-		$(".status-bar").append(_.template(statustemplate, {'message': message}));
+		$(".status-bar").append(_.template(statustemplate, {"message": message}));
 	});
 	
 	// data endpoints/requests
@@ -21146,7 +21170,8 @@ ptc.on("initialize:after", function () {
 			
 			var user = App.request("user:getloggedin");
 			$.when(user).done(function(userLogon) {
-			App.trigger("user:message", "get logged in user");
+				
+				App.trigger("user:message", "get logged in user");
 				
 				Mod.Config.loggedInUser = userLogon;
 				
@@ -21182,18 +21207,18 @@ ptc.on("initialize:after", function () {
 			});
 			return defer.promise();
 		}
-	}
-});;ptc.module('Reservation', function(Mod, App, Backbone, Marionette, $, _){
+	};
+});;ptc.module("Reservation", function(Mod, App){
 	
 	Mod.NewReservation = {
-		studentID: '',
-		studentName: '',
-		teacherName: '',
-		teacherLogon: '',
-		startTime: '',
-		endTime: '',
-		familyCode: ''
-	}
+		studentID: "",
+		studentName: "",
+		teacherName: "",
+		teacherLogon: "",
+		startTime: "",
+		endTime: "",
+		familyCode: ""
+	};
 	
 	App.on("reservation:new", function() {
 		API.newReservation();
@@ -21274,9 +21299,9 @@ ptc.on("initialize:after", function () {
 				teacherList = new Mod.Views.TeacherList({
 					collection: data
 				});
-				teacherList.on("show", function() {
-					this.$el.before("Select a teacher: ");
-				});
+			teacherList.on("show", function() {
+				this.$el.before("Select a teacher: ");
+			});
 			// show view in teacher region
 			App.teacherRegion.show(teacherList);			
 		},
@@ -21288,9 +21313,9 @@ ptc.on("initialize:after", function () {
 				timeList = new Mod.Views.TimeList({
 					collection: data
 				});
-				timeList.on("show", function() {
-					this.$el.before("Select a time slot: ");
-				});
+			timeList.on("show", function() {
+				this.$el.before("Select a time slot: ");
+			});
 			// show view in time region
 			App.timeRegion.show(timeList);
 		},
@@ -21318,13 +21343,13 @@ ptc.on("initialize:after", function () {
 	// Appointment Model and Collection ************************************
 	Mod.Appt = Backbone.Model.extend({
 		defaults: {
-			studentID: '',
-			studentName: '',
-			teacherName: '',
-			teacherLogon: '',
-			startTime: '',
-			endTime: '',
-			familyCode: ''
+			studentID: "",
+			studentName: "",
+			teacherName: "",
+			teacherLogon: "",
+			startTime: "",
+			endTime: "",
+			familyCode: ""
 		}
 	});
 	
@@ -21371,7 +21396,7 @@ ptc.on("initialize:after", function () {
 		model: Mod.Time
 	});
 
-});;ptc.module('Reservation.Views', function(Mod, App, Backbone, Marionette, $, _){
+});;ptc.module('Reservation.Views', function(Mod, App, Backbone, Marionette, $){
 	
 	Mod.Layout = Marionette.Layout.extend({
 		template: "#reservationLayout",
@@ -21504,7 +21529,7 @@ ptc.on("initialize:after", function () {
 		}
 		
 	});	
-});;ptc.module('Schedule', function(Mod, App, Backbone, Marionette, $, _){
+});;ptc.module("Schedule", function(Mod, App){
 
 	App.on("schedule:listAppts", function() {
 		API.showSchedule();
@@ -21523,7 +21548,7 @@ ptc.on("initialize:after", function () {
 		}
 	};
 	
-});;ptc.module('Schedule', function(Mod, App, Backbone, Marionette, $, _){
+});;ptc.module("Schedule", function(Mod, App){
 
 	Mod.Controller = {
 		showSchedule: function() {
@@ -21551,10 +21576,10 @@ ptc.on("initialize:after", function () {
 	// Model and Collection **********************************************
 	Mod.Appt = Backbone.Model.extend({
 		defaults: {
-			studentName: '',
-			teacher: '',
-			time: '',
-			room: ''
+			studentName: "",
+			teacher: "",
+			time: "",
+			room: ""
 		}
 	});
 	
@@ -21562,7 +21587,7 @@ ptc.on("initialize:after", function () {
 		model: Mod.Appt
 	});
 
-});;ptc.module('Schedule.View', function(Mod, App, Backbone, Marionette, $, _){
+});;ptc.module("Schedule.View", function(Mod, App, Backbone, Marionette){
 	
 	Mod.ApptItem = Marionette.ItemView.extend({
 		tagName: "li",
