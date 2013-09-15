@@ -2,55 +2,51 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 
 	// set these settings on a per-conference basis
 	Mod.Settings = {
-		timeSlots: [
-			{
-				category: "ES",
-				duration: 20, // conference duration in minutes
-				padding:10, // minutes after a conference where no bookings can be made
-				dates: [ // in 24hr Beijing time
-					{
-						startDateTime: "2013-10-21 12:00",
-						endDateTime: "2013-10-21 20:00"
-					},
-					{
-						startDateTime: "2013-10-22 08:00",
-						endDateTime: "2013-10-22 15:30"
-					}
-				]
+		timeSlots: [{
+			category: "ES",
+			duration: 20, // conference duration in minutes
+			padding:10, // minutes after a conference where no bookings can be made
+			dates: [ // in 24hr Beijing time
+				{
+					startDateTime: "2013-10-21 12:00",
+					endDateTime: "2013-10-21 20:00"
+				},
+				{
+					startDateTime: "2013-10-22 08:00",
+					endDateTime: "2013-10-22 15:30"
+				}
+			]
 
-			},
-			{
-				category: "MS",
-				duration: 15, // conference duration in minutes
-				padding: 0, // minutes after a conference where no bookings can be made
-				dates: [ // in 24hr Beijing time
-					{
-						startDateTime: "2013-10-21 12:00",
-						endDateTime: "2013-10-21 20:00"
-					},
-					{
-						startDateTime: "2013-10-22 08:00",
-						endDateTime: "2013-10-22 15:30"
-					}
-				]
+		}, {
+			category: "MS",
+			duration: 15, // conference duration in minutes
+			padding: 0, // minutes after a conference where no bookings can be made
+			dates: [ // in 24hr Beijing time
+				{
+					startDateTime: "2013-10-21 12:00",
+					endDateTime: "2013-10-21 20:00"
+				},
+				{
+					startDateTime: "2013-10-22 08:00",
+					endDateTime: "2013-10-22 15:30"
+				}
+			]
 
-			},
-			{
-				category: "HS",
-				duration: 10, // conference duration in minutes
-				padding: 0, // minutes after a conference where no bookings can be made
-				dates: [ // in 24hr Beijing time
-					{
-						startDateTime: "2013-10-21 12:00",
-						endDateTime: "2013-10-21 20:00"
-					}, {
-						startDateTime: "2013-10-22 08:00",
-						endDateTime: "2013-10-22 15:30"
-					}
-				]
+		}, {
+			category: "HS",
+			duration: 10, // conference duration in minutes
+			padding: 0, // minutes after a conference where no bookings can be made
+			dates: [ // in 24hr Beijing time
+				{
+					startDateTime: "2013-10-21 12:00",
+					endDateTime: "2013-10-21 20:00"
+				}, {
+					startDateTime: "2013-10-22 08:00",
+					endDateTime: "2013-10-22 15:30"
+				}
+			]
 
-			}
-		]
+		}]
 	},
 
 	// generated below
@@ -114,37 +110,49 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 			App.trigger("user:message", "generate time slots");
 			Mod.TimeSlots = appts;
 		},
+		
 		getLoggedInUser: function () {
 			var defer = $.Deferred();
-			// get user
-			var userLogon = {
-				username: "Mark.Tedder",
-				familyCode: "Ted234"
-			};
 
-			defer.resolve(userLogon);
+			var parentLogon = $().SPServices.SPGetCurrentUser({
+				fieldName: "Name",
+		 		debug: false,
+				async: true
+			});
+			parentLogon = parentLogon.split("\\")[1];
+
+			parentLogon = "AbdoElian.Kardous"; // for testing
+			
+			defer.resolve(parentLogon);
+
 			return defer.promise();
 		},
-
+		
 		getStudents: function (userLogon) {
 			// this should just get a list of all students of the user
 			// the list should be formatted as an array of objects
 			// each student should have an ID, name, and familyCode
 			var defer = $.Deferred(),
-				studentList = [{
-					studentID: "234258",
-					fullName: "Ben Tedder",
-					familyCode: "Ted234"
-				}, {
-					studentID: "23453258",
-					fullName: "Daniel Tedder",
-					familyCode: "Ted234"
-				}];
-			// get students of user	using SPServices and the user's LogonName		
-			// studentList = [{studentID: "234258", fullName: "Ben Tedder", familyCode: "Ted234"}, {studentID: "23453258", fullName: "Daniel Tedder", familyCode: "Ted234"}];
-			defer.resolve(studentList);
+				familyJSON;
+				
+				$().SPServices({
+					operation: "GetListItems",
+					webURL: "https://g.isb.bj.edu.cn/my",
+					async:true,
+					listName: "FamilyInfo",
+					CAMLQuery:"<Query><Where><Eq><FieldRef Name='ParentLogonName' /><Value Type='Text'>" + userLogon + "</Value></Eq></Where></Query>",
+					completefunc: function (xData, Status) {
+						familyJSON = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+							includeAllAttrs: true,
+							removeOws: true
+						});
+						defer.resolve(familyJSON);
+					}
+				});
+				
 			return defer.promise();
 		},
+		
 		getSchedule: function (familyCode) {
 			// this should just get a list of all students of the user
 			// the list should be formatted as an array of objects
@@ -156,7 +164,8 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 					teacherName: "Science",
 					startTime: "2013-02-23",
 					endTime: "2020-23-42",
-					roomNumber: "2311"
+					roomNumber: "2311",
+					teacherLogon: "jim.dean"
 				}, {
 					ID: "23",
 					studentName: "Daniel Tedder",
@@ -164,10 +173,10 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 					familyCode: "Math",
 					startTime: "2013-02-23",
 					endTime: "2020-23-42",
-					roomNumber: "2311"
+					roomNumber: "2311",
+					teacherLogon: "jim.dean"
 				}];
-			// get students of user	using SPServices and the user's LogonName		
-			// studentList = [{studentID: "234258", fullName: "Ben Tedder", familyCode: "Ted234"}, {studentID: "23453258", fullName: "Daniel Tedder", familyCode: "Ted234"}];
+
 			defer.resolve(schedule);
 			return defer.promise();
 		},

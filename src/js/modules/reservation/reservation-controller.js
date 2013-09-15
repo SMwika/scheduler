@@ -14,7 +14,7 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 				studentList = new Mod.Views.StudentList({
 					collection: data
 				});
-			Mod.NewReservation.familyCode = App.Data.Config.loggedInUser.familyCode;
+			Mod.NewReservation.familyCode = App.Data.Config.students[0].FamilyCode;
 			
 			studentList.on("show", function() {
 				this.$el.before("Select a student: ");

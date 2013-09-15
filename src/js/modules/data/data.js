@@ -39,19 +39,20 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 				App.trigger("user:message", "get logged in user");
 				
 				Mod.Config.loggedInUser = userLogon;
-				
-				var schedule = App.request("schedule:getmy", userLogon.familyCode);
-				
-				$.when(schedule).done(function(scheduleList) {
-					App.trigger("user:message", "get schedule");
-					Mod.Config.schedule = scheduleList;
-				});
 
-				var students = App.request("user:getstudents", userLogon.familyCode);
+				var students = App.request("user:getstudents", userLogon);
 				$.when(students).done(function(studentList) {
 					App.trigger("user:message", "get students");
 					
 					Mod.Config.students = studentList;
+					
+					var schedule = App.request("schedule:getmy", Mod.Config.students[0].FamilyCode);
+
+					$.when(schedule).done(function(scheduleList) {
+						App.trigger("user:message", "get schedule");
+						Mod.Config.schedule = scheduleList;
+					});
+					
 					
 					var teachers = App.request("student:getteachers", studentList);
 					$.when(teachers).done(function(teacherList) {

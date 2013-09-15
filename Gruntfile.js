@@ -45,7 +45,7 @@ module.exports = function(grunt) {
             'src/js/modules/schedule/schedule-views.js',
 			
             'src/js/app.start.js'
-            ],
+        ],
         dest: 'dist/js/<%= pkg.name %>.js'
       },
       css: {
