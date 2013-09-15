@@ -69,3 +69,5 @@ A big part of the scheduling application is to check for duplication. There are 
 Modifying the App
 -----------------
 This app has been built to be as flexible as possible. As such, the **app-config.js** file *should* be all you need to edit. This allows the admin to put the different types of dates and classifications of conferences in. Then the app itself generates the times. Also, this file has all of the database calls (SharePoint in this case).
+
+When configuring the times for conferences, simply create a start and end date/time for each day of conferences. The time must be in Beijing (local) time, and be in 24hr time format. Each day should be a new object in the array of dates for each category. In this case, each division should exist as a category. Each category can have multiple dates, and the time slot length can be dictated here. There is also a "padding" feature that allows for gap time between each conference session.

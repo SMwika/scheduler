@@ -20922,7 +20922,8 @@ ptc.on("initialize:after", function () {
 					{
 						startDateTime: "2013-10-21 12:00",
 						endDateTime: "2013-10-21 20:00"
-					}, {
+					},
+					{
 						startDateTime: "2013-10-22 08:00",
 						endDateTime: "2013-10-22 15:30"
 					}
@@ -20937,7 +20938,8 @@ ptc.on("initialize:after", function () {
 					{
 						startDateTime: "2013-10-21 12:00",
 						endDateTime: "2013-10-21 20:00"
-					}, {
+					},
+					{
 						startDateTime: "2013-10-22 08:00",
 						endDateTime: "2013-10-22 15:30"
 					}
