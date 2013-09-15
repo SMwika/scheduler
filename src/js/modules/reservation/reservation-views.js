@@ -100,9 +100,10 @@ ptc.module('Reservation.Views', function(Mod, App, Backbone, Marionette, $){
 		template: "#singleTimeSlot",
 		
 		onRender: function() {
+			// set data att
 			$(this.el)
-				.attr("data-start", this.model.get("startTime"))
-				.attr("data-end", this.model.get("endTime"));
+				.attr("data-start", this.model.get("unixStart"))
+				.attr("data-end", this.model.get("unixEnd"));
 		}
 
 	});

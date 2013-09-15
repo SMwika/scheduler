@@ -1,5 +1,5 @@
 /*!
- scheduler Build version 0.0.1, 09-10-2013
+ scheduler Build version 0.0.1, 09-15-2013
 */
 /*!
  * jQuery JavaScript Library v1.9.0
@@ -20913,46 +20913,53 @@ ptc.on("initialize:after", function () {
 
 	// set these settings on a per-conference basis
 	Mod.Settings = {
-		timeSlots: [{
-			category: "ES",
-			duration: 30, // conference duration in minutes
-			dates: [ // in 24hr Beijing time
-				{
-					startDateTime: "2013-10-21 12:00",
-					endDateTime: "2013-10-21 20:00"
-				}, {
-					startDateTime: "2013-10-22 08:00",
-					endDateTime: "2013-10-22 15:30"
-				}
-			]
+		timeSlots: [
+			{
+				category: "ES",
+				duration: 20, // conference duration in minutes
+				padding:10, // minutes after a conference where no bookings can be made
+				dates: [ // in 24hr Beijing time
+					{
+						startDateTime: "2013-10-21 12:00",
+						endDateTime: "2013-10-21 20:00"
+					}, {
+						startDateTime: "2013-10-22 08:00",
+						endDateTime: "2013-10-22 15:30"
+					}
+				]
 
-		}, {
-			category: "MS",
-			duration: 15, // conference duration in minutes
-			dates: [ // in 24hr Beijing time
-				{
-					startDateTime: "2013-10-21 12:00",
-					endDateTime: "2013-10-21 20:00"
-				}, {
-					startDateTime: "2013-10-22 08:00",
-					endDateTime: "2013-10-22 15:30"
-				}
-			]
+			},
+			{
+				category: "MS",
+				duration: 15, // conference duration in minutes
+				padding: 0, // minutes after a conference where no bookings can be made
+				dates: [ // in 24hr Beijing time
+					{
+						startDateTime: "2013-10-21 12:00",
+						endDateTime: "2013-10-21 20:00"
+					}, {
+						startDateTime: "2013-10-22 08:00",
+						endDateTime: "2013-10-22 15:30"
+					}
+				]
 
-		}, {
-			category: "HS",
-			duration: 10, // conference duration in minutes
-			dates: [ // in 24hr Beijing time
-				{
-					startDateTime: "2013-10-21 12:00",
-					endDateTime: "2013-10-21 20:00"
-				}, {
-					startDateTime: "2013-10-22 08:00",
-					endDateTime: "2013-10-22 15:30"
-				}
-			]
+			},
+			{
+				category: "HS",
+				duration: 10, // conference duration in minutes
+				padding: 0, // minutes after a conference where no bookings can be made
+				dates: [ // in 24hr Beijing time
+					{
+						startDateTime: "2013-10-21 12:00",
+						endDateTime: "2013-10-21 20:00"
+					}, {
+						startDateTime: "2013-10-22 08:00",
+						endDateTime: "2013-10-22 15:30"
+					}
+				]
 
-		}]
+			}
+		]
 	},
 
 	// generated below
@@ -20992,14 +20999,24 @@ ptc.on("initialize:after", function () {
 						diff = end.diff(start, "m", true),
 						slotCount = diff / times[i].duration;
 					for (k = 0; k <= slotCount; k++) {
-						var minuteCount = times[i].duration * k,
-							newStart = moment(start).add(minuteCount, "m").format("ddd D MMM h:mm"),
-							newEnd = moment(start).add(minuteCount + times[i].duration, "m").format("h:mm a");
+						var minuteCount = (times[i].duration + times[i].padding) * k,
+							newStart = moment(start).add(minuteCount, "m"),
+							newEnd = moment(start).add(minuteCount + times[i].duration, "m"),
+							
+							niceStart = newStart.format("ddd D MMM h:mm"),
+							unixStart = newStart.format("X"),
+							
+							niceEnd = newEnd.format("h:mm a"),
+							unixEnd = newEnd.format("X");
+		
 						appts.push({
 							category: times[i].category,
-							startTime: newStart,
-							endTime: newEnd,
+							startTime: niceStart,
+							endTime: niceEnd,
+							unixStart: unixStart,
+							unixEnd: unixEnd
 						});
+						
 					}
 				}
 			}
@@ -21107,7 +21124,6 @@ ptc.on("initialize:after", function () {
 				total = list.length,
 				timeList = [],
 				appts = App.Config.TimeSlots;
-
 			// iterate through each teacher
 			for (i = 0; i < total; i++) {
 				// then iterate through all time slots
@@ -21116,7 +21132,9 @@ ptc.on("initialize:after", function () {
 						timeList.push({
 							teacherLogon: list[i].teacherLogon,
 							startTime: appts[j].startTime,
-							endTime: appts[j].endTime
+							endTime: appts[j].endTime,
+							unixStart: appts[j].unixStart,
+							unixEnd: appts[j].unixEnd
 						});
 					}
 				}
@@ -21275,7 +21293,6 @@ ptc.on("initialize:after", function () {
 		
 		createReservation: function() {
 			var reservation = new Mod.Appt(Mod.NewReservation);
-			console.log(reservation);
 		},
 		
 		listStudents: function() {
@@ -21498,9 +21515,10 @@ ptc.on("initialize:after", function () {
 		template: "#singleTimeSlot",
 		
 		onRender: function() {
+			// set data att
 			$(this.el)
-				.attr("data-start", this.model.get("startTime"))
-				.attr("data-end", this.model.get("endTime"));
+				.attr("data-start", this.model.get("unixStart"))
+				.attr("data-end", this.model.get("unixEnd"));
 		}
 
 	});

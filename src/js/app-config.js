@@ -2,46 +2,53 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 
 	// set these settings on a per-conference basis
 	Mod.Settings = {
-		timeSlots: [{
-			category: "ES",
-			duration: 30, // conference duration in minutes
-			dates: [ // in 24hr Beijing time
-				{
-					startDateTime: "2013-10-21 12:00",
-					endDateTime: "2013-10-21 20:00"
-				}, {
-					startDateTime: "2013-10-22 08:00",
-					endDateTime: "2013-10-22 15:30"
-				}
-			]
+		timeSlots: [
+			{
+				category: "ES",
+				duration: 20, // conference duration in minutes
+				padding:10, // minutes after a conference where no bookings can be made
+				dates: [ // in 24hr Beijing time
+					{
+						startDateTime: "2013-10-21 12:00",
+						endDateTime: "2013-10-21 20:00"
+					}, {
+						startDateTime: "2013-10-22 08:00",
+						endDateTime: "2013-10-22 15:30"
+					}
+				]
 
-		}, {
-			category: "MS",
-			duration: 15, // conference duration in minutes
-			dates: [ // in 24hr Beijing time
-				{
-					startDateTime: "2013-10-21 12:00",
-					endDateTime: "2013-10-21 20:00"
-				}, {
-					startDateTime: "2013-10-22 08:00",
-					endDateTime: "2013-10-22 15:30"
-				}
-			]
+			},
+			{
+				category: "MS",
+				duration: 15, // conference duration in minutes
+				padding: 0, // minutes after a conference where no bookings can be made
+				dates: [ // in 24hr Beijing time
+					{
+						startDateTime: "2013-10-21 12:00",
+						endDateTime: "2013-10-21 20:00"
+					}, {
+						startDateTime: "2013-10-22 08:00",
+						endDateTime: "2013-10-22 15:30"
+					}
+				]
 
-		}, {
-			category: "HS",
-			duration: 10, // conference duration in minutes
-			dates: [ // in 24hr Beijing time
-				{
-					startDateTime: "2013-10-21 12:00",
-					endDateTime: "2013-10-21 20:00"
-				}, {
-					startDateTime: "2013-10-22 08:00",
-					endDateTime: "2013-10-22 15:30"
-				}
-			]
+			},
+			{
+				category: "HS",
+				duration: 10, // conference duration in minutes
+				padding: 0, // minutes after a conference where no bookings can be made
+				dates: [ // in 24hr Beijing time
+					{
+						startDateTime: "2013-10-21 12:00",
+						endDateTime: "2013-10-21 20:00"
+					}, {
+						startDateTime: "2013-10-22 08:00",
+						endDateTime: "2013-10-22 15:30"
+					}
+				]
 
-		}]
+			}
+		]
 	},
 
 	// generated below
@@ -81,14 +88,24 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 						diff = end.diff(start, "m", true),
 						slotCount = diff / times[i].duration;
 					for (k = 0; k <= slotCount; k++) {
-						var minuteCount = times[i].duration * k,
-							newStart = moment(start).add(minuteCount, "m").format("ddd D MMM h:mm"),
-							newEnd = moment(start).add(minuteCount + times[i].duration, "m").format("h:mm a");
+						var minuteCount = (times[i].duration + times[i].padding) * k,
+							newStart = moment(start).add(minuteCount, "m"),
+							newEnd = moment(start).add(minuteCount + times[i].duration, "m"),
+							
+							niceStart = newStart.format("ddd D MMM h:mm"),
+							unixStart = newStart.format("X"),
+							
+							niceEnd = newEnd.format("h:mm a"),
+							unixEnd = newEnd.format("X");
+		
 						appts.push({
 							category: times[i].category,
-							startTime: newStart,
-							endTime: newEnd,
+							startTime: niceStart,
+							endTime: niceEnd,
+							unixStart: unixStart,
+							unixEnd: unixEnd
 						});
+						
 					}
 				}
 			}
@@ -196,7 +213,6 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 				total = list.length,
 				timeList = [],
 				appts = App.Config.TimeSlots;
-
 			// iterate through each teacher
 			for (i = 0; i < total; i++) {
 				// then iterate through all time slots
@@ -205,7 +221,9 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 						timeList.push({
 							teacherLogon: list[i].teacherLogon,
 							startTime: appts[j].startTime,
-							endTime: appts[j].endTime
+							endTime: appts[j].endTime,
+							unixStart: appts[j].unixStart,
+							unixEnd: appts[j].unixEnd
 						});
 					}
 				}

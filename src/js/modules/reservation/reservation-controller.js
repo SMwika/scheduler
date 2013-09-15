@@ -7,7 +7,6 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 		
 		createReservation: function() {
 			var reservation = new Mod.Appt(Mod.NewReservation);
-			console.log(reservation);
 		},
 		
 		listStudents: function() {
