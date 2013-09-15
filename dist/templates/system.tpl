@@ -13,7 +13,7 @@
 
 <!-- singleStudent -->
 <script id="singleStudent" type="text/template">
-{{ fullName }}
+{{ StudentFullName }}
 </script>
 
 <!-- singleTeacher -->

@@ -25,8 +25,8 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 		template: "#singleStudent",
 		onRender: function() {
 			$(this.el)
-				.attr("data-studentid", "ID" + this.model.get("studentID"))
-				.attr("data-fullname", this.model.get("fullName"));
+				.attr("data-studentid", "ID" + this.model.get("StudentID"))
+				.attr("data-fullname", this.model.get("StudentFullName"));
 		}
 
 	});

@@ -19,7 +19,7 @@ module.exports = function(grunt) {
       },
       scheduler: {
         src: [
-            'src/js/libs/jquery-1.9.0.js',
+            'src/js/libs/jquery-1.8.3.js',
             'src/js/libs/json2.js',
             'src/js/libs/underscore.js',
             'src/js/libs/backbone.js',
@@ -33,6 +33,7 @@ module.exports = function(grunt) {
             'src/js/app-config.js',
 			
             'src/js/modules/data/data.js',
+            'src/js/modules/data/data-requests.js',
 			        
     		'src/js/modules/reservation/reservation.js',
             'src/js/modules/reservation/reservation-controller.js',
