@@ -8,7 +8,14 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 			listName: "FamilyInfo"
 		},
 		studentTeacherList: {
-			// put connection info here
+			// used to get list of teachers of studentids
+			webURL: "https://g.isb.bj.edu.cn/test/conferencing/",
+			listName: "StudentTeachers"
+		},
+		conferenceList: {
+			// used to get list of conferences
+			webURL: "https://g.isb.bj.edu.cn/test/conferencing/",
+			listName: "ConferenceList"
 		},
 		timeSlots: [{
 			category: "ES",

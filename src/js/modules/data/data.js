@@ -59,15 +59,23 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 						App.trigger("user:message", "get teachers");
 					
 						Mod.Config.teachers = teacherList;
+						console.log(Mod.Config.teachers.length);
+						var conferences = App.request("teacher:getconferences", Mod.Config.teachers);
+						$.when(conferences).done(function(conferenceList) {
+							App.trigger("user:message", "get conference details");
 
-						var times = App.request("teacher:gettimes", teacherList);
-						$.when(times).done(function(timeList) {
-							App.trigger("user:message", "get available time slots");
+							Mod.Config.conferences = conferenceList;
 							
-							Mod.Config.times = timeList;
-							
-							defer.resolve();
+							var times = App.request("teacher:gettimes", conferenceList);
+							$.when(times).done(function(timeList) {
+								App.trigger("user:message", "get available time slots");
+								
+								Mod.Config.times = timeList;
+								
+								defer.resolve();
+							});
 						});
+
 					});
 				});
 			});

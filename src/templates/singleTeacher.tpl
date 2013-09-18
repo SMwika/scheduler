@@ -1,1 +1,1 @@
-{{ teacherName }}
+{{ conferenceName }}

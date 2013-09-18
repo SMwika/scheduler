@@ -15,8 +15,11 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 	App.reqres.setHandler("student:getteachers", function (studentList) {
 		return API.getTeachers(studentList);
 	});
-	App.reqres.setHandler("teacher:gettimes", function (teacherList) {
-		return API.getTimes(teacherList);
+	App.reqres.setHandler("teacher:gettimes", function (conferenceList) {
+		return API.getTimes(conferenceList);
+	});
+	App.reqres.setHandler("teacher:getconferences", function (teacherList) {
+		return API.getConferences(teacherList);
 	});
 	App.reqres.setHandler("schedule:getmy", function (familyCode) {
 		return API.getSchedule(familyCode);
@@ -136,41 +139,101 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 				i,
 				counter = 0,
 				total = studentList.length,
-				teacherList = [{
+				teacherList = [];
+				
+				/*[{
 					studentID: "234258",
 					teacherLogon: "jim.stewart",
 					teacherName: "Math",
 					division: "HS"
-				}, {
-					studentID: "23453258",
-					teacherLogon: "james.dean",
-					teacherName: "Science",
-					division: "MS"
-				}, {
-					studentID: "234258",
-					teacherLogon: "james.dean",
-					teacherName: "Science",
-					division: "MS"
-				}];
-
+				}]; */
+				
 			// iterate through each student
 			for (i = 0; i < total; i++) {
-				// with each iteration, iterate counter, so we can resolve once counter is done
-				counter++;
-				// SPServices query for teachers of studentList[i].studentID
-				// teacherList.push(["studentID", "teacherLogon", "teacherName"]);
-				if (counter == total) {
-					defer.resolve(teacherList);
-				}
+				var studentid = studentList[i].StudentID;
+				$().SPServices({
+					operation: "GetListItems",
+					webURL: App.Config.Settings.studentTeacherList.webURL,
+					async:true,
+					listName: App.Config.Settings.studentTeacherList.listName,
+					CAMLQuery:"<Query><Where><Eq><FieldRef Name='StudentID' /><Value Type='Text'>" + studentid + "</Value></Eq></Where></Query>",
+					completefunc: function (xData, Status) {
+						var teacherArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+							includeAllAttrs: true,
+							removeOws: true
+						});
+						
+						if(teacherArray[0]) {
+							var newTeacherArray = teacherArray[0].Teachers.split(",");
+							for(var j = 0; j < newTeacherArray.length; j++) {
+								teacherList.push({
+									studentID: teacherArray[0].StudentID,
+									teacherLogon: newTeacherArray[j]
+								});				
+							}
+
+						}
+
+						// with each iteration, iterate counter, so we can resolve once counter is done
+						counter++;
+
+						// SPServices query for teachers of studentList[i].studentID
+						// teacherList.push(["studentID", "teacherLogon", "teacherName"]);
+						if (counter == total-1) {
+							defer.resolve(teacherList);
+						}					
+					}
+				});
 			}
 			return defer.promise();
 		},
+		
+		getConferences: function(teacherList) {
+			var defer = $.Deferred(),
+				i, list = teacherList, listLength = list.length,
+				counter = 0, conferenceList = [];
+				console.log(listLength);
+			// for each teacher that we have
+			for(i = 0; i < listLength; i++) {
+				var x = list[i].studentID;
+				console.log(counter);
+				$().SPServices({
+					operation: "GetListItems",
+					webURL: App.Config.Settings.conferenceList.webURL,
+					async:true,
+					listName: App.Config.Settings.conferenceList.listName,
+					CAMLQuery:"<Query><Where><Eq><FieldRef Name='TeacherLogon' /><Value Type='Text'>" + list[i].teacherLogon + "</Value></Eq></Where></Query>",
+					completefunc: function (xData, Status) {
+						var conferenceArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+							includeAllAttrs: true,
+							removeOws: true
+						});
+						counter = counter+1;
+						if(conferenceArray[0]) {
+							conferenceList.push({
+								conferenceName: conferenceArray[0].Title,
+								studentID: x,
+								division: conferenceArray[0].Division,
+								room: conferenceArray[0].Room,
+								teacherLogon: conferenceArray[0].TeacherLogon
+							});
+						}
+						
 
-		getTimes: function (teacherList) {
+						if (counter == listLength) {
+							defer.resolve(conferenceList);
+						}	
+					}
+				});
+			}
+			return defer.promise();
+		},
+		
+		getTimes: function (conferenceList) {
 			var defer = $.Deferred(),
 				i, j,
 				counter = 0,
-				list = teacherList,
+				list = conferenceList,
 				total = list.length,
 				timeList = [],
 				appts = Mod.TimeSlots;
