@@ -24,17 +24,26 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 		},
 		
 		listTeachers: function(studentID) {
-			var teacherArray = App.Data.Config.conferences,
-				filtered = _.where(teacherArray, {studentID: studentID}),
-				data = new Mod.TeacherCollection(filtered),
+			// first, get teacherids of current student
+			var teacherids = _.pluck(_.where(App.Data.Config.teachers, {studentID: studentID}), "teacherLogon"),
+				teacherData = [], i;
+			for(i = 0; i < teacherids.length; i++) {
+				var x = _.findWhere(App.Data.Config.conferences, {teacherLogon: teacherids[i]});
+				if(x) {
+					teacherData.push(x);
+				}
+			}
+				data = new Mod.TeacherCollection(teacherData),
 				teacherList = new Mod.Views.TeacherList({
 					collection: data
 				});
+			
 			teacherList.on("show", function() {
 				this.$el.before("Select a teacher: ");
 			});
 			// show view in teacher region
-			App.teacherRegion.show(teacherList);			
+			App.teacherRegion.show(teacherList);
+			
 		},
 		
 		listTimes: function(teacherLogon) {

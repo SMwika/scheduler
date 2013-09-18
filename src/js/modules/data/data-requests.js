@@ -136,96 +136,86 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 
 		getTeachers: function (studentList) {
 			var defer = $.Deferred(),
-				i,
-				counter = 0,
-				total = studentList.length,
-				teacherList = [];
-				
-				/*[{
-					studentID: "234258",
-					teacherLogon: "jim.stewart",
-					teacherName: "Math",
-					division: "HS"
-				}]; */
-				
-			// iterate through each student
-			for (i = 0; i < total; i++) {
-				var studentid = studentList[i].StudentID;
-				$().SPServices({
-					operation: "GetListItems",
-					webURL: App.Config.Settings.studentTeacherList.webURL,
-					async:true,
-					listName: App.Config.Settings.studentTeacherList.listName,
-					CAMLQuery:"<Query><Where><Eq><FieldRef Name='StudentID' /><Value Type='Text'>" + studentid + "</Value></Eq></Where></Query>",
-					completefunc: function (xData, Status) {
-						var teacherArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
-							includeAllAttrs: true,
-							removeOws: true
+				i, inQuery,
+				listLength = studentList.length,
+				students = [], teacherList = [];
+
+			// for each teacher that we have
+			for(i = 0; i < listLength; i++) {
+				inQuery += "<Value Type='Text'>" + studentList[i].StudentID + "</Value>";
+			}
+			console.log(inQuery);
+			$().SPServices({
+				operation: "GetListItems",
+				webURL: App.Config.Settings.studentTeacherList.webURL,
+				async:true,
+				listName: App.Config.Settings.studentTeacherList.listName,
+				CAMLQuery:"<Where><In><FieldRef Name='StudentID' /><Values>" + inQuery +"</Values></In></Where>",
+				completefunc: function (xData, Status) {
+					var studentArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+						includeAllAttrs: true,
+						removeOws: true
+					});
+					
+					if(studentArray) {
+						_.each(studentArray, function(student) {
+							students.push({
+								studentID: student.StudentID,
+								teachers: student.NameValues,
+							});
 						});
 						
-						if(teacherArray[0]) {
-							var newTeacherArray = teacherArray[0].Teachers.split(",");
-							for(var j = 0; j < newTeacherArray.length; j++) {
+						_.each(students, function(record) {
+							var teachers = record.teachers.split(";");
+							_.each(teachers, function(teacher) {
 								teacherList.push({
-									studentID: teacherArray[0].StudentID,
-									teacherLogon: newTeacherArray[j]
-								});				
-							}
-
-						}
-
-						// with each iteration, iterate counter, so we can resolve once counter is done
-						counter++;
-
-						// SPServices query for teachers of studentList[i].studentID
-						// teacherList.push(["studentID", "teacherLogon", "teacherName"]);
-						if (counter == total-1) {
-							defer.resolve(teacherList);
-						}					
+									teacherLogon: teacher,
+									studentID: record.studentID
+								});
+							});
+						});
 					}
-				});
-			}
+				}
+			});
+			
 			return defer.promise();
 		},
 		
 		getConferences: function(teacherList) {
 			var defer = $.Deferred(),
 				i, list = teacherList, listLength = list.length,
-				counter = 0, conferenceList = [];
-				console.log(listLength);
+				counter = 0, conferenceList = [], student,
+				inQuery = "";
+
 			// for each teacher that we have
 			for(i = 0; i < listLength; i++) {
-				var x = list[i].studentID;
-				console.log(counter);
-				$().SPServices({
-					operation: "GetListItems",
-					webURL: App.Config.Settings.conferenceList.webURL,
-					async:true,
-					listName: App.Config.Settings.conferenceList.listName,
-					CAMLQuery:"<Query><Where><Eq><FieldRef Name='TeacherLogon' /><Value Type='Text'>" + list[i].teacherLogon + "</Value></Eq></Where></Query>",
-					completefunc: function (xData, Status) {
-						var conferenceArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
-							includeAllAttrs: true,
-							removeOws: true
-						});
-						counter = counter+1;
-						if(conferenceArray[0]) {
-							conferenceList.push({
-								conferenceName: conferenceArray[0].Title,
-								studentID: x,
-								division: conferenceArray[0].Division,
-								room: conferenceArray[0].Room,
-								teacherLogon: conferenceArray[0].TeacherLogon
-							});
-						}
-						
-
-						if (counter == listLength) {
-							defer.resolve(conferenceList);
-						}	
-					}
-				});
+				inQuery += "<Value Type='Text'>" + list[i].teacherLogon + "</Value>";
 			}
+			$().SPServices({
+				operation: "GetListItems",
+				webURL: App.Config.Settings.conferenceList.webURL,
+				async:true,
+				listName: App.Config.Settings.conferenceList.listName,
+				CAMLQuery:"<Query><Where><In><FieldRef Name='TeacherLogon' /><Values>" + inQuery +"</Values></In></Where></Query>",
+				completefunc: function (xData, Status) {
+					var conferenceArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+						includeAllAttrs: true,
+						removeOws: true
+					});
+					
+					_.each(conferenceArray, function(conference) {
+						conferenceList.push({
+							conferenceName: conference.Title,
+							division: conference.Division,
+							room: conference.Room,
+							teacherLogon: conference.TeacherLogon
+						});
+					});
+					
+					defer.resolve(conferenceList);
+				}
+			});
+
 			return defer.promise();
 		},
 		

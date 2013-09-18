@@ -9,8 +9,8 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 		},
 		studentTeacherList: {
 			// used to get list of teachers of studentids
-			webURL: "https://g.isb.bj.edu.cn/test/conferencing/",
-			listName: "StudentTeachers"
+			webURL: "https://g.isb.bj.edu.cn/my/",
+			listName: "SchedulingApplicationTeachersList"
 		},
 		conferenceList: {
 			// used to get list of conferences

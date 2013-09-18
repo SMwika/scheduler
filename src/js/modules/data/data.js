@@ -47,20 +47,18 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 					Mod.Config.students = studentList;
 					
 					var schedule = App.request("schedule:getmy", Mod.Config.students[0].FamilyCode);
-
 					$.when(schedule).done(function(scheduleList) {
 						App.trigger("user:message", "get schedule");
 						Mod.Config.schedule = scheduleList;
 					});
 					
-					
 					var teachers = App.request("student:getteachers", studentList);
 					$.when(teachers).done(function(teacherList) {
 						App.trigger("user:message", "get teachers");
-					
+
 						Mod.Config.teachers = teacherList;
-						console.log(Mod.Config.teachers.length);
-						var conferences = App.request("teacher:getconferences", Mod.Config.teachers);
+						
+						var conferences = App.request("teacher:getconferences", teacherList);
 						$.when(conferences).done(function(conferenceList) {
 							App.trigger("user:message", "get conference details");
 
