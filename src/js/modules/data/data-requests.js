@@ -88,20 +88,20 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 			var defer = $.Deferred(),
 				familyJSON = [];
 				
-				$().SPServices({
-					operation: "GetListItems",
-					webURL: App.Config.Settings.familyList.webURL,
-					async:true,
-					listName: App.Config.Settings.familyList.listName,
-					CAMLQuery:"<Query><Where><Eq><FieldRef Name='ParentLogonName' /><Value Type='Text'>" + userLogon + "</Value></Eq></Where></Query>",
-					completefunc: function (xData, Status) {
-						familyJSON = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
-							includeAllAttrs: true,
-							removeOws: true
-						});
-						defer.resolve(familyJSON);
-					}
-				});
+			$().SPServices({
+				operation: "GetListItems",
+				webURL: App.Config.Settings.familyList.webURL,
+				async:true,
+				listName: App.Config.Settings.familyList.listName,
+				CAMLQuery:"<Query><Where><Eq><FieldRef Name='ParentLogonName' /><Value Type='Text'>" + userLogon + "</Value></Eq></Where></Query>",
+				completefunc: function (xData) {
+					familyJSON = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+						includeAllAttrs: true,
+						removeOws: true
+					});
+					defer.resolve(familyJSON);
+				}
+			});
 				
 			return defer.promise();
 		},
@@ -136,38 +136,44 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 
 		getTeachers: function (studentList) {
 			var defer = $.Deferred(),
-				i, inQuery,
-				listLength = studentList.length,
 				students = [], teacherList = [];
 
-			// for each teacher that we have
-			for(i = 0; i < listLength; i++) {
-				inQuery += "<Value Type='Text'>" + studentList[i].StudentID + "</Value>";
-			}
-			console.log(inQuery);
 			$().SPServices({
 				operation: "GetListItems",
 				webURL: App.Config.Settings.studentTeacherList.webURL,
 				async:true,
 				listName: App.Config.Settings.studentTeacherList.listName,
-				CAMLQuery:"<Where><In><FieldRef Name='StudentID' /><Values>" + inQuery +"</Values></In></Where>",
-				completefunc: function (xData, Status) {
+				completefunc: function (xData) {
 					var studentArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
 						includeAllAttrs: true,
 						removeOws: true
 					});
-					
 					if(studentArray) {
+						
+						// iterate through each returned query result
 						_.each(studentArray, function(student) {
-							students.push({
-								studentID: student.StudentID,
-								teachers: student.NameValues,
+						
+							// iterate through each of the user's students
+							_.each(studentList, function(indStudent) {
+								
+								// if the query result's studentid == the user's student
+								if(student.StudentID === indStudent.StudentID) {
+									// then push that student into the list of student/teachers
+									students.push({
+										studentID: student.StudentID,
+										teachers: student.NameValues,
+									});
+								}
 							});
 						});
 						
+						// now, iterate through each of the student/teachers
 						_.each(students, function(record) {
+							// split up the teacher column by semicolon
 							var teachers = record.teachers.split(";");
+							// then iterate through each of those teachers
 							_.each(teachers, function(teacher) {
+								// and push the individual teacher, with the record's student
 								teacherList.push({
 									teacherLogon: teacher,
 									studentID: record.studentID
@@ -175,6 +181,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 							});
 						});
 					}
+					defer.resolve(teacherList);
 				}
 			});
 			
@@ -184,8 +191,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 		getConferences: function(teacherList) {
 			var defer = $.Deferred(),
 				i, list = teacherList, listLength = list.length,
-				counter = 0, conferenceList = [], student,
-				inQuery = "";
+				conferenceList = [], inQuery = "";
 
 			// for each teacher that we have
 			for(i = 0; i < listLength; i++) {
@@ -197,7 +203,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 				async:true,
 				listName: App.Config.Settings.conferenceList.listName,
 				CAMLQuery:"<Query><Where><In><FieldRef Name='TeacherLogon' /><Values>" + inQuery +"</Values></In></Where></Query>",
-				completefunc: function (xData, Status) {
+				completefunc: function (xData) {
 					var conferenceArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
 						includeAllAttrs: true,
 						removeOws: true
@@ -207,7 +213,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 						conferenceList.push({
 							conferenceName: conference.Title,
 							division: conference.Division,
-							room: conference.Room,
+							roomNumber: conference.Room,
 							teacherLogon: conference.TeacherLogon
 						});
 					});

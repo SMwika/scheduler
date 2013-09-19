@@ -7,6 +7,8 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 		
 		createReservation: function() {
 			var reservation = new Mod.Appt(Mod.NewReservation);
+			// put logic to begin checking and reserving
+			console.log(reservation);
 		},
 		
 		listStudents: function() {
@@ -33,11 +35,12 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 					teacherData.push(x);
 				}
 			}
-				data = new Mod.TeacherCollection(teacherData),
+			
+			var data = new Mod.TeacherCollection(teacherData),
 				teacherList = new Mod.Views.TeacherList({
 					collection: data
 				});
-			
+		
 			teacherList.on("show", function() {
 				this.$el.before("Select a teacher: ");
 			});
@@ -61,19 +64,10 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 		},
 		
 		enableSubmit: function() {
-			var submitArea = Marionette.ItemView.extend({
-				template: "#submitForm",
-				events: {
-					"click .js-submit-form": "submitFormClicked"
-				},
-				submitFormClicked: function(e) {
-					e.preventDefault();
-					App.trigger("reservation:create");
-				}
-			});
+			var submitArea = new Mod.Views.SubmitView();
 			
 			//console.log(submitArea);
-			App.submitRegion.show(new submitArea());
+			App.submitRegion.show(submitArea);
 		}
 		
 	};

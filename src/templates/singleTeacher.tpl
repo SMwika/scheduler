@@ -1,1 +1,1 @@
-{{ conferenceName }}
+{{ conferenceName }} - Room {{ roomNumber }}

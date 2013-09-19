@@ -358,36 +358,57 @@ ptc.on("initialize:after", function () {
 			var defer = $.Deferred(),
 				i, inQuery,
 				listLength = studentList.length,
-				studentList = [], teacherList = [];
+				students = [], teacherList = [];
 
-			// for each teacher that we have
+	/*		// for each teacher that we have
 			for(i = 0; i < listLength; i++) {
-				inQuery += "<Value Type='Text'>" + studentList[i].studentID + "</Value>";
+				inQuery += "<Value Type='Text'>" + studentList[i].StudentID + "</Value>";
 			}
-			
+			console.log(inQuery); */
 			$().SPServices({
 				operation: "GetListItems",
 				webURL: App.Config.Settings.studentTeacherList.webURL,
 				async:true,
 				listName: App.Config.Settings.studentTeacherList.listName,
-				CAMLQuery:"<Query><Where><In><FieldRef Name='StudentID' /><Values>" + inQuery +"</Values></In></Where></Query>",
+				// I've turned off the CAML Query until I figure out how to use the IN operator
+				// with external content types. In the meantime I'm just returning all values,
+				// and then filtering with javascript
+	//			CAMLQuery:"<Where><In><FieldRef Name='StudentID' /><Values>" + inQuery +"</Values></In></Where>",
 				completefunc: function (xData, Status) {
 					var studentArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
 						includeAllAttrs: true,
 						removeOws: true
 					});
-					
+					console.time('test');
 					if(studentArray) {
+						
+						// get the list of studentids from the query
+						var onlyStudentIDs = _.pluck(studentArray, "StudentID");
+						
+						// iterate through each returned query result
 						_.each(studentArray, function(student) {
-							studentList.push({
-								studentID: student.StudentID,
-								teachers: student.NameValues,
+						
+							// iterate through each of the user's students
+							_.each(studentList, function(indStudent) {
+								
+								// if the query result's studentid == the user's student
+								if(student.StudentID === indStudent.StudentID) {
+									// then push that student into the list of student/teachers
+									students.push({
+										studentID: student.StudentID,
+										teachers: student.NameValues,
+									});
+								}
 							});
 						});
 						
-						_.each(studentList, function(record) {
+						// now, iterate through each of the student/teachers
+						_.each(students, function(record) {
+							// split up the teacher column by semicolon
 							var teachers = record.teachers.split(";");
+							// then iterate through each of those teachers
 							_.each(teachers, function(teacher) {
+								// and push the individual teacher, with the record's student
 								teacherList.push({
 									teacherLogon: teacher,
 									studentID: record.studentID
@@ -395,12 +416,11 @@ ptc.on("initialize:after", function () {
 							});
 						});
 					}
-
+					console.timeEnd('test');
 					defer.resolve(teacherList);
-			
 				}
 			});
-			}
+			
 			return defer.promise();
 		},
 		
@@ -430,7 +450,7 @@ ptc.on("initialize:after", function () {
 						conferenceList.push({
 							conferenceName: conference.Title,
 							division: conference.Division,
-							room: conference.Room,
+							roomNumber: conference.Room,
 							teacherLogon: conference.TeacherLogon
 						});
 					});
@@ -543,6 +563,7 @@ ptc.on("initialize:after", function () {
 		
 		createReservation: function() {
 			var reservation = new Mod.Appt(Mod.NewReservation);
+			console.log(Mod.NewReservation);
 		},
 		
 		listStudents: function() {
@@ -597,16 +618,7 @@ ptc.on("initialize:after", function () {
 		},
 		
 		enableSubmit: function() {
-			var submitArea = Marionette.ItemView.extend({
-				template: "#submitForm",
-				events: {
-					"click .js-submit-form": "submitFormClicked"
-				},
-				submitFormClicked: function(e) {
-					e.preventDefault();
-					App.trigger("reservation:create");
-				}
-			});
+			var submitArea = new Mod.SubmitView();
 			
 			//console.log(submitArea);
 			App.submitRegion.show(new submitArea());
@@ -615,6 +627,7 @@ ptc.on("initialize:after", function () {
 	};
 	
 });;ptc.module("Reservation", function(Mod, App, Backbone){
+
 
 	// Appointment Model and Collection ************************************
 	Mod.Appt = Backbone.Model.extend({
@@ -681,15 +694,17 @@ ptc.on("initialize:after", function () {
 			studentRegion: "#resStudents",
 			teacherRegion: "#resTeachers",
 			timeRegion: "#resTimes",
-		},
-		
+		}
+	});
+	
+	Mod.SubmitView = Marionette.ItemView.extend({
+		template: "#submitForm",
 		events: {
-			"click button": "buttonClicked"
+			"click .js-submit-form": "submitFormClicked"
 		},
-		
-		buttonClicked: function(e) {
+		submitFormClicked: function(e) {
 			e.preventDefault();
-			console.log("clicked!");
+			App.trigger("reservation:create");
 		}
 	});
 	
@@ -738,6 +753,7 @@ ptc.on("initialize:after", function () {
 				
 		onRender: function() {
 			$(this.el).attr("data-teacherlogon", this.model.get("teacherLogon"));
+			$(this.el).attr("data-roomNumber", this.model.get("roomNumber"));
 		}
 
 	});
@@ -758,9 +774,11 @@ ptc.on("initialize:after", function () {
 				App.submitRegion.close();
 			} else {
 				var teacherLogon = $(e.target).find(":selected").data("teacherlogon");
+				var roomNumber = $(e.target).find(":selected").data("roomnumber");
 				var teacherName = $(e.target).find(":selected").val();
 				App.Reservation.NewReservation.teacherName = teacherName;
 				App.Reservation.NewReservation.teacherLogon = teacherLogon;
+				App.Reservation.NewReservation.roomNumber = roomNumber;
 				App.trigger("times:list", teacherLogon);
 			}
 		}

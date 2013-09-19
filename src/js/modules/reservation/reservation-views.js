@@ -7,15 +7,17 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 			studentRegion: "#resStudents",
 			teacherRegion: "#resTeachers",
 			timeRegion: "#resTimes",
-		},
-		
+		}
+	});
+	
+	Mod.SubmitView = Marionette.ItemView.extend({
+		template: "#submitForm",
 		events: {
-			"click button": "buttonClicked"
+			"click .js-submit-form": "submitFormClicked"
 		},
-		
-		buttonClicked: function(e) {
+		submitFormClicked: function(e) {
 			e.preventDefault();
-			console.log("clicked!");
+			App.trigger("reservation:create");
 		}
 	});
 	
@@ -25,7 +27,7 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 		template: "#singleStudent",
 		onRender: function() {
 			$(this.el)
-				.attr("data-studentid", "ID" + this.model.get("StudentID"))
+				.attr("data-studentid", this.model.get("StudentID"))
 				.attr("data-fullname", this.model.get("StudentFullName"));
 		}
 
@@ -49,7 +51,6 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 			} else {
 				var studentID = $(e.target).find(":selected").data("studentid");
 				var studentName = $(e.target).find(":selected").data("fullname");
-				studentID = studentID.substr(2);
 				App.Reservation.NewReservation.studentID = studentID;
 				App.Reservation.NewReservation.studentName = studentName;
 				App.trigger("teachers:list", studentID);
@@ -64,6 +65,7 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 				
 		onRender: function() {
 			$(this.el).attr("data-teacherlogon", this.model.get("teacherLogon"));
+			$(this.el).attr("data-roomNumber", this.model.get("roomNumber"));
 		}
 
 	});
@@ -84,9 +86,11 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 				App.submitRegion.close();
 			} else {
 				var teacherLogon = $(e.target).find(":selected").data("teacherlogon");
+				var roomNumber = $(e.target).find(":selected").data("roomnumber");
 				var teacherName = $(e.target).find(":selected").val();
 				App.Reservation.NewReservation.teacherName = teacherName;
 				App.Reservation.NewReservation.teacherLogon = teacherLogon;
+				App.Reservation.NewReservation.roomNumber = roomNumber;
 				App.trigger("times:list", teacherLogon);
 			}
 		}

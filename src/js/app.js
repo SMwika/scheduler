@@ -14,8 +14,7 @@ ptc.addRegions({
     timeRegion: "#timeRegion",
 	submitRegion: "#submitRegion",
 	
-    scheduleRegion: "#scheduleRegion",
-    extraRegion: "#extraRegion"
+    scheduleRegion: "#scheduleRegion"
 });
 
 ptc.on("initialize:after", function () {
