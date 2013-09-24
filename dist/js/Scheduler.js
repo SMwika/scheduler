@@ -1,5 +1,5 @@
 /*!
- scheduler Build version 0.0.1, 09-18-2013
+ scheduler Build version 0.0.1, 09-24-2013
 */
 $(function () {
     
@@ -62,8 +62,7 @@ ptc.addRegions({
     timeRegion: "#timeRegion",
 	submitRegion: "#submitRegion",
 	
-    scheduleRegion: "#scheduleRegion",
-    extraRegion: "#extraRegion"
+    scheduleRegion: "#scheduleRegion"
 });
 
 ptc.on("initialize:after", function () {
@@ -294,7 +293,7 @@ ptc.on("initialize:after", function () {
 				});
 			parentLogon = parentLogon.split("\\")[1];
 
-			parentLogon = "AbdoElian.Kardous"; // for testing
+			parentLogon = "Sunrong.gong"; // for testing
 			
 			defer.resolve(parentLogon);
 
@@ -308,20 +307,20 @@ ptc.on("initialize:after", function () {
 			var defer = $.Deferred(),
 				familyJSON = [];
 				
-				$().SPServices({
-					operation: "GetListItems",
-					webURL: App.Config.Settings.familyList.webURL,
-					async:true,
-					listName: App.Config.Settings.familyList.listName,
-					CAMLQuery:"<Query><Where><Eq><FieldRef Name='ParentLogonName' /><Value Type='Text'>" + userLogon + "</Value></Eq></Where></Query>",
-					completefunc: function (xData, Status) {
-						familyJSON = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
-							includeAllAttrs: true,
-							removeOws: true
-						});
-						defer.resolve(familyJSON);
-					}
-				});
+			$().SPServices({
+				operation: "GetListItems",
+				webURL: App.Config.Settings.familyList.webURL,
+				async:true,
+				listName: App.Config.Settings.familyList.listName,
+				CAMLQuery:"<Query><Where><Eq><FieldRef Name='ParentLogonName' /><Value Type='Text'>" + userLogon + "</Value></Eq></Where></Query>",
+				completefunc: function (xData) {
+					familyJSON = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+						includeAllAttrs: true,
+						removeOws: true
+					});
+					defer.resolve(familyJSON);
+				}
+			});
 				
 			return defer.promise();
 		},
@@ -356,34 +355,19 @@ ptc.on("initialize:after", function () {
 
 		getTeachers: function (studentList) {
 			var defer = $.Deferred(),
-				i, inQuery,
-				listLength = studentList.length,
 				students = [], teacherList = [];
 
-	/*		// for each teacher that we have
-			for(i = 0; i < listLength; i++) {
-				inQuery += "<Value Type='Text'>" + studentList[i].StudentID + "</Value>";
-			}
-			console.log(inQuery); */
 			$().SPServices({
 				operation: "GetListItems",
 				webURL: App.Config.Settings.studentTeacherList.webURL,
 				async:true,
 				listName: App.Config.Settings.studentTeacherList.listName,
-				// I've turned off the CAML Query until I figure out how to use the IN operator
-				// with external content types. In the meantime I'm just returning all values,
-				// and then filtering with javascript
-	//			CAMLQuery:"<Where><In><FieldRef Name='StudentID' /><Values>" + inQuery +"</Values></In></Where>",
-				completefunc: function (xData, Status) {
+				completefunc: function (xData) {
 					var studentArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
 						includeAllAttrs: true,
 						removeOws: true
 					});
-					console.time('test');
 					if(studentArray) {
-						
-						// get the list of studentids from the query
-						var onlyStudentIDs = _.pluck(studentArray, "StudentID");
 						
 						// iterate through each returned query result
 						_.each(studentArray, function(student) {
@@ -410,13 +394,12 @@ ptc.on("initialize:after", function () {
 							_.each(teachers, function(teacher) {
 								// and push the individual teacher, with the record's student
 								teacherList.push({
-									teacherLogon: teacher,
+									teacherLogon: teacher.toLowerCase(),
 									studentID: record.studentID
 								});
 							});
 						});
 					}
-					console.timeEnd('test');
 					defer.resolve(teacherList);
 				}
 			});
@@ -427,34 +410,46 @@ ptc.on("initialize:after", function () {
 		getConferences: function(teacherList) {
 			var defer = $.Deferred(),
 				i, list = teacherList, listLength = list.length,
-				counter = 0, conferenceList = [], student,
-				inQuery = "";
+				conferenceList = [], inQuery = "";
 
 			// for each teacher that we have
 			for(i = 0; i < listLength; i++) {
-				inQuery += "<Value Type='Text'>" + list[i].teacherLogon + "</Value>";
+				inQuery += "<Value Type='Text'>ISB\\" + list[i].teacherLogon + "</Value>";
 			}
 			$().SPServices({
 				operation: "GetListItems",
 				webURL: App.Config.Settings.conferenceList.webURL,
 				async:true,
 				listName: App.Config.Settings.conferenceList.listName,
-				CAMLQuery:"<Query><Where><In><FieldRef Name='TeacherLogon' /><Values>" + inQuery +"</Values></In></Where></Query>",
-				completefunc: function (xData, Status) {
+				CAMLQuery:"<Query><Where><In><FieldRef Name='Teachers' /><Values>" + inQuery +"</Values></In></Where></Query>",
+				completefunc: function (xData) {
 					var conferenceArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
 						includeAllAttrs: true,
 						removeOws: true
 					});
 					
 					_.each(conferenceArray, function(conference) {
-						conferenceList.push({
-							conferenceName: conference.Title,
-							division: conference.Division,
-							roomNumber: conference.Room,
-							teacherLogon: conference.TeacherLogon
-						});
+						var teachers = conference.Teachers.split(";"),
+						teacherSplits = "";
+						
+						if(teachers.length > 2) {
+							conferenceList.push({
+								conferenceName: conference.Title,
+								division: conference.Division,
+								roomNumber: conference.Room,
+								teacher1: teachers[1].split("\\")[1].toLowerCase(),
+								teacher2: teachers[3].split("\\")[1].toLowerCase()
+							});
+						} else {
+							conferenceList.push({
+								conferenceName: conference.Title,
+								division: conference.Division,
+								roomNumber: conference.Room,
+								teacher1: teachers[1].split("\\")[1].toLowerCase(),
+							});
+						}
 					});
-					
+
 					defer.resolve(conferenceList);
 				}
 			});
@@ -469,14 +464,20 @@ ptc.on("initialize:after", function () {
 				list = conferenceList,
 				total = list.length,
 				timeList = [],
+				teacher = "",
 				appts = Mod.TimeSlots;
 			// iterate through each teacher
 			for (i = 0; i < total; i++) {
+				if(list[i].teacher2) {
+					teacher = list[i].teacher1 + "-" + list[i].teacher2;
+				} else {
+					teacher = list[i].teacher1;
+				}
 				// then iterate through all time slots
 				for (j = 0; j < appts.length; j++) {
 					if (appts[j].category === list[i].division) {
 						timeList.push({
-							teacherLogon: list[i].teacherLogon,
+							teacherLogon: teacher,
 							startTime: appts[j].startTime,
 							endTime: appts[j].endTime,
 							unixStart: appts[j].unixStart,
@@ -563,7 +564,8 @@ ptc.on("initialize:after", function () {
 		
 		createReservation: function() {
 			var reservation = new Mod.Appt(Mod.NewReservation);
-			console.log(Mod.NewReservation);
+			// put logic to begin checking and reserving
+			console.log(reservation);
 		},
 		
 		listStudents: function() {
@@ -581,20 +583,27 @@ ptc.on("initialize:after", function () {
 		},
 		
 		listTeachers: function(studentID) {
-			// first, get teacherids of current student
-			var teacherids = _.pluck(_.where(App.Data.Config.teachers, {studentID: studentID}), "teacherLogon"),
+			// get teacherids of current student
+			var teacherids = _.pluck(_.where(App.Data.Config.teachers, {studentID: String(studentID)}), "teacherLogon"),
 				teacherData = [], i;
+			// iterate through each of the returned teachers
 			for(i = 0; i < teacherids.length; i++) {
-				var x = _.findWhere(App.Data.Config.conferences, {teacherLogon: teacherids[i]});
+				// find if any of them have conferences
+				var x = _.findWhere(App.Data.Config.conferences, {teacher2: teacherids[i]});
+				var y = _.findWhere(App.Data.Config.conferences, {teacher1: teacherids[i]});
+
 				if(x) {
 					teacherData.push(x);
+				} else if(y) {
+					teacherData.push(y);
 				}
 			}
-				data = new Mod.TeacherCollection(teacherData),
+			
+			var data = new Mod.TeacherCollection(teacherData),
 				teacherList = new Mod.Views.TeacherList({
 					collection: data
 				});
-			
+		
 			teacherList.on("show", function() {
 				this.$el.before("Select a teacher: ");
 			});
@@ -618,10 +627,10 @@ ptc.on("initialize:after", function () {
 		},
 		
 		enableSubmit: function() {
-			var submitArea = new Mod.SubmitView();
+			var submitArea = new Mod.Views.SubmitView();
 			
 			//console.log(submitArea);
-			App.submitRegion.show(new submitArea());
+			App.submitRegion.show(submitArea);
 		}
 		
 	};
@@ -714,7 +723,7 @@ ptc.on("initialize:after", function () {
 		template: "#singleStudent",
 		onRender: function() {
 			$(this.el)
-				.attr("data-studentid", "ID" + this.model.get("StudentID"))
+				.attr("data-studentid", this.model.get("StudentID"))
 				.attr("data-fullname", this.model.get("StudentFullName"));
 		}
 
@@ -738,7 +747,6 @@ ptc.on("initialize:after", function () {
 			} else {
 				var studentID = $(e.target).find(":selected").data("studentid");
 				var studentName = $(e.target).find(":selected").data("fullname");
-				studentID = studentID.substr(2);
 				App.Reservation.NewReservation.studentID = studentID;
 				App.Reservation.NewReservation.studentName = studentName;
 				App.trigger("teachers:list", studentID);
@@ -752,7 +760,12 @@ ptc.on("initialize:after", function () {
 		template: "#singleTeacher",
 				
 		onRender: function() {
-			$(this.el).attr("data-teacherlogon", this.model.get("teacherLogon"));
+			if(this.model.get("teacher2")) {
+				var teacherLogon = this.model.get("teacher1") + "-" + this.model.get("teacher2");
+				$(this.el).attr("data-teacherlogon", teacherLogon);
+			} else {
+				$(this.el).attr("data-teacherlogon", this.model.get("teacher1"));
+			}
 			$(this.el).attr("data-roomNumber", this.model.get("roomNumber"));
 		}
 

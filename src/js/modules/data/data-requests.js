@@ -74,7 +74,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 				});
 			parentLogon = parentLogon.split("\\")[1];
 
-			parentLogon = "AbdoElian.Kardous"; // for testing
+			parentLogon = "Sunrong.gong"; // for testing
 			
 			defer.resolve(parentLogon);
 
@@ -175,7 +175,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 							_.each(teachers, function(teacher) {
 								// and push the individual teacher, with the record's student
 								teacherList.push({
-									teacherLogon: teacher,
+									teacherLogon: teacher.toLowerCase(),
 									studentID: record.studentID
 								});
 							});
@@ -195,14 +195,14 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 
 			// for each teacher that we have
 			for(i = 0; i < listLength; i++) {
-				inQuery += "<Value Type='Text'>" + list[i].teacherLogon + "</Value>";
+				inQuery += "<Value Type='Text'>ISB\\" + list[i].teacherLogon + "</Value>";
 			}
 			$().SPServices({
 				operation: "GetListItems",
 				webURL: App.Config.Settings.conferenceList.webURL,
 				async:true,
 				listName: App.Config.Settings.conferenceList.listName,
-				CAMLQuery:"<Query><Where><In><FieldRef Name='TeacherLogon' /><Values>" + inQuery +"</Values></In></Where></Query>",
+				CAMLQuery:"<Query><Where><In><FieldRef Name='Teachers' /><Values>" + inQuery +"</Values></In></Where></Query>",
 				completefunc: function (xData) {
 					var conferenceArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
 						includeAllAttrs: true,
@@ -210,14 +210,27 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 					});
 					
 					_.each(conferenceArray, function(conference) {
-						conferenceList.push({
-							conferenceName: conference.Title,
-							division: conference.Division,
-							roomNumber: conference.Room,
-							teacherLogon: conference.TeacherLogon
-						});
+						var teachers = conference.Teachers.split(";"),
+						teacherSplits = "";
+						
+						if(teachers.length > 2) {
+							conferenceList.push({
+								conferenceName: conference.Title,
+								division: conference.Division,
+								roomNumber: conference.Room,
+								teacher1: teachers[1].split("\\")[1].toLowerCase(),
+								teacher2: teachers[3].split("\\")[1].toLowerCase()
+							});
+						} else {
+							conferenceList.push({
+								conferenceName: conference.Title,
+								division: conference.Division,
+								roomNumber: conference.Room,
+								teacher1: teachers[1].split("\\")[1].toLowerCase(),
+							});
+						}
 					});
-					
+
 					defer.resolve(conferenceList);
 				}
 			});
@@ -232,14 +245,20 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 				list = conferenceList,
 				total = list.length,
 				timeList = [],
+				teacher = "",
 				appts = Mod.TimeSlots;
 			// iterate through each teacher
 			for (i = 0; i < total; i++) {
+				if(list[i].teacher2) {
+					teacher = list[i].teacher1 + "-" + list[i].teacher2;
+				} else {
+					teacher = list[i].teacher1;
+				}
 				// then iterate through all time slots
 				for (j = 0; j < appts.length; j++) {
 					if (appts[j].category === list[i].division) {
 						timeList.push({
-							teacherLogon: list[i].teacherLogon,
+							teacherLogon: teacher,
 							startTime: appts[j].startTime,
 							endTime: appts[j].endTime,
 							unixStart: appts[j].unixStart,

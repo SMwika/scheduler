@@ -64,7 +64,12 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 		template: "#singleTeacher",
 				
 		onRender: function() {
-			$(this.el).attr("data-teacherlogon", this.model.get("teacherLogon"));
+			if(this.model.get("teacher2")) {
+				var teacherLogon = this.model.get("teacher1") + "-" + this.model.get("teacher2");
+				$(this.el).attr("data-teacherlogon", teacherLogon);
+			} else {
+				$(this.el).attr("data-teacherlogon", this.model.get("teacher1"));
+			}
 			$(this.el).attr("data-roomNumber", this.model.get("roomNumber"));
 		}
 

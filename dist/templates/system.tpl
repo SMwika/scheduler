@@ -18,7 +18,7 @@
 
 <!-- singleTeacher -->
 <script id="singleTeacher" type="text/template">
-{{ conferenceName }}
+{{ conferenceName }} - Room {{ roomNumber }}
 </script>
 
 <!-- singleTimeSlot -->

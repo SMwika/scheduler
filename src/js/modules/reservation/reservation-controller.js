@@ -26,13 +26,19 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 		},
 		
 		listTeachers: function(studentID) {
-			// first, get teacherids of current student
-			var teacherids = _.pluck(_.where(App.Data.Config.teachers, {studentID: studentID}), "teacherLogon"),
+			// get teacherids of current student
+			var teacherids = _.pluck(_.where(App.Data.Config.teachers, {studentID: String(studentID)}), "teacherLogon"),
 				teacherData = [], i;
+			// iterate through each of the returned teachers
 			for(i = 0; i < teacherids.length; i++) {
-				var x = _.findWhere(App.Data.Config.conferences, {teacherLogon: teacherids[i]});
+				// find if any of them have conferences
+				var x = _.findWhere(App.Data.Config.conferences, {teacher2: teacherids[i]});
+				var y = _.findWhere(App.Data.Config.conferences, {teacher1: teacherids[i]});
+
 				if(x) {
 					teacherData.push(x);
+				} else if(y) {
+					teacherData.push(y);
 				}
 			}
 			
