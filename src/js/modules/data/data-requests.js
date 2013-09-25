@@ -1,4 +1,4 @@
-ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
+ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 
 	// generated below
 	Mod.TimeSlots = [];
@@ -27,6 +27,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 	
 	var API = {
 		generateTimeSlots: function () {
+			console.time("generate");
 			var i, j, k,
 				times = App.Config.Settings.timeSlots,
 				timesLength = times.length,
@@ -61,20 +62,21 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 					}
 				}
 			}
+			console.timeEnd("generate");
 			App.trigger("user:message", "generate time slots");
 			Mod.TimeSlots = appts;
 		},
 		
 		getLoggedInUser: function () {
-			var defer = $.Deferred(),
-				parentLogon = $().SPServices.SPGetCurrentUser({
+			var defer = $.Deferred();
+	/*		var	parentLogon = $().SPServices.SPGetCurrentUser({
 					fieldName: "Name",
 					debug: false,
 					async: true
 				});
-			parentLogon = parentLogon.split("\\")[1];
+			parentLogon = parentLogon.split("\\")[1]; */
 
-			parentLogon = "Sunrong.gong"; // for testing
+			parentLogon = "Kathryn.Baxter"; // for testing
 			
 			defer.resolve(parentLogon);
 
@@ -135,14 +137,15 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 		},
 
 		getTeachers: function (studentList) {
-			var defer = $.Deferred(),
+			console.log(studentList);
+			var defer = $.Deferred(), self = this,
 				students = [], teacherList = [];
-
 			$().SPServices({
 				operation: "GetListItems",
 				webURL: App.Config.Settings.studentTeacherList.webURL,
 				async:true,
 				listName: App.Config.Settings.studentTeacherList.listName,
+				CAMLQuery:"<Query><Where><Eq><FieldRef Name='FamilyCode' /><Value>" + studentList[0].FamilyCode +"</Value></Eq></Where></Query>",
 				completefunc: function (xData) {
 					var studentArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
 						includeAllAttrs: true,
@@ -152,32 +155,38 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 						
 						// iterate through each returned query result
 						_.each(studentArray, function(student) {
-						
-							// iterate through each of the user's students
-							_.each(studentList, function(indStudent) {
-								
-								// if the query result's studentid == the user's student
-								if(student.StudentID === indStudent.StudentID) {
-									// then push that student into the list of student/teachers
-									students.push({
-										studentID: student.StudentID,
-										teachers: student.NameValues,
-									});
-								}
+							students.push({
+								studentID: student.StudentID,
+								teachers: student.NameValues,
 							});
 						});
 						
-						// now, iterate through each of the student/teachers
+						// now, iterate and filter through each of the student's teachers
 						_.each(students, function(record) {
+						
 							// split up the teacher column by semicolon
-							var teachers = record.teachers.split(";");
-							// then iterate through each of those teachers
-							_.each(teachers, function(teacher) {
+							var teacherArray = record.teachers.split(";");
+							
+							// remove exclusions from the teacher list
+							var newTeacherArray = self.removeExcludedTeachers(teacherArray);
+							
+							// remove everything after parentheses and change to lowercase
+							newTeacherArray = _.map(newTeacherArray, function(teacher) {
+								return teacher.replace(/\(.+/g, '').toLowerCase();
+							});	
+							
+							// trim out any duplicates
+							newTeacherArray = _.uniq(newTeacherArray);
+
+							// then iterate through each of the teachers
+							_.each(newTeacherArray, function(teacher) {
+							
 								// and push the individual teacher, with the record's student
 								teacherList.push({
-									teacherLogon: teacher.toLowerCase(),
+									teacherLogon: teacher,
 									studentID: record.studentID
 								});
+						
 							});
 						});
 					}
@@ -186,6 +195,20 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
 			});
 			
 			return defer.promise();
+		},
+		
+		removeExcludedTeachers: function(teacherArray) {
+			// set the newTeacherArray with the passed variable
+			var newTeacherArray = teacherArray;
+			// iterate through each of the exclusions (strings)
+			_.each(App.Config.Settings.exclusions, function(exclusion) {
+				// set the new array to be a filtered version of itself each time
+				newTeacherArray = _.filter(newTeacherArray, function(teacher) {
+					// return anything that doesn't have an index of the exclusion
+					return teacher.indexOf(exclusion) < 0;
+				});
+			});
+			return newTeacherArray;
 		},
 		
 		getConferences: function(teacherList) {

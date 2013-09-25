@@ -1,5 +1,5 @@
 /*!
- scheduler Build version 0.0.1, 09-24-2013
+ scheduler Build version 0.0.1, 09-25-2013
 */
 $(function () {
     
@@ -78,6 +78,9 @@ ptc.on("initialize:after", function () {
 
 	// set these settings on a per-conference basis
 	Mod.Settings = {
+	
+		exclusions: ["(ASA)", "(MSE)"],
+		
 		familyList: {
 			// used to get family information
 			webURL: "https://g.isb.bj.edu.cn/my/",
@@ -169,10 +172,9 @@ ptc.on("initialize:after", function () {
 			*/
 			
 			var defer = $.Deferred();
-			
+
 			var user = App.request("user:getloggedin");
 			$.when(user).done(function(userLogon) {
-				
 				App.trigger("user:message", "get logged in user");
 				
 				Mod.Config.loggedInUser = userLogon;
@@ -182,25 +184,23 @@ ptc.on("initialize:after", function () {
 					App.trigger("user:message", "get students");
 					
 					Mod.Config.students = studentList;
-					
+
 					var schedule = App.request("schedule:getmy", Mod.Config.students[0].FamilyCode);
 					$.when(schedule).done(function(scheduleList) {
 						App.trigger("user:message", "get schedule");
 						Mod.Config.schedule = scheduleList;
 					});
-					
+
 					var teachers = App.request("student:getteachers", studentList);
 					$.when(teachers).done(function(teacherList) {
 						App.trigger("user:message", "get teachers");
 
 						Mod.Config.teachers = teacherList;
-						
 						var conferences = App.request("teacher:getconferences", teacherList);
 						$.when(conferences).done(function(conferenceList) {
 							App.trigger("user:message", "get conference details");
 
 							Mod.Config.conferences = conferenceList;
-							
 							var times = App.request("teacher:gettimes", conferenceList);
 							$.when(times).done(function(timeList) {
 								App.trigger("user:message", "get available time slots");
@@ -217,7 +217,7 @@ ptc.on("initialize:after", function () {
 			return defer.promise();
 		}
 	};
-});;ptc.module("Data", function (Mod, App, Backbone, Marionette, $) {
+});;ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 
 	// generated below
 	Mod.TimeSlots = [];
@@ -246,6 +246,7 @@ ptc.on("initialize:after", function () {
 	
 	var API = {
 		generateTimeSlots: function () {
+			console.time("generate");
 			var i, j, k,
 				times = App.Config.Settings.timeSlots,
 				timesLength = times.length,
@@ -280,20 +281,21 @@ ptc.on("initialize:after", function () {
 					}
 				}
 			}
+			console.timeEnd("generate");
 			App.trigger("user:message", "generate time slots");
 			Mod.TimeSlots = appts;
 		},
 		
 		getLoggedInUser: function () {
-			var defer = $.Deferred(),
-				parentLogon = $().SPServices.SPGetCurrentUser({
+			var defer = $.Deferred();
+	/*		var	parentLogon = $().SPServices.SPGetCurrentUser({
 					fieldName: "Name",
 					debug: false,
 					async: true
 				});
-			parentLogon = parentLogon.split("\\")[1];
+			parentLogon = parentLogon.split("\\")[1]; */
 
-			parentLogon = "Sunrong.gong"; // for testing
+			parentLogon = "Kathryn.Baxter"; // for testing
 			
 			defer.resolve(parentLogon);
 
@@ -354,57 +356,75 @@ ptc.on("initialize:after", function () {
 		},
 
 		getTeachers: function (studentList) {
-			var defer = $.Deferred(),
+			console.log(studentList);
+			var defer = $.Deferred(), self = this,
 				students = [], teacherList = [];
-
 			$().SPServices({
 				operation: "GetListItems",
 				webURL: App.Config.Settings.studentTeacherList.webURL,
 				async:true,
 				listName: App.Config.Settings.studentTeacherList.listName,
+				CAMLQuery:"<Query><Where><Eq><FieldRef Name='FamilyCode' /><Value>" + studentList[0].FamilyCode +"</Value></Eq></Where></Query>",
 				completefunc: function (xData) {
 					var studentArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
 						includeAllAttrs: true,
 						removeOws: true
 					});
+					console.time("filters");
 					if(studentArray) {
 						
 						// iterate through each returned query result
 						_.each(studentArray, function(student) {
-						
-							// iterate through each of the user's students
-							_.each(studentList, function(indStudent) {
-								
-								// if the query result's studentid == the user's student
-								if(student.StudentID === indStudent.StudentID) {
-									// then push that student into the list of student/teachers
-									students.push({
-										studentID: student.StudentID,
-										teachers: student.NameValues,
-									});
-								}
+							students.push({
+								studentID: student.StudentID,
+								teachers: student.NameValues,
 							});
 						});
 						
-						// now, iterate through each of the student/teachers
+						// now, iterate and filter through each of the student's teachers
 						_.each(students, function(record) {
+						
 							// split up the teacher column by semicolon
-							var teachers = record.teachers.split(";");
+							var teacherArray = record.teachers.split(";");
+							
+							var newTeacherArray = self.removeExcludedTeachers(teacherArray);
+							
+							newTeacherArray = _.map(newTeacherArray, function(teacher) {
+								return teacher.replace(/\(.+/g, '').toLowerCase();
+							});	
+							newTeacherArray = _.uniq(newTeacherArray);
+
 							// then iterate through each of those teachers
-							_.each(teachers, function(teacher) {
+							_.each(newTeacherArray, function(teacher) {
 								// and push the individual teacher, with the record's student
 								teacherList.push({
-									teacherLogon: teacher.toLowerCase(),
+									teacherLogon: teacher,
 									studentID: record.studentID
 								});
+						
 							});
 						});
 					}
+					console.timeEnd("filters");
 					defer.resolve(teacherList);
 				}
 			});
 			
 			return defer.promise();
+		},
+		
+		removeExcludedTeachers: function(teacherArray) {
+			var newTeacherArray = teacherArray;
+			console.log(teacherArray);
+			_.each(App.Config.Settings.exclusions, function(exclusion) {
+				console.log(exclusion);
+				newTeacherArray = _.filter(newTeacherArray, function(teacher) {
+					console.log(teacher.indexOf(exclusion), teacher);
+					return teacher.indexOf(exclusion) < 0;
+				});
+			});
+			console.log(newTeacherArray);
+			return newTeacherArray;
 		},
 		
 		getConferences: function(teacherList) {
@@ -583,21 +603,8 @@ ptc.on("initialize:after", function () {
 		},
 		
 		listTeachers: function(studentID) {
-			// get teacherids of current student
-			var teacherids = _.pluck(_.where(App.Data.Config.teachers, {studentID: String(studentID)}), "teacherLogon"),
-				teacherData = [], i;
-			// iterate through each of the returned teachers
-			for(i = 0; i < teacherids.length; i++) {
-				// find if any of them have conferences
-				var x = _.findWhere(App.Data.Config.conferences, {teacher2: teacherids[i]});
-				var y = _.findWhere(App.Data.Config.conferences, {teacher1: teacherids[i]});
-
-				if(x) {
-					teacherData.push(x);
-				} else if(y) {
-					teacherData.push(y);
-				}
-			}
+			
+			var teacherData = this.customizeTeacherList(studentID);
 			
 			var data = new Mod.TeacherCollection(teacherData),
 				teacherList = new Mod.Views.TeacherList({
@@ -611,7 +618,24 @@ ptc.on("initialize:after", function () {
 			App.teacherRegion.show(teacherList);
 			
 		},
-		
+		customizeTeacherList: function(studentID) {
+			// get teacherids of current student
+			var teacherids = _.pluck(_.where(App.Data.Config.teachers, {studentID: String(studentID)}), "teacherLogon"),
+				teacherData = [], i;
+			// iterate through each of the returned teachers
+			for(i = 0; i < teacherids.length; i++) {
+				// find if any of them have conferences
+				var x = _.findWhere(App.Data.Config.conferences, {teacher2: teacherids[i]});
+				var y = _.findWhere(App.Data.Config.conferences, {teacher1: teacherids[i]});
+
+				if(y) {
+				//	teacherData.push(x);
+			//	} else if(y) {
+					teacherData.push(y);
+				}
+			}
+			return teacherData;
+		},
 		listTimes: function(teacherLogon) {
 			var timeArray = App.Data.Config.times,
 				filtered = _.where(timeArray, {teacherLogon: teacherLogon}),
@@ -724,6 +748,7 @@ ptc.on("initialize:after", function () {
 		onRender: function() {
 			$(this.el)
 				.attr("data-studentid", this.model.get("StudentID"))
+				.attr("data-currgrade", this.model.get("CurrentGrade"))
 				.attr("data-fullname", this.model.get("StudentFullName"));
 		}
 
@@ -747,6 +772,8 @@ ptc.on("initialize:after", function () {
 			} else {
 				var studentID = $(e.target).find(":selected").data("studentid");
 				var studentName = $(e.target).find(":selected").data("fullname");
+				var currGrade = $(e.target).find(":selected").data("currgrade");
+				App.Reservation.NewReservation.currGrade = currGrade;
 				App.Reservation.NewReservation.studentID = studentID;
 				App.Reservation.NewReservation.studentName = studentName;
 				App.trigger("teachers:list", studentID);

@@ -28,6 +28,7 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 		onRender: function() {
 			$(this.el)
 				.attr("data-studentid", this.model.get("StudentID"))
+				.attr("data-currgrade", this.model.get("CurrentGrade"))
 				.attr("data-fullname", this.model.get("StudentFullName"));
 		}
 
@@ -51,6 +52,8 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 			} else {
 				var studentID = $(e.target).find(":selected").data("studentid");
 				var studentName = $(e.target).find(":selected").data("fullname");
+				var currGrade = $(e.target).find(":selected").data("currgrade");
+				App.Reservation.NewReservation.currGrade = currGrade;
 				App.Reservation.NewReservation.studentID = studentID;
 				App.Reservation.NewReservation.studentName = studentName;
 				App.trigger("teachers:list", studentID);

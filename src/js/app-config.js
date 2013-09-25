@@ -2,6 +2,9 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 
 	// set these settings on a per-conference basis
 	Mod.Settings = {
+	
+		exclusions: ["(ASA)", "(MSE)"],
+		
 		familyList: {
 			// used to get family information
 			webURL: "https://g.isb.bj.edu.cn/my/",
