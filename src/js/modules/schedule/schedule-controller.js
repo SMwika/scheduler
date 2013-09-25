@@ -10,6 +10,7 @@ ptc.module("Schedule", function(Mod, App){
 			App.scheduleRegion.show(scheduleView);
 		},
 		deleteAppt: function(appt) {
+			// get the ID from the passed model
 			var reservationID = appt.get("ID");
 
 			$().SPServices({

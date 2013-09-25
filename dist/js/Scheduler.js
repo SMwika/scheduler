@@ -538,18 +538,38 @@ ptc.on("initialize:after", function () {
 			}
 			return defer.promise();
 		},
-		
-		saveReservation: function() {
-			// for ease, set the reservation to a small variable
-			var x = App.Reservation.NewReservation,
-				teachers = "";
-			
+		getTeacherList: function(x) {
+			var teachers;
 			// check if the teacher is actually a team teaching thing
 			if(x.teacherLogon.indexOf("-") > 0) {
 				teachers = "-1;#ISB\\" + x.teacherLogon.split("-")[0] + ";#-1;#ISB\\" + x.teacherLogon.split("-")[1] + ";#";
 			} else {
 				teachers = "-1;#ISB\\" + x.teacherLogon;
 			}
+			return teachers;
+		},
+		setDivision: function(x) {
+			var division;
+			// set the correct list to save to, depending on student's grade level
+			if(x.currGrade > 5 && x.currGrade < 9) {
+				division = "MS"
+			} else if(x.currGrade > 8 && x.currGrade <= 12) {
+				division = "HS"
+			} else {
+				division = "ES"
+			}
+			return division;
+		},
+		saveReservation: function() {
+			// for ease, set the reservation to a small variable
+			var x = App.Reservation.NewReservation,
+				self = this;
+			// get formatted teacher list
+			var teachers = self.getTeacherList(x);
+			// set division
+			var division = self.setDivision(x);
+			
+			
 			var reservationValues = [
 				["Title", x.teacherName],
 				["StudentID", x.studentID],
@@ -564,9 +584,9 @@ ptc.on("initialize:after", function () {
 			$().SPServices({
 				operation: "UpdateListItems",
 				async: false,
-				webURL: App.Config.Settings.reservationLists.HS.webURL,
+				webURL: App.Config.Settings.reservationLists[division].webURL,
 				batchCmd: "New",
-				listName: App.Config.Settings.reservationLists.HS.listName,
+				listName: App.Config.Settings.reservationLists[division].listName,
 				valuepairs: reservationValues,
 				completefunc: function(xData, Status) {
 					console.log(xData);
@@ -959,13 +979,14 @@ ptc.on("initialize:after", function () {
 			App.scheduleRegion.show(scheduleView);
 		},
 		deleteAppt: function(appt) {
+			// get the ID from the passed model
 			var reservationID = appt.get("ID");
 
 			$().SPServices({
 				operation: "UpdateListItems",
 				async: true,
-				webURL: App.Config.Settings.reservationList.HS.webURL,
-				listName: App.Config.Settings.reservationList.HS.listName,
+				webURL: App.Config.Settings.reservationLists.HS.webURL,
+				listName: App.Config.Settings.reservationLists.HS.listName,
 				batchCmd: "Delete",
 				ID: reservationID,
 				completefunc: function(xData, Status) {
