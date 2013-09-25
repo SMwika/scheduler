@@ -346,31 +346,38 @@ ptc.on("initialize:after", function () {
 		},
 		
 		getSchedule: function (familyCode) {
-			// this should just get a list of all students of the user
-			// the list should be formatted as an array of objects
-			// each student should have an ID, name, and familyCode
-			var defer = $.Deferred();
-			
-			$().SPServices({
-				operation: "GetListItems",
-				webURL: App.Config.Settings.reservationLists.HS.webURL,
-				async:true,
-				listName: App.Config.Settings.reservationLists.HS.listName,
-				CAMLQuery:"<Query><Where><Eq><FieldRef Name='FamilyCode' /><Value Type='Text'>" + familyCode +"</Value></Eq></Where></Query>",
-				completefunc: function (xData) {
-					var schedule = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
-						includeAllAttrs: true,
-						removeOws: true
-					});
-					var newschedule = [];
-					_.each(schedule, function(appt) {
-						appt.StartTime = moment.unix(parseInt(appt.StartTime)).format("ddd D MMM h:mm");
-						appt.EndTime = moment.unix(parseInt(appt.EndTime)).format("h:mm a");
-						newschedule.push(appt);
-					});
-					defer.resolve(newschedule);
-				}
+			var defer = $.Deferred(),
+				fullSchedule = [], counter = 0,
+				divisions = _.keys(App.Config.Settings.reservationLists);
+				
+			_.each(divisions, function(division) {
+				$().SPServices({
+					operation: "GetListItems",
+					webURL: App.Config.Settings.reservationLists[division].webURL,
+					async:true,
+					listName: App.Config.Settings.reservationLists[division].listName,
+					CAMLQuery:"<Query><Where><Eq><FieldRef Name='FamilyCode' /><Value Type='Text'>" + familyCode +"</Value></Eq></Where></Query>",
+					completefunc: function (xData) {
+						var schedule = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+							includeAllAttrs: true,
+							removeOws: true
+						});
+						_.each(schedule, function(appt) {
+							appt.Division = division;
+							appt.StartTime = moment.unix(parseInt(appt.StartTime)).format("ddd D MMM h:mm");
+							appt.EndTime = moment.unix(parseInt(appt.EndTime)).format("h:mm a");
+							fullSchedule.push(appt);
+						});
+						
+						counter++;
+						
+						if(counter === 3) {
+							defer.resolve(fullSchedule);
+						}
+					}
+				});
 			});
+			
 			return defer.promise();
 		},
 
@@ -980,13 +987,14 @@ ptc.on("initialize:after", function () {
 		},
 		deleteAppt: function(appt) {
 			// get the ID from the passed model
-			var reservationID = appt.get("ID");
+			var reservationID = appt.get("ID"),
+				division = appt.get("Division");
 
 			$().SPServices({
 				operation: "UpdateListItems",
 				async: true,
-				webURL: App.Config.Settings.reservationLists.HS.webURL,
-				listName: App.Config.Settings.reservationLists.HS.listName,
+				webURL: App.Config.Settings.reservationLists[division].webURL,
+				listName: App.Config.Settings.reservationLists[division].listName,
 				batchCmd: "Delete",
 				ID: reservationID,
 				completefunc: function(xData, Status) {

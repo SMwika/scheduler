@@ -11,13 +11,14 @@ ptc.module("Schedule", function(Mod, App){
 		},
 		deleteAppt: function(appt) {
 			// get the ID from the passed model
-			var reservationID = appt.get("ID");
+			var reservationID = appt.get("ID"),
+				division = appt.get("Division");
 
 			$().SPServices({
 				operation: "UpdateListItems",
 				async: true,
-				webURL: App.Config.Settings.reservationLists.HS.webURL,
-				listName: App.Config.Settings.reservationLists.HS.listName,
+				webURL: App.Config.Settings.reservationLists[division].webURL,
+				listName: App.Config.Settings.reservationLists[division].listName,
 				batchCmd: "Delete",
 				ID: reservationID,
 				completefunc: function(xData, Status) {
