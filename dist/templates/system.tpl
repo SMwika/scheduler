@@ -6,8 +6,8 @@
 
 <!-- scheduleApptSingle -->
 <script id="scheduleApptSingle" type="text/template">
-{{ startTime }}&nbsp;&nbsp;&nbsp;<strong>{{ studentName }}</strong><br/>
-{{ teacherName }} (room {{ roomNumber }})<br/>
+{{ StartTime }} - {{ EndTime }}&nbsp;&nbsp;&nbsp;<strong>{{ StudentName }}</strong><br/>
+{{ Title }} (room {{ RoomNumber }})<br/>
 <a href="" class="js-delete-appt">delete</a>
 </script>
 

@@ -273,8 +273,8 @@ ptc.on("initialize:after", function () {
 				var dates = times[i].dates,
 					datesLength = dates.length;
 				for (j = 0; j < datesLength; j++) {
-					var start = moment.utc(dates[j].startDateTime, "YYYY-MM-DD HH:mm"),
-						end = moment.utc(dates[j].endDateTime, "YYYY-MM-DD HH:mm"),
+					var start = moment(dates[j].startDateTime, "YYYY-MM-DD HH:mm"),
+						end = moment(dates[j].endDateTime, "YYYY-MM-DD HH:mm"),
 						diff = end.diff(start, "m", true),
 						slotCount = diff / times[i].duration;
 					for (k = 0; k <= slotCount; k++) {
@@ -349,27 +349,28 @@ ptc.on("initialize:after", function () {
 			// this should just get a list of all students of the user
 			// the list should be formatted as an array of objects
 			// each student should have an ID, name, and familyCode
-			var defer = $.Deferred(),
-				schedule = [{
-					ID: "12",
-					studentName: "Ben Tedder",
-					teacherName: "Science",
-					startTime: "2013-02-23",
-					endTime: "2020-23-42",
-					roomNumber: "2311",
-					teacherLogon: "jim.dean"
-				}, {
-					ID: "23",
-					studentName: "Daniel Tedder",
-					teacherName: "Math",
-					familyCode: "Math",
-					startTime: "2013-02-23",
-					endTime: "2020-23-42",
-					roomNumber: "2311",
-					teacherLogon: "jim.dean"
-				}];
-
-			defer.resolve(schedule);
+			var defer = $.Deferred();
+			
+			$().SPServices({
+				operation: "GetListItems",
+				webURL: App.Config.Settings.reservationLists.HS.webURL,
+				async:true,
+				listName: App.Config.Settings.reservationLists.HS.listName,
+				CAMLQuery:"<Query><Where><Eq><FieldRef Name='FamilyCode' /><Value Type='Text'>" + familyCode +"</Value></Eq></Where></Query>",
+				completefunc: function (xData) {
+					var schedule = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+						includeAllAttrs: true,
+						removeOws: true
+					});
+					var newschedule = [];
+					_.each(schedule, function(appt) {
+						appt.StartTime = moment.unix(parseInt(appt.StartTime)).format("ddd D MMM h:mm");
+						appt.EndTime = moment.unix(parseInt(appt.EndTime)).format("h:mm a");
+						newschedule.push(appt);
+					});
+					defer.resolve(newschedule);
+				}
+			});
 			return defer.promise();
 		},
 
