@@ -25,6 +25,10 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 		return API.getSchedule(familyCode);
 	});
 	
+	App.on("reservation:save", function () {
+		API.saveReservation();
+	});
+	
 	var API = {
 		generateTimeSlots: function () {
 			console.time("generate");
@@ -299,6 +303,42 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 				}
 			}
 			return defer.promise();
+		},
+		
+		saveReservation: function() {
+			// for ease, set the reservation to a small variable
+			var x = App.Reservation.NewReservation,
+				teachers = "";
+			
+			// check if the teacher is actually a team teaching thing
+			if(x.teacherLogon.indexOf("-") > 0) {
+				teachers = "-1;#ISB\\" + x.teacherLogon.split("-")[0] + ";#-1;#ISB\\" + x.teacherLogon.split("-")[1] + ";#";
+			} else {
+				teachers = "-1;#ISB\\" + x.teacherLogon;
+			}
+			var reservationValues = [
+				["Title", x.teacherName],
+				["StudentID", x.studentID],
+				["StudentName", x.studentName],
+				["RoomNumber", x.roomNumber],
+				["StartTime", x.startTime],
+				["EndTime", x.endTime],
+				["FamilyCode", x.familyCode],
+				["Teachers", teachers]
+			];
+			
+			$().SPServices({
+				operation: "UpdateListItems",
+				async: false,
+				webURL: App.Config.Settings.reservationLists.HS.webURL,
+				batchCmd: "New",
+				listName: App.Config.Settings.reservationLists.HS.listName,
+				valuepairs: reservationValues,
+				completefunc: function(xData, Status) {
+					console.log(xData);
+					App.trigger("user:message", "successfully reserved");
+				}
+			});
 		}
 	};
 });

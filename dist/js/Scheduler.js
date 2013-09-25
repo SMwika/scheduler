@@ -96,6 +96,20 @@ ptc.on("initialize:after", function () {
 			webURL: "https://g.isb.bj.edu.cn/test/conferencing/",
 			listName: "ConferenceList"
 		},
+		reservationLists: {
+			"HS": {
+				webURL: "https://g.isb.bj.edu.cn/test/conferencing/",
+				listName: "ReservationsHS"
+			},
+			"MS": {
+				webURL: "https://g.isb.bj.edu.cn/test/conferencing/",
+				listName: "ReservationsMS"
+			},
+			"ES": {
+				webURL: "https://g.isb.bj.edu.cn/test/conferencing/",
+				listName: "ReservationsES"
+			}
+		},
 		timeSlots: [{
 			category: "ES",
 			duration: 20, // conference duration in minutes
@@ -244,6 +258,10 @@ ptc.on("initialize:after", function () {
 		return API.getSchedule(familyCode);
 	});
 	
+	App.on("reservation:save", function () {
+		API.saveReservation();
+	});
+	
 	var API = {
 		generateTimeSlots: function () {
 			console.time("generate");
@@ -370,7 +388,6 @@ ptc.on("initialize:after", function () {
 						includeAllAttrs: true,
 						removeOws: true
 					});
-					console.time("filters");
 					if(studentArray) {
 						
 						// iterate through each returned query result
@@ -387,15 +404,20 @@ ptc.on("initialize:after", function () {
 							// split up the teacher column by semicolon
 							var teacherArray = record.teachers.split(";");
 							
+							// remove exclusions from the teacher list
 							var newTeacherArray = self.removeExcludedTeachers(teacherArray);
 							
+							// remove everything after parentheses and change to lowercase
 							newTeacherArray = _.map(newTeacherArray, function(teacher) {
 								return teacher.replace(/\(.+/g, '').toLowerCase();
 							});	
+							
+							// trim out any duplicates
 							newTeacherArray = _.uniq(newTeacherArray);
 
-							// then iterate through each of those teachers
+							// then iterate through each of the teachers
 							_.each(newTeacherArray, function(teacher) {
+							
 								// and push the individual teacher, with the record's student
 								teacherList.push({
 									teacherLogon: teacher,
@@ -405,7 +427,6 @@ ptc.on("initialize:after", function () {
 							});
 						});
 					}
-					console.timeEnd("filters");
 					defer.resolve(teacherList);
 				}
 			});
@@ -414,16 +435,16 @@ ptc.on("initialize:after", function () {
 		},
 		
 		removeExcludedTeachers: function(teacherArray) {
+			// set the newTeacherArray with the passed variable
 			var newTeacherArray = teacherArray;
-			console.log(teacherArray);
+			// iterate through each of the exclusions (strings)
 			_.each(App.Config.Settings.exclusions, function(exclusion) {
-				console.log(exclusion);
+				// set the new array to be a filtered version of itself each time
 				newTeacherArray = _.filter(newTeacherArray, function(teacher) {
-					console.log(teacher.indexOf(exclusion), teacher);
+					// return anything that doesn't have an index of the exclusion
 					return teacher.indexOf(exclusion) < 0;
 				});
 			});
-			console.log(newTeacherArray);
 			return newTeacherArray;
 		},
 		
@@ -515,6 +536,42 @@ ptc.on("initialize:after", function () {
 				}
 			}
 			return defer.promise();
+		},
+		
+		saveReservation: function() {
+			// for ease, set the reservation to a small variable
+			var x = App.Reservation.NewReservation,
+				teachers = "";
+			
+			// check if the teacher is actually a team teaching thing
+			if(x.teacherLogon.indexOf("-") > 0) {
+				teachers = "-1;#ISB\\" + x.teacherLogon.split("-")[0] + ";#-1;#ISB\\" + x.teacherLogon.split("-")[1] + ";#";
+			} else {
+				teachers = "-1;#ISB\\" + x.teacherLogon;
+			}
+			var reservationValues = [
+				["Title", x.teacherName],
+				["StudentID", x.studentID],
+				["StudentName", x.studentName],
+				["RoomNumber", x.roomNumber],
+				["StartTime", x.startTime],
+				["EndTime", x.endTime],
+				["FamilyCode", x.familyCode],
+				["Teachers", teachers]
+			];
+			
+			$().SPServices({
+				operation: "UpdateListItems",
+				async: false,
+				webURL: App.Config.Settings.reservationLists.HS.webURL,
+				batchCmd: "New",
+				listName: App.Config.Settings.reservationLists.HS.listName,
+				valuepairs: reservationValues,
+				completefunc: function(xData, Status) {
+					console.log(xData);
+					App.trigger("user:message", "successfully reserved");
+				}
+			});
 		}
 	};
 });;ptc.module("Reservation", function(Mod, App){
@@ -526,7 +583,9 @@ ptc.on("initialize:after", function () {
 		teacherLogon: "",
 		startTime: "",
 		endTime: "",
-		familyCode: ""
+		familyCode: "",
+		currGrade: "",
+		roomNumber: ""
 	};
 	
 	App.on("reservation:new", function() {

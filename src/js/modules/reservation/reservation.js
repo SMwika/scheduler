@@ -7,7 +7,9 @@ ptc.module("Reservation", function(Mod, App){
 		teacherLogon: "",
 		startTime: "",
 		endTime: "",
-		familyCode: ""
+		familyCode: "",
+		currGrade: "",
+		roomNumber: ""
 	};
 	
 	App.on("reservation:new", function() {

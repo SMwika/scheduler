@@ -20,6 +20,20 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 			webURL: "https://g.isb.bj.edu.cn/test/conferencing/",
 			listName: "ConferenceList"
 		},
+		reservationLists: {
+			"HS": {
+				webURL: "https://g.isb.bj.edu.cn/test/conferencing/",
+				listName: "ReservationsHS"
+			},
+			"MS": {
+				webURL: "https://g.isb.bj.edu.cn/test/conferencing/",
+				listName: "ReservationsMS"
+			},
+			"ES": {
+				webURL: "https://g.isb.bj.edu.cn/test/conferencing/",
+				listName: "ReservationsES"
+			}
+		},
 		timeSlots: [{
 			category: "ES",
 			duration: 20, // conference duration in minutes
