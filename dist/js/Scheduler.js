@@ -573,6 +573,10 @@ ptc.on("initialize:after", function () {
 					App.trigger("user:message", "successfully reserved");
 				}
 			});
+		},
+		
+		deleteReservation: function(id) {
+			
 		}
 	};
 });;ptc.module("Reservation", function(Mod, App){
@@ -955,12 +959,17 @@ ptc.on("initialize:after", function () {
 			App.scheduleRegion.show(scheduleView);
 		},
 		deleteAppt: function(appt) {
-			appt.destroy({
-				success: function() {
-					console.log("deleted");
-				},
-				error: function() {
-					console.log("error destroying the event");
+			var reservationID = appt.get("ID");
+
+			$().SPServices({
+				operation: "UpdateListItems",
+				async: true,
+				webURL: App.Config.Settings.reservationList.HS.webURL,
+				listName: App.Config.Settings.reservationList.HS.listName,
+				batchCmd: "Delete",
+				ID: reservationID,
+				completefunc: function(xData, Status) {
+					App.trigger("user:message", "reservation deleted");
 				}
 			});
 		}
@@ -996,6 +1005,7 @@ ptc.on("initialize:after", function () {
 		deleteClicked: function(e) {
 			e.preventDefault();
 			App.trigger("schedule:appt:delete", this.model);
+			this.remove();
 		}
 	});
 	Mod.ApptList = Marionette.CollectionView.extend({

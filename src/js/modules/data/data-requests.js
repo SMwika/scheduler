@@ -340,6 +340,10 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 					App.trigger("user:message", "successfully reserved");
 				}
 			});
+		},
+		
+		deleteReservation: function(id) {
+			
 		}
 	};
 });

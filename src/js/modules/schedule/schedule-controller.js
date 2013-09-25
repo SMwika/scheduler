@@ -10,12 +10,17 @@ ptc.module("Schedule", function(Mod, App){
 			App.scheduleRegion.show(scheduleView);
 		},
 		deleteAppt: function(appt) {
-			appt.destroy({
-				success: function() {
-					console.log("deleted");
-				},
-				error: function() {
-					console.log("error destroying the event");
+			var reservationID = appt.get("ID");
+
+			$().SPServices({
+				operation: "UpdateListItems",
+				async: true,
+				webURL: App.Config.Settings.reservationLists.HS.webURL,
+				listName: App.Config.Settings.reservationLists.HS.listName,
+				batchCmd: "Delete",
+				ID: reservationID,
+				completefunc: function(xData, Status) {
+					App.trigger("user:message", "reservation deleted");
 				}
 			});
 		}

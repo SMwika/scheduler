@@ -12,6 +12,7 @@ ptc.module("Schedule.View", function(Mod, App, Backbone, Marionette){
 		deleteClicked: function(e) {
 			e.preventDefault();
 			App.trigger("schedule:appt:delete", this.model);
+			this.remove();
 		}
 	});
 	Mod.ApptList = Marionette.CollectionView.extend({
