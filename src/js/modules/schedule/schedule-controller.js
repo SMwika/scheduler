@@ -3,28 +3,18 @@ ptc.module("Schedule", function(Mod, App){
 	Mod.Controller = {
 		showSchedule: function() {
 			var data = new Mod.ApptCollection(App.Data.Config.schedule);
+
 			var scheduleView = new Mod.View.ApptList({
 				collection: data
+			});
+			App.on("schedule:collection:add", function(model) {
+				data.add(model);
 			});
 			// show view in schedule region
 			App.scheduleRegion.show(scheduleView);
 		},
 		deleteAppt: function(appt) {
-			// get the ID from the passed model
-			var reservationID = appt.get("ID"),
-				division = appt.get("Division");
-
-			$().SPServices({
-				operation: "UpdateListItems",
-				async: true,
-				webURL: App.Config.Settings.reservationLists[division].webURL,
-				listName: App.Config.Settings.reservationLists[division].listName,
-				batchCmd: "Delete",
-				ID: reservationID,
-				completefunc: function(xData, Status) {
-					App.trigger("user:message", "reservation deleted");
-				}
-			});
+			App.trigger("data:reservation:delete", appt);
 		}
 	};
 	

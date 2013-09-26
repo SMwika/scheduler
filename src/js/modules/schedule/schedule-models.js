@@ -11,7 +11,10 @@ ptc.module("Schedule", function(Mod, App, Backbone){
 	});
 	
 	Mod.ApptCollection = Backbone.Collection.extend({
-		model: Mod.Appt
+		model: Mod.Appt,
+		comparator: function (model) {
+            return model.get("StartTime");
+        }
 	});
 
 });

@@ -7,6 +7,10 @@ ptc.module("Schedule", function(Mod, App){
 		API.deleteAppt(appt);
 	});
 	
+	App.on("schedule:append", function(data) {
+		API.appendAppt(data);
+	});
+	
 	
 	var API = {
 		showSchedule: function() {
@@ -14,6 +18,10 @@ ptc.module("Schedule", function(Mod, App){
 		},
 		deleteAppt: function(appt) {
 			Mod.Controller.deleteAppt(appt);
+		},
+		appendAppt: function(data) {
+			var appt = new Mod.Appt(data);
+			App.trigger("schedule:collection:add", appt);
 		}
 	};
 	

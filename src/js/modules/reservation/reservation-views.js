@@ -17,7 +17,11 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 		},
 		submitFormClicked: function(e) {
 			e.preventDefault();
-			App.trigger("reservation:create");
+			if(App.Reservation.ReservingStatus === false) {
+				App.trigger("reservation:create");
+			} else {
+				console.log("checking");
+			}
 		}
 	});
 	

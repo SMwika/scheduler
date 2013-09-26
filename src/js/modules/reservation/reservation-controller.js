@@ -6,9 +6,8 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 		},
 		
 		createReservation: function() {
-			var reservation = new Mod.Appt(Mod.NewReservation);
 			// put logic to begin checking and reserving
-			console.log(reservation);
+			App.trigger("data:reservation:save");
 		},
 		
 		listStudents: function() {
@@ -48,12 +47,9 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 			// iterate through each of the returned teachers
 			for(i = 0; i < teacherids.length; i++) {
 				// find if any of them have conferences
-				var x = _.findWhere(App.Data.Config.conferences, {teacher2: teacherids[i]});
 				var y = _.findWhere(App.Data.Config.conferences, {teacher1: teacherids[i]});
 
 				if(y) {
-				//	teacherData.push(x);
-			//	} else if(y) {
 					teacherData.push(y);
 				}
 			}

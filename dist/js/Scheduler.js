@@ -1,5 +1,5 @@
 /*!
- scheduler Build version 0.0.1, 09-25-2013
+ scheduler Build version 0.0.1, 09-26-2013
 */
 $(function () {
     
@@ -150,7 +150,7 @@ ptc.on("initialize:after", function () {
 				}
 			]
 		}]
-	}
+	};
 
 });;ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 	
@@ -258,13 +258,24 @@ ptc.on("initialize:after", function () {
 		return API.getSchedule(familyCode);
 	});
 	
-	App.on("reservation:save", function () {
+	App.reqres.setHandler("data:getTeacherAvailability", function(res) {
+		return API.getTeacherAvailability(res);
+	});
+	
+	App.reqres.setHandler("data:getStudentTeacherStatus", function(res) {
+		return API.getStudentTeacherStatus(res);
+	});
+	
+	App.on("data:reservation:save", function () {
 		API.saveReservation();
 	});
+	App.on("data:reservation:delete", function(appt) {
+		API.deleteReservation(appt);
+	});
+
 	
 	var API = {
 		generateTimeSlots: function () {
-			console.time("generate");
 			var i, j, k,
 				times = App.Config.Settings.timeSlots,
 				timesLength = times.length,
@@ -299,7 +310,6 @@ ptc.on("initialize:after", function () {
 					}
 				}
 			}
-			console.timeEnd("generate");
 			App.trigger("user:message", "generate time slots");
 			Mod.TimeSlots = appts;
 		},
@@ -313,7 +323,7 @@ ptc.on("initialize:after", function () {
 				});
 			parentLogon = parentLogon.split("\\")[1]; */
 
-			parentLogon = "Kathryn.Baxter"; // for testing
+			var parentLogon = "Kathryn.Baxter"; // for testing
 			
 			defer.resolve(parentLogon);
 
@@ -346,7 +356,7 @@ ptc.on("initialize:after", function () {
 		},
 		
 		getSchedule: function (familyCode) {
-			var defer = $.Deferred(),
+			var defer = $.Deferred(), self = this,
 				fullSchedule = [], counter = 0,
 				divisions = _.keys(App.Config.Settings.reservationLists);
 				
@@ -362,11 +372,11 @@ ptc.on("initialize:after", function () {
 							includeAllAttrs: true,
 							removeOws: true
 						});
+						
 						_.each(schedule, function(appt) {
-							appt.Division = division;
-							appt.StartTime = moment.unix(parseInt(appt.StartTime)).format("ddd D MMM h:mm");
-							appt.EndTime = moment.unix(parseInt(appt.EndTime)).format("h:mm a");
-							fullSchedule.push(appt);
+							var x = self.formatScheduleDates(appt);
+							x.Division = division;
+							fullSchedule.push(x);
 						});
 						
 						counter++;
@@ -380,9 +390,14 @@ ptc.on("initialize:after", function () {
 			
 			return defer.promise();
 		},
+		
+		formatScheduleDates: function(appt) {
+			appt.StartTime = moment.unix(parseInt(appt.StartTime, 10)).format("ddd D MMM h:mm");
+			appt.EndTime = moment.unix(parseInt(appt.EndTime, 10)).format("h:mm a");
+			return appt;
+		},
 
 		getTeachers: function (studentList) {
-			console.log(studentList);
 			var defer = $.Deferred(), self = this,
 				students = [], teacherList = [];
 			$().SPServices({
@@ -417,7 +432,7 @@ ptc.on("initialize:after", function () {
 							
 							// remove everything after parentheses and change to lowercase
 							newTeacherArray = _.map(newTeacherArray, function(teacher) {
-								return teacher.replace(/\(.+/g, '').toLowerCase();
+								return teacher.replace(/\(.+/g, "").toLowerCase();
 							});	
 							
 							// trim out any duplicates
@@ -478,8 +493,7 @@ ptc.on("initialize:after", function () {
 					});
 					
 					_.each(conferenceArray, function(conference) {
-						var teachers = conference.Teachers.split(";"),
-						teacherSplits = "";
+						var teachers = conference.Teachers.split(";");
 						
 						if(teachers.length > 2) {
 							conferenceList.push({
@@ -559,11 +573,11 @@ ptc.on("initialize:after", function () {
 			var division;
 			// set the correct list to save to, depending on student's grade level
 			if(x.currGrade > 5 && x.currGrade < 9) {
-				division = "MS"
+				division = "MS";
 			} else if(x.currGrade > 8 && x.currGrade <= 12) {
-				division = "HS"
+				division = "HS";
 			} else {
-				division = "ES"
+				division = "ES";
 			}
 			return division;
 		},
@@ -595,18 +609,60 @@ ptc.on("initialize:after", function () {
 				batchCmd: "New",
 				listName: App.Config.Settings.reservationLists[division].listName,
 				valuepairs: reservationValues,
-				completefunc: function(xData, Status) {
-					console.log(xData);
-					App.trigger("user:message", "successfully reserved");
+				completefunc: function(xData) {
+					if(xData.statusText == "OK") {
+						var schedule = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+							includeAllAttrs: true,
+							removeOws: true
+						});
+						var x = self.formatScheduleDates(schedule[0]);
+						x.Division = division;
+						
+						App.trigger("schedule:append", x);
+						App.trigger("user:message", "successfully reserved");
+					} else {
+						App.trigger("user:message", "error saving your reservation");
+					}
 				}
 			});
 		},
 		
-		deleteReservation: function(id) {
+		getTeacherAvailability: function(res) {
+			// check if teacher has this time slot taken
+			var teacher = res.teacherLogon,
+				startTime = res.StartTime;
 			
+			// query SP division 
+		
+			return true;
+			// return true for available, or false
+		},
+		getStudentTeacherStatus: function(res) {
+			return true;
+			// return true for available, or false
+		},
+		
+		deleteReservation: function(appt) {
+			var reservationID = appt.get("ID"),
+				division = appt.get("Division");
+			$().SPServices({
+				operation: "UpdateListItems",
+				async: true,
+				webURL: App.Config.Settings.reservationLists[division].webURL,
+				listName: App.Config.Settings.reservationLists[division].listName,
+				batchCmd: "Delete",
+				ID: reservationID,
+				completefunc: function() {
+					App.trigger("user:message", "reservation deleted");
+				}
+			});
 		}
 	};
 });;ptc.module("Reservation", function(Mod, App){
+	
+	// used when reserving/checking reservations
+	// so that the app doesn't continually check
+	Mod.ReservingStatus = false;
 	
 	Mod.NewReservation = {
 		studentID: "",
@@ -639,6 +695,10 @@ ptc.on("initialize:after", function () {
 		API.enableSubmit();
 	});
 	
+	App.reqres.setHandler("reservation:availability", function(res) {
+		return API.checkAvailability(res);
+	});
+	
 	var API = {
 		listStudents: function() {
 			App.teacherRegion.close();
@@ -659,8 +719,59 @@ ptc.on("initialize:after", function () {
 			Mod.Controller.startNewReservation();
 		},
 		createReservation: function() {
-			Mod.Controller.createReservation();
+
+			// check if possible to create a reservation
+			var checkAvailability = App.request("reservation:availability", Mod.NewReservation);
+			$.when(checkAvailability).done(function(status) {
+				// if so, then create it
+				if(status === true) {
+					Mod.Controller.createReservation();
+				} else {
+					alert("I'm sorry, that slot cannot be booked. Please try again.");
+				}
+			});
 		},
+		checkAvailability: function(res) {
+			Mod.ReservingStatus = true;
+			var defer = $.Deferred();
+			// not available by default
+			var availability = false;
+			
+			// see if this slot is reserved for this teacher
+			var checkTeacherAvailability = App.request("data:getTeacherAvailability", res);
+			
+			$.when(checkTeacherAvailability).done(function(teacherStatus) {
+				if(teacherStatus === true) {
+					// then see if this student and teacher already have a reservation together
+					var checkStudentTeacherStatus = App.request("data:getStudentTeacherStatus", res);
+					$.when(checkStudentTeacherStatus).done(function(studentStatus) {
+						if(studentStatus === true) {
+							console.log("teacher yes, student yes");
+							availability = true;
+							Mod.ReservingStatus = false;
+							defer.resolve(availability);
+						} else {
+							console.log("teacher yes, student no");
+							availability = false;
+							Mod.ReservingStatus = false;
+							defer.resolve(availability);
+						}
+					});
+				} else {
+					console.log("teacher no");
+					Mod.ReservingStatus = false;
+					defer.resolve(availability);
+				}
+			});
+			
+			// then, see if this student already has an appt with this teacher
+			
+			defer.resolve(availability);
+			
+			return defer.promise();
+		},
+		
+		
 		enableSubmit: function() {
 			Mod.Controller.enableSubmit();
 		}
@@ -674,9 +785,8 @@ ptc.on("initialize:after", function () {
 		},
 		
 		createReservation: function() {
-			var reservation = new Mod.Appt(Mod.NewReservation);
 			// put logic to begin checking and reserving
-			console.log(reservation);
+			App.trigger("data:reservation:save");
 		},
 		
 		listStudents: function() {
@@ -716,12 +826,9 @@ ptc.on("initialize:after", function () {
 			// iterate through each of the returned teachers
 			for(i = 0; i < teacherids.length; i++) {
 				// find if any of them have conferences
-				var x = _.findWhere(App.Data.Config.conferences, {teacher2: teacherids[i]});
 				var y = _.findWhere(App.Data.Config.conferences, {teacher1: teacherids[i]});
 
 				if(y) {
-				//	teacherData.push(x);
-			//	} else if(y) {
 					teacherData.push(y);
 				}
 			}
@@ -828,7 +935,11 @@ ptc.on("initialize:after", function () {
 		},
 		submitFormClicked: function(e) {
 			e.preventDefault();
-			App.trigger("reservation:create");
+			if(App.Reservation.ReservingStatus === false) {
+				App.trigger("reservation:create");
+			} else {
+				console.log("checking");
+			}
 		}
 	});
 	
@@ -964,6 +1075,10 @@ ptc.on("initialize:after", function () {
 		API.deleteAppt(appt);
 	});
 	
+	App.on("schedule:append", function(data) {
+		API.appendAppt(data);
+	});
+	
 	
 	var API = {
 		showSchedule: function() {
@@ -971,6 +1086,10 @@ ptc.on("initialize:after", function () {
 		},
 		deleteAppt: function(appt) {
 			Mod.Controller.deleteAppt(appt);
+		},
+		appendAppt: function(data) {
+			var appt = new Mod.Appt(data);
+			App.trigger("schedule:collection:add", appt);
 		}
 	};
 	
@@ -979,28 +1098,18 @@ ptc.on("initialize:after", function () {
 	Mod.Controller = {
 		showSchedule: function() {
 			var data = new Mod.ApptCollection(App.Data.Config.schedule);
+
 			var scheduleView = new Mod.View.ApptList({
 				collection: data
+			});
+			App.on("schedule:collection:add", function(model) {
+				data.add(model);
 			});
 			// show view in schedule region
 			App.scheduleRegion.show(scheduleView);
 		},
 		deleteAppt: function(appt) {
-			// get the ID from the passed model
-			var reservationID = appt.get("ID"),
-				division = appt.get("Division");
-
-			$().SPServices({
-				operation: "UpdateListItems",
-				async: true,
-				webURL: App.Config.Settings.reservationLists[division].webURL,
-				listName: App.Config.Settings.reservationLists[division].listName,
-				batchCmd: "Delete",
-				ID: reservationID,
-				completefunc: function(xData, Status) {
-					App.trigger("user:message", "reservation deleted");
-				}
-			});
+			App.trigger("data:reservation:delete", appt);
 		}
 	};
 	
@@ -1017,7 +1126,10 @@ ptc.on("initialize:after", function () {
 	});
 	
 	Mod.ApptCollection = Backbone.Collection.extend({
-		model: Mod.Appt
+		model: Mod.Appt,
+		comparator: function (model) {
+            return model.get("StartTime");
+        }
 	});
 
 });;ptc.module("Schedule.View", function(Mod, App, Backbone, Marionette){
@@ -1040,7 +1152,20 @@ ptc.on("initialize:after", function () {
 	Mod.ApptList = Marionette.CollectionView.extend({
 		tagName: "ul",
 		className: "appt-schedule",
-		itemView: Mod.ApptItem
+		itemView: Mod.ApptItem,
+		onRender: function(){
+			this.$el.fadeIn();
+		},
+		appendHtml: function(collectionView, itemView, index){
+			// puts a new model into the collection view in sort order
+			var childrenContainer = $(collectionView.childrenContainer || collectionView.el);
+			var children = childrenContainer.children();
+			if (children.size() === index) {
+				childrenContainer.append(itemView.el);
+			} else {
+				childrenContainer.children().eq(index).before(itemView.el);
+			}
+		}
 	});
 	
 });;$(function() {

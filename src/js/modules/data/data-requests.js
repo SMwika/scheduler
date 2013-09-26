@@ -25,13 +25,24 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 		return API.getSchedule(familyCode);
 	});
 	
-	App.on("reservation:save", function () {
+	App.reqres.setHandler("data:getTeacherAvailability", function(res) {
+		return API.getTeacherAvailability(res);
+	});
+	
+	App.reqres.setHandler("data:getStudentTeacherStatus", function(res) {
+		return API.getStudentTeacherStatus(res);
+	});
+	
+	App.on("data:reservation:save", function () {
 		API.saveReservation();
 	});
+	App.on("data:reservation:delete", function(appt) {
+		API.deleteReservation(appt);
+	});
+
 	
 	var API = {
 		generateTimeSlots: function () {
-			console.time("generate");
 			var i, j, k,
 				times = App.Config.Settings.timeSlots,
 				timesLength = times.length,
@@ -66,7 +77,6 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 					}
 				}
 			}
-			console.timeEnd("generate");
 			App.trigger("user:message", "generate time slots");
 			Mod.TimeSlots = appts;
 		},
@@ -80,7 +90,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 				});
 			parentLogon = parentLogon.split("\\")[1]; */
 
-			parentLogon = "Kathryn.Baxter"; // for testing
+			var parentLogon = "Kathryn.Baxter"; // for testing
 			
 			defer.resolve(parentLogon);
 
@@ -113,7 +123,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 		},
 		
 		getSchedule: function (familyCode) {
-			var defer = $.Deferred(),
+			var defer = $.Deferred(), self = this,
 				fullSchedule = [], counter = 0,
 				divisions = _.keys(App.Config.Settings.reservationLists);
 				
@@ -129,11 +139,11 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 							includeAllAttrs: true,
 							removeOws: true
 						});
+						
 						_.each(schedule, function(appt) {
-							appt.Division = division;
-							appt.StartTime = moment.unix(parseInt(appt.StartTime)).format("ddd D MMM h:mm");
-							appt.EndTime = moment.unix(parseInt(appt.EndTime)).format("h:mm a");
-							fullSchedule.push(appt);
+							var x = self.formatScheduleDates(appt);
+							x.Division = division;
+							fullSchedule.push(x);
 						});
 						
 						counter++;
@@ -147,9 +157,14 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 			
 			return defer.promise();
 		},
+		
+		formatScheduleDates: function(appt) {
+			appt.StartTime = moment.unix(parseInt(appt.StartTime, 10)).format("ddd D MMM h:mm");
+			appt.EndTime = moment.unix(parseInt(appt.EndTime, 10)).format("h:mm a");
+			return appt;
+		},
 
 		getTeachers: function (studentList) {
-			console.log(studentList);
 			var defer = $.Deferred(), self = this,
 				students = [], teacherList = [];
 			$().SPServices({
@@ -184,7 +199,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 							
 							// remove everything after parentheses and change to lowercase
 							newTeacherArray = _.map(newTeacherArray, function(teacher) {
-								return teacher.replace(/\(.+/g, '').toLowerCase();
+								return teacher.replace(/\(.+/g, "").toLowerCase();
 							});	
 							
 							// trim out any duplicates
@@ -245,8 +260,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 					});
 					
 					_.each(conferenceArray, function(conference) {
-						var teachers = conference.Teachers.split(";"),
-						teacherSplits = "";
+						var teachers = conference.Teachers.split(";");
 						
 						if(teachers.length > 2) {
 							conferenceList.push({
@@ -326,11 +340,11 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 			var division;
 			// set the correct list to save to, depending on student's grade level
 			if(x.currGrade > 5 && x.currGrade < 9) {
-				division = "MS"
+				division = "MS";
 			} else if(x.currGrade > 8 && x.currGrade <= 12) {
-				division = "HS"
+				division = "HS";
 			} else {
-				division = "ES"
+				division = "ES";
 			}
 			return division;
 		},
@@ -362,15 +376,53 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 				batchCmd: "New",
 				listName: App.Config.Settings.reservationLists[division].listName,
 				valuepairs: reservationValues,
-				completefunc: function(xData, Status) {
-					console.log(xData);
-					App.trigger("user:message", "successfully reserved");
+				completefunc: function(xData) {
+					if(xData.statusText == "OK") {
+						var schedule = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+							includeAllAttrs: true,
+							removeOws: true
+						});
+						var x = self.formatScheduleDates(schedule[0]);
+						x.Division = division;
+						
+						App.trigger("schedule:append", x);
+						App.trigger("user:message", "successfully reserved");
+					} else {
+						App.trigger("user:message", "error saving your reservation");
+					}
 				}
 			});
 		},
 		
-		deleteReservation: function(id) {
+		getTeacherAvailability: function(res) {
+			// check if teacher has this time slot taken
+			var teacher = res.teacherLogon,
+				startTime = res.StartTime;
 			
+			// query SP division 
+		
+			return true;
+			// return true for available, or false
+		},
+		getStudentTeacherStatus: function(res) {
+			return true;
+			// return true for available, or false
+		},
+		
+		deleteReservation: function(appt) {
+			var reservationID = appt.get("ID"),
+				division = appt.get("Division");
+			$().SPServices({
+				operation: "UpdateListItems",
+				async: true,
+				webURL: App.Config.Settings.reservationLists[division].webURL,
+				listName: App.Config.Settings.reservationLists[division].listName,
+				batchCmd: "Delete",
+				ID: reservationID,
+				completefunc: function() {
+					App.trigger("user:message", "reservation deleted");
+				}
+			});
 		}
 	};
 });

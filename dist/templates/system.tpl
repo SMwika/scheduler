@@ -7,7 +7,7 @@
 <!-- scheduleApptSingle -->
 <script id="scheduleApptSingle" type="text/template">
 {{ StartTime }} - {{ EndTime }}&nbsp;&nbsp;&nbsp;<strong>{{ StudentName }}</strong><br/>
-{{ Title }} <em>{{ RoomNumber }}</em><br/>
+{{ Title }}&nbsp;&nbsp;&nbsp;<em>Room: {{ RoomNumber }}</em><br/>
 <a href="" class="js-delete-appt">delete</a>
 </script>
 

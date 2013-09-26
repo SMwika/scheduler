@@ -74,6 +74,6 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 				}
 			]
 		}]
-	}
+	};
 
 });
