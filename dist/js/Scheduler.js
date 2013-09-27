@@ -1,5 +1,5 @@
 /*!
- scheduler Build version 0.0.1, 09-26-2013
+ scheduler Build version 0.0.1, 09-27-2013
 */
 $(function () {
     
@@ -78,8 +78,11 @@ ptc.on("initialize:after", function () {
 
 	// set these settings on a per-conference basis
 	Mod.Settings = {
-	
-		exclusions: ["(ASA)", "(MSE)"],
+		
+		overrides: {
+			exclusions: ["(ASA)", "(MSE)", "dbeckstead(Homeroom)", "drussell(Homeroom)"],
+			inclusions: ["aflores"]
+		},
 		
 		familyList: {
 			// used to get family information
@@ -323,7 +326,7 @@ ptc.on("initialize:after", function () {
 				});
 			parentLogon = parentLogon.split("\\")[1]; */
 
-			var parentLogon = "Kathryn.Baxter"; // for testing
+			var parentLogon = "Lap.Tung"; // for testing
 			
 			defer.resolve(parentLogon);
 
@@ -417,7 +420,7 @@ ptc.on("initialize:after", function () {
 						_.each(studentArray, function(student) {
 							students.push({
 								studentID: student.StudentID,
-								teachers: student.NameValues,
+								teachers: student.NameValues.toLowerCase(),
 							});
 						});
 						
@@ -427,12 +430,12 @@ ptc.on("initialize:after", function () {
 							// split up the teacher column by semicolon
 							var teacherArray = record.teachers.split(";");
 							
-							// remove exclusions from the teacher list
-							var newTeacherArray = self.removeExcludedTeachers(teacherArray);
+							// process overrides from the teacher list
+							var newTeacherArray = self.processOverrides(teacherArray);
 							
 							// remove everything after parentheses and change to lowercase
 							newTeacherArray = _.map(newTeacherArray, function(teacher) {
-								return teacher.replace(/\(.+/g, "").toLowerCase();
+								return teacher.replace(/\(.+/g, "");
 							});	
 							
 							// trim out any duplicates
@@ -457,18 +460,42 @@ ptc.on("initialize:after", function () {
 			return defer.promise();
 		},
 		
-		removeExcludedTeachers: function(teacherArray) {
+		processOverrides: function(teacherArray) {
+		
 			// set the newTeacherArray with the passed variable
-			var newTeacherArray = teacherArray;
+			var excluded = [];
+			var finalExclusions = [];
+			
+			// first, let's get a list of excluded teachers
+			_.each(App.Config.Settings.overrides.exclusions, function(exclusion) {
+				exclusion = exclusion.toLowerCase();
+				var eachExclusion = _.filter(teacherArray, function(teacher) {
+					// return anything that is excluded
+					return teacher.indexOf(exclusion) >= 0;
+				});
+				excluded = excluded.concat(eachExclusion);
+			});
+			
+			// then, let's take out any of the exclusions that are in the "inclusions"
+			_.each(App.Config.Settings.overrides.inclusions, function(inclusion) {
+				inclusion = inclusion.toLowerCase();
+				var eachInclusion = _.filter(excluded, function(teacher) {
+					// return all teachers who AREN'T included by override
+					return teacher.indexOf(inclusion) === -1;
+				});
+				finalExclusions = finalExclusions.concat(eachInclusion);
+			});
+			
 			// iterate through each of the exclusions (strings)
-			_.each(App.Config.Settings.exclusions, function(exclusion) {
+			_.each(finalExclusions, function(exclusion) {
 				// set the new array to be a filtered version of itself each time
-				newTeacherArray = _.filter(newTeacherArray, function(teacher) {
+				teacherArray = _.filter(teacherArray, function(teacher) {
 					// return anything that doesn't have an index of the exclusion
-					return teacher.indexOf(exclusion) < 0;
+					return teacher.indexOf(exclusion) === -1;
 				});
 			});
-			return newTeacherArray;
+			
+			return teacherArray;
 		},
 		
 		getConferences: function(teacherList) {

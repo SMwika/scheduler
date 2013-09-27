@@ -2,8 +2,11 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 
 	// set these settings on a per-conference basis
 	Mod.Settings = {
-	
-		exclusions: ["(ASA)", "(MSE)"],
+		
+		overrides: {
+			exclusions: ["(ASA)", "(MSE)", "dbeckstead(Homeroom)", "drussell(Homeroom)"],
+			inclusions: ["aflores"]
+		},
 		
 		familyList: {
 			// used to get family information
