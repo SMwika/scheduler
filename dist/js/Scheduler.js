@@ -1,5 +1,5 @@
 /*!
- scheduler Build version 0.0.1, 09-27-2013
+ scheduler Build version 0.0.1, 10-01-2013
 */
 $(function () {
     
@@ -655,7 +655,8 @@ ptc.on("initialize:after", function () {
 		},
 		
 		getTeacherAvailability: function(res) {
-			// check if teacher has this time slot taken
+			console.log(res);
+			// check if teacher has this time slot available
 			var teacher = res.teacherLogon,
 				startTime = res.StartTime;
 			
@@ -665,6 +666,10 @@ ptc.on("initialize:after", function () {
 			// return true for available, or false
 		},
 		getStudentTeacherStatus: function(res) {
+			console.log(res);
+			var teacher = res.teacherLogon,
+				student = res.studentID;
+			// make sure teacher and student are not already reserved together
 			return true;
 			// return true for available, or false
 		},

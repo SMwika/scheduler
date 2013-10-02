@@ -12,6 +12,11 @@ module.exports = function(grunt) {
         dest: 'dist/templates/system.tpl'
       }
     },
+	shell: {
+      bumpVersion: {
+        command: 'npm version patch'
+      }
+    },
     concat: {
       options: {
         banner: '/*!\n <%= pkg.name %> Build version <%= pkg.version %>, <%= grunt.template.today("mm-dd-yyyy") %>\n*/\n',
@@ -81,7 +86,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
-  
   
   // Template multitask
   grunt.registerMultiTask('templates', 'Wraps templates with header and footer, then concats into single file', function () {
