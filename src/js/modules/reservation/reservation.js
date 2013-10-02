@@ -72,8 +72,11 @@ ptc.module("Reservation", function(Mod, App){
 			});
 		},
 		checkAvailability: function(res) {
+		
 			Mod.ReservingStatus = true;
+			
 			var defer = $.Deferred();
+			
 			// not available by default
 			var availability = false;
 			
@@ -102,11 +105,7 @@ ptc.module("Reservation", function(Mod, App){
 					Mod.ReservingStatus = false;
 					defer.resolve(availability);
 				}
-			});
-			
-			// then, see if this student already has an appt with this teacher
-			
-			defer.resolve(availability);
+			});			
 			
 			return defer.promise();
 		},

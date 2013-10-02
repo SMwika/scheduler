@@ -655,21 +655,59 @@ ptc.on("initialize:after", function () {
 		},
 		
 		getTeacherAvailability: function(res) {
-			console.log(res);
-			// check if teacher has this time slot available
+		// check if teacher has this time slot available
+		
+			// set teacher and startTime from passed reservation
 			var teacher = res.teacherLogon,
-				startTime = res.StartTime;
+				startTime = res.startTime;
+			
+			if(teacher.indexOf("-") > 0) {
+				teacher = teacher.split("-")[0];
+			}
 			
 			// query SP division 
-		
-			return true;
+			var defer = $.Deferred(), self = this,
+				available = true, counter = 0,
+				divisions = _.keys(App.Config.Settings.reservationLists);
+				
+			_.each(divisions, function(division) {
+				$().SPServices({
+					operation: "GetListItems",
+					webURL: App.Config.Settings.reservationLists[division].webURL,
+					async:true,
+					listName: App.Config.Settings.reservationLists[division].listName,					
+					CAMLQuery:"<Query><Where><And><In><FieldRef Name='Teachers' /><Values><Value Type='Text'>ISB\\" + teacher + "</Value></Values></In><Eq><FieldRef Name='StartTime' /><Value Type='Text'>" + startTime + "</Value></Eq></And></Where></Query>",
+					completefunc: function (xData) {
+						var schedule = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+							includeAllAttrs: true,
+							removeOws: true
+						});
+						console.log(schedule);
+						if(schedule.length > 0) {
+							available = false;
+							defer.resolve(available);
+						}
+						
+						counter++;
+						
+						if(counter === 3) {
+							console.log(available);
+							defer.resolve(available);
+						}
+					}
+				});
+			});
+			
+			return defer.promise();
 			// return true for available, or false
 		},
 		getStudentTeacherStatus: function(res) {
-			console.log(res);
+		// make sure teacher and student are not already reserved together
+		
+			// student and teacher from passed reservation
 			var teacher = res.teacherLogon,
 				student = res.studentID;
-			// make sure teacher and student are not already reserved together
+			
 			return true;
 			// return true for available, or false
 		},
@@ -764,8 +802,11 @@ ptc.on("initialize:after", function () {
 			});
 		},
 		checkAvailability: function(res) {
+		
 			Mod.ReservingStatus = true;
+			
 			var defer = $.Deferred();
+			
 			// not available by default
 			var availability = false;
 			
