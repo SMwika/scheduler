@@ -1,5 +1,5 @@
 /*!
- scheduler Build version 0.0.1, 10-01-2013
+ scheduler Build version 0.0.1, 10-03-2013
 */
 $(function () {
     
@@ -211,20 +211,40 @@ ptc.on("initialize:after", function () {
 					var teachers = App.request("student:getteachers", studentList);
 					$.when(teachers).done(function(teacherList) {
 						App.trigger("user:message", "get teachers");
-
+						
 						Mod.Config.teachers = teacherList;
+						
 						var conferences = App.request("teacher:getconferences", teacherList);
 						$.when(conferences).done(function(conferenceList) {
 							App.trigger("user:message", "get conference details");
 
 							Mod.Config.conferences = conferenceList;
-							var times = App.request("teacher:gettimes", conferenceList);
-							$.when(times).done(function(timeList) {
-								App.trigger("user:message", "get available time slots");
+							
+							// get any booked appointments for any teachers
+							var teacherSchedule = App.request("teacher:getschedule", conferenceList);
+							$.when(teacherSchedule).done(function(teacherScheduleList) {
+								App.trigger("user:message", "got teacher reservations");
+								Mod.Config.teacherSchedules = teacherScheduleList;
+								console.log("blocked times: ", teacherScheduleList.length);
 								
-								Mod.Config.times = timeList;
+								var times = App.request("teacher:gettimes", conferenceList);
+								$.when(times).done(function(timeList) {
+									console.log("raw times: ", timeList.length);
+									App.trigger("user:message", "get available time slots");
+									
+									Mod.Config.times = timeList;
+									
+									var availableTimes = App.request("times:getavailable");
+									$.when(availableTimes).done(function(newTimeList) {
+										console.log("filtered times: ", newTimeList.length);
+										Mod.Config.newTimes = timeList;
+										App.trigger("user:message", "filtered the times");
+										defer.resolve();
+
+									});
+									
+								});
 								
-								defer.resolve();
 							});
 						});
 
@@ -242,25 +262,35 @@ ptc.on("initialize:after", function () {
 	App.on("times:generate", function () {
 		API.generateTimeSlots();
 	});
+	
 	App.reqres.setHandler("user:getloggedin", function () {
 		return API.getLoggedInUser();
 	});
+	
 	App.reqres.setHandler("user:getstudents", function (userLogon) {
 		return API.getStudents(userLogon);
 	});
+	
 	App.reqres.setHandler("student:getteachers", function (studentList) {
 		return API.getTeachers(studentList);
 	});
+	
 	App.reqres.setHandler("teacher:gettimes", function (conferenceList) {
 		return API.getTimes(conferenceList);
 	});
+	
+	App.reqres.setHandler("teacher:getschedule", function(teacher) {
+		return API.getTeacherSchedule(teacher);
+	});
+	
 	App.reqres.setHandler("teacher:getconferences", function (teacherList) {
 		return API.getConferences(teacherList);
 	});
+	
 	App.reqres.setHandler("schedule:getmy", function (familyCode) {
 		return API.getSchedule(familyCode);
 	});
-	
+		
 	App.reqres.setHandler("data:getTeacherAvailability", function(res) {
 		return API.getTeacherAvailability(res);
 	});
@@ -269,9 +299,14 @@ ptc.on("initialize:after", function () {
 		return API.getStudentTeacherStatus(res);
 	});
 	
+	App.reqres.setHandler("times:getavailable", function() {
+		return API.getAvailableTimes();
+	});
+	
 	App.on("data:reservation:save", function () {
 		API.saveReservation();
 	});
+	
 	App.on("data:reservation:delete", function(appt) {
 		API.deleteReservation(appt);
 	});
@@ -586,6 +621,92 @@ ptc.on("initialize:after", function () {
 			}
 			return defer.promise();
 		},
+		getAvailableTimes: function() {
+			console.time('filtering times');
+			// we're trying to get filter the 'times' list and
+			// remove anything from the 'teacherSchedules' list that matches
+			var defer = $.Deferred(),
+				oldTimes = App.Data.Config.times,
+				blockedTimes = App.Data.Config.teacherSchedules,
+				matchingBlockedTimes = [],
+				newTimes = [];
+			
+			// first, filter through all the blockedTimes
+			_.each(blockedTimes, function(time) {
+				var teacherBits = time.Teachers.split(";"),
+					teacherName = "";
+						
+				if(teacherBits.length > 2) {
+					// if > 2, then there are two teachers in the field
+					teacherName = teacherBits[1].split("\\")[1] + "-" + teacherBits[3].split("\\")[1];
+				} else {
+					// otherwise, there's only one teacher
+					teacherName = teacherBits[1].split("\\")[1];
+				}
+				// convert to lowercase so we can compare to the times array
+				teacherName = teacherName.toLowerCase();
+				
+				// now we have the teacherName (eg 'bweir' or 'jbinns-aflores')
+				matchingBlockedTimes.push({
+					teacherLogon: teacherName,
+					unixStart: time.StartTime
+				});
+			});
+			
+			// look through each of the reserved times
+			_.each(matchingBlockedTimes, function(time) {
+				// for each one, iterate through all the oldTimes
+				_.each(oldTimes, function(oldtime, i) {
+					// if the new time matches the old time
+					if(JSON.stringify(time) === JSON.stringify({teacherLogon: oldtime.teacherLogon, unixStart: oldtime.unixStart})) {
+						oldTimes.splice(i, 1);
+					}
+				});
+			});
+			console.timeEnd('filtering times');
+			defer.resolve(oldTimes);
+			
+			return defer.promise();
+		},
+		getTeacherSchedule: function(teachers) {
+			// get all of the reservations for this/these teacher(s) in their list
+			var defer = $.Deferred(),
+				counter = 0,
+				scheduleList = [];
+			
+			_.each(teachers, function(teacher) {
+				// should have access to teacher.teacher1 and teacher.division				
+				// query SharePoint for any reservations for this teacher
+				$().SPServices({
+					operation: "GetListItems",
+					webURL: App.Config.Settings.reservationLists[teacher.division].webURL,
+					async:true,
+					listName: App.Config.Settings.reservationLists[teacher.division].listName,					
+					CAMLQuery:"<Query><Where><In><FieldRef Name='Teachers' /><Values><Value Type='Text'>ISB\\" + teacher.teacher1 + "</Value></Values></In></Where></Query>",
+					completefunc: function (xData) {
+						var teacherSchedule = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+							includeAllAttrs: true,
+							removeOws: true
+						});
+												
+						if(teacherSchedule.length > 0) {
+							// if this teacher has reservations, add them to the master list
+							scheduleList = scheduleList.concat(teacherSchedule)
+						}
+						
+						counter++;
+						
+						if(counter === teachers.length) {
+							// once we've iterated through all teachers,
+							// resolve the full list
+							defer.resolve(scheduleList);
+						}
+					}
+				});
+			});
+			
+			return defer.promise();
+		},
 		getTeacherList: function(x) {
 			var teachers;
 			// check if the teacher is actually a team teaching thing
@@ -614,9 +735,6 @@ ptc.on("initialize:after", function () {
 				self = this;
 			// get formatted teacher list
 			var teachers = self.getTeacherList(x);
-			// set division
-			var division = self.setDivision(x);
-			
 			
 			var reservationValues = [
 				["Title", x.teacherName],
@@ -632,9 +750,9 @@ ptc.on("initialize:after", function () {
 			$().SPServices({
 				operation: "UpdateListItems",
 				async: false,
-				webURL: App.Config.Settings.reservationLists[division].webURL,
+				webURL: App.Config.Settings.reservationLists[x.division].webURL,
 				batchCmd: "New",
-				listName: App.Config.Settings.reservationLists[division].listName,
+				listName: App.Config.Settings.reservationLists[x.division].listName,
 				valuepairs: reservationValues,
 				completefunc: function(xData) {
 					if(xData.statusText == "OK") {
@@ -642,10 +760,10 @@ ptc.on("initialize:after", function () {
 							includeAllAttrs: true,
 							removeOws: true
 						});
-						var x = self.formatScheduleDates(schedule[0]);
-						x.Division = division;
+						var y = self.formatScheduleDates(schedule[0]);
+						y.Division = x.division;
 						
-						App.trigger("schedule:append", x);
+						App.trigger("schedule:append", y);
 						App.trigger("user:message", "successfully reserved");
 					} else {
 						App.trigger("user:message", "error saving your reservation");
@@ -690,7 +808,7 @@ ptc.on("initialize:after", function () {
 						
 						counter++;
 						
-						if(counter === 3) {
+						if(counter === divisions.length) {
 							console.log(available);
 							defer.resolve(available);
 						}
@@ -708,7 +826,44 @@ ptc.on("initialize:after", function () {
 			var teacher = res.teacherLogon,
 				student = res.studentID;
 			
-			return true;
+			if(teacher.indexOf("-") > 0) {
+				teacher = teacher.split("-")[0];
+			}
+			
+			// query SP division 
+			var defer = $.Deferred(), self = this,
+				available = true, counter = 0,
+				divisions = _.keys(App.Config.Settings.reservationLists);
+				
+			_.each(divisions, function(division) {
+				$().SPServices({
+					operation: "GetListItems",
+					webURL: App.Config.Settings.reservationLists[division].webURL,
+					async:true,
+					listName: App.Config.Settings.reservationLists[division].listName,					
+					CAMLQuery:"<Query><Where><And><In><FieldRef Name='Teachers' /><Values><Value Type='Text'>ISB\\" + teacher + "</Value></Values></In><Eq><FieldRef Name='StudentID' /><Value Type='Text'>" + student + "</Value></Eq></And></Where></Query>",
+					completefunc: function (xData) {
+						var schedule = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+							includeAllAttrs: true,
+							removeOws: true
+						});
+
+						if(schedule.length > 0) {
+							available = false;
+							defer.resolve(available);
+						}
+						
+						counter++;
+						
+						if(counter === divisions.length) {
+							console.log(available);
+							defer.resolve(available);
+						}
+					}
+				});
+			});
+			
+			return defer.promise()
 			// return true for available, or false
 		},
 		
@@ -835,11 +990,7 @@ ptc.on("initialize:after", function () {
 					Mod.ReservingStatus = false;
 					defer.resolve(availability);
 				}
-			});
-			
-			// then, see if this student already has an appt with this teacher
-			
-			defer.resolve(availability);
+			});			
 			
 			return defer.promise();
 		},
@@ -1068,7 +1219,8 @@ ptc.on("initialize:after", function () {
 			} else {
 				$(this.el).attr("data-teacherlogon", this.model.get("teacher1"));
 			}
-			$(this.el).attr("data-roomNumber", this.model.get("roomNumber"));
+			$(this.el).attr("data-roomnumber", this.model.get("roomNumber"));
+			$(this.el).attr("data-division", this.model.get("division"));
 		}
 
 	});
@@ -1090,10 +1242,12 @@ ptc.on("initialize:after", function () {
 			} else {
 				var teacherLogon = $(e.target).find(":selected").data("teacherlogon");
 				var roomNumber = $(e.target).find(":selected").data("roomnumber");
+				var division = $(e.target).find(":selected").data("division");
 				var teacherName = $(e.target).find(":selected").val();
 				App.Reservation.NewReservation.teacherName = teacherName;
 				App.Reservation.NewReservation.teacherLogon = teacherLogon;
 				App.Reservation.NewReservation.roomNumber = roomNumber;
+				App.Reservation.NewReservation.division = division;
 				App.trigger("times:list", teacherLogon);
 			}
 		}

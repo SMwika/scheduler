@@ -6,25 +6,35 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 	App.on("times:generate", function () {
 		API.generateTimeSlots();
 	});
+	
 	App.reqres.setHandler("user:getloggedin", function () {
 		return API.getLoggedInUser();
 	});
+	
 	App.reqres.setHandler("user:getstudents", function (userLogon) {
 		return API.getStudents(userLogon);
 	});
+	
 	App.reqres.setHandler("student:getteachers", function (studentList) {
 		return API.getTeachers(studentList);
 	});
+	
 	App.reqres.setHandler("teacher:gettimes", function (conferenceList) {
 		return API.getTimes(conferenceList);
 	});
+	
+	App.reqres.setHandler("teacher:getschedule", function(teacher) {
+		return API.getTeacherSchedule(teacher);
+	});
+	
 	App.reqres.setHandler("teacher:getconferences", function (teacherList) {
 		return API.getConferences(teacherList);
 	});
+	
 	App.reqres.setHandler("schedule:getmy", function (familyCode) {
 		return API.getSchedule(familyCode);
 	});
-	
+		
 	App.reqres.setHandler("data:getTeacherAvailability", function(res) {
 		return API.getTeacherAvailability(res);
 	});
@@ -33,9 +43,14 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 		return API.getStudentTeacherStatus(res);
 	});
 	
+	App.reqres.setHandler("times:getavailable", function() {
+		return API.getAvailableTimes();
+	});
+	
 	App.on("data:reservation:save", function () {
 		API.saveReservation();
 	});
+	
 	App.on("data:reservation:delete", function(appt) {
 		API.deleteReservation(appt);
 	});
@@ -350,6 +365,92 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 			}
 			return defer.promise();
 		},
+		getAvailableTimes: function() {
+			console.time('filtering times');
+			// we're trying to get filter the 'times' list and
+			// remove anything from the 'teacherSchedules' list that matches
+			var defer = $.Deferred(),
+				oldTimes = App.Data.Config.times,
+				blockedTimes = App.Data.Config.teacherSchedules,
+				matchingBlockedTimes = [],
+				newTimes = [];
+			
+			// first, filter through all the blockedTimes
+			_.each(blockedTimes, function(time) {
+				var teacherBits = time.Teachers.split(";"),
+					teacherName = "";
+						
+				if(teacherBits.length > 2) {
+					// if > 2, then there are two teachers in the field
+					teacherName = teacherBits[1].split("\\")[1] + "-" + teacherBits[3].split("\\")[1];
+				} else {
+					// otherwise, there's only one teacher
+					teacherName = teacherBits[1].split("\\")[1];
+				}
+				// convert to lowercase so we can compare to the times array
+				teacherName = teacherName.toLowerCase();
+				
+				// now we have the teacherName (eg 'bweir' or 'jbinns-aflores')
+				matchingBlockedTimes.push({
+					teacherLogon: teacherName,
+					unixStart: time.StartTime
+				});
+			});
+			
+			// look through each of the reserved times
+			_.each(matchingBlockedTimes, function(time) {
+				// for each one, iterate through all the oldTimes
+				_.each(oldTimes, function(oldtime, i) {
+					// if the new time matches the old time
+					if(JSON.stringify(time) === JSON.stringify({teacherLogon: oldtime.teacherLogon, unixStart: oldtime.unixStart})) {
+						oldTimes.splice(i, 1);
+					}
+				});
+			});
+			console.timeEnd('filtering times');
+			defer.resolve(oldTimes);
+			
+			return defer.promise();
+		},
+		getTeacherSchedule: function(teachers) {
+			// get all of the reservations for this/these teacher(s) in their list
+			var defer = $.Deferred(),
+				counter = 0,
+				scheduleList = [];
+			
+			_.each(teachers, function(teacher) {
+				// should have access to teacher.teacher1 and teacher.division				
+				// query SharePoint for any reservations for this teacher
+				$().SPServices({
+					operation: "GetListItems",
+					webURL: App.Config.Settings.reservationLists[teacher.division].webURL,
+					async:true,
+					listName: App.Config.Settings.reservationLists[teacher.division].listName,					
+					CAMLQuery:"<Query><Where><In><FieldRef Name='Teachers' /><Values><Value Type='Text'>ISB\\" + teacher.teacher1 + "</Value></Values></In></Where></Query>",
+					completefunc: function (xData) {
+						var teacherSchedule = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+							includeAllAttrs: true,
+							removeOws: true
+						});
+												
+						if(teacherSchedule.length > 0) {
+							// if this teacher has reservations, add them to the master list
+							scheduleList = scheduleList.concat(teacherSchedule)
+						}
+						
+						counter++;
+						
+						if(counter === teachers.length) {
+							// once we've iterated through all teachers,
+							// resolve the full list
+							defer.resolve(scheduleList);
+						}
+					}
+				});
+			});
+			
+			return defer.promise();
+		},
 		getTeacherList: function(x) {
 			var teachers;
 			// check if the teacher is actually a team teaching thing
@@ -378,9 +479,6 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 				self = this;
 			// get formatted teacher list
 			var teachers = self.getTeacherList(x);
-			// set division
-			var division = self.setDivision(x);
-			
 			
 			var reservationValues = [
 				["Title", x.teacherName],
@@ -396,9 +494,9 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 			$().SPServices({
 				operation: "UpdateListItems",
 				async: false,
-				webURL: App.Config.Settings.reservationLists[division].webURL,
+				webURL: App.Config.Settings.reservationLists[x.division].webURL,
 				batchCmd: "New",
-				listName: App.Config.Settings.reservationLists[division].listName,
+				listName: App.Config.Settings.reservationLists[x.division].listName,
 				valuepairs: reservationValues,
 				completefunc: function(xData) {
 					if(xData.statusText == "OK") {
@@ -406,10 +504,10 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 							includeAllAttrs: true,
 							removeOws: true
 						});
-						var x = self.formatScheduleDates(schedule[0]);
-						x.Division = division;
+						var y = self.formatScheduleDates(schedule[0]);
+						y.Division = x.division;
 						
-						App.trigger("schedule:append", x);
+						App.trigger("schedule:append", y);
 						App.trigger("user:message", "successfully reserved");
 					} else {
 						App.trigger("user:message", "error saving your reservation");
@@ -454,7 +552,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 						
 						counter++;
 						
-						if(counter === 3) {
+						if(counter === divisions.length) {
 							console.log(available);
 							defer.resolve(available);
 						}
@@ -462,7 +560,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 				});
 			});
 			
-			return true;
+			return defer.promise();
 			// return true for available, or false
 		},
 		getStudentTeacherStatus: function(res) {
@@ -472,7 +570,44 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 			var teacher = res.teacherLogon,
 				student = res.studentID;
 			
-			return true;
+			if(teacher.indexOf("-") > 0) {
+				teacher = teacher.split("-")[0];
+			}
+			
+			// query SP division 
+			var defer = $.Deferred(), self = this,
+				available = true, counter = 0,
+				divisions = _.keys(App.Config.Settings.reservationLists);
+				
+			_.each(divisions, function(division) {
+				$().SPServices({
+					operation: "GetListItems",
+					webURL: App.Config.Settings.reservationLists[division].webURL,
+					async:true,
+					listName: App.Config.Settings.reservationLists[division].listName,					
+					CAMLQuery:"<Query><Where><And><In><FieldRef Name='Teachers' /><Values><Value Type='Text'>ISB\\" + teacher + "</Value></Values></In><Eq><FieldRef Name='StudentID' /><Value Type='Text'>" + student + "</Value></Eq></And></Where></Query>",
+					completefunc: function (xData) {
+						var schedule = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+							includeAllAttrs: true,
+							removeOws: true
+						});
+
+						if(schedule.length > 0) {
+							available = false;
+							defer.resolve(available);
+						}
+						
+						counter++;
+						
+						if(counter === divisions.length) {
+							console.log(available);
+							defer.resolve(available);
+						}
+					}
+				});
+			});
+			
+			return defer.promise()
 			// return true for available, or false
 		},
 		

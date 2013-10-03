@@ -77,7 +77,8 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 			} else {
 				$(this.el).attr("data-teacherlogon", this.model.get("teacher1"));
 			}
-			$(this.el).attr("data-roomNumber", this.model.get("roomNumber"));
+			$(this.el).attr("data-roomnumber", this.model.get("roomNumber"));
+			$(this.el).attr("data-division", this.model.get("division"));
 		}
 
 	});
@@ -99,10 +100,12 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 			} else {
 				var teacherLogon = $(e.target).find(":selected").data("teacherlogon");
 				var roomNumber = $(e.target).find(":selected").data("roomnumber");
+				var division = $(e.target).find(":selected").data("division");
 				var teacherName = $(e.target).find(":selected").val();
 				App.Reservation.NewReservation.teacherName = teacherName;
 				App.Reservation.NewReservation.teacherLogon = teacherLogon;
 				App.Reservation.NewReservation.roomNumber = roomNumber;
+				App.Reservation.NewReservation.division = division;
 				App.trigger("times:list", teacherLogon);
 			}
 		}

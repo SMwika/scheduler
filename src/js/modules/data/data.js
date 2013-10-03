@@ -54,20 +54,40 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 					var teachers = App.request("student:getteachers", studentList);
 					$.when(teachers).done(function(teacherList) {
 						App.trigger("user:message", "get teachers");
-
+						
 						Mod.Config.teachers = teacherList;
+						
 						var conferences = App.request("teacher:getconferences", teacherList);
 						$.when(conferences).done(function(conferenceList) {
 							App.trigger("user:message", "get conference details");
 
 							Mod.Config.conferences = conferenceList;
-							var times = App.request("teacher:gettimes", conferenceList);
-							$.when(times).done(function(timeList) {
-								App.trigger("user:message", "get available time slots");
+							
+							// get any booked appointments for any teachers
+							var teacherSchedule = App.request("teacher:getschedule", conferenceList);
+							$.when(teacherSchedule).done(function(teacherScheduleList) {
+								App.trigger("user:message", "got teacher reservations");
+								Mod.Config.teacherSchedules = teacherScheduleList;
+								console.log("blocked times: ", teacherScheduleList.length);
 								
-								Mod.Config.times = timeList;
+								var times = App.request("teacher:gettimes", conferenceList);
+								$.when(times).done(function(timeList) {
+									console.log("raw times: ", timeList.length);
+									App.trigger("user:message", "get available time slots");
+									
+									Mod.Config.times = timeList;
+									
+									var availableTimes = App.request("times:getavailable");
+									$.when(availableTimes).done(function(newTimeList) {
+										console.log("filtered times: ", newTimeList.length);
+										Mod.Config.newTimes = timeList;
+										App.trigger("user:message", "filtered the times");
+										defer.resolve();
+
+									});
+									
+								});
 								
-								defer.resolve();
 							});
 						});
 
