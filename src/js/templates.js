@@ -7,7 +7,14 @@ $(function () {
 			"singleStudent",
 			"singleTeacher",
 			"singleTimeSlot",
+			"studentListContainer",
+			"teacherListContainer",
+			"timeListContainer",
+			"submitChecking",
+			"submitUnavailable",
+			"submitSuccess",
 			"submitForm"
+
         ];
     
     if ( $("body").data("env") === "dev" ) {

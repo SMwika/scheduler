@@ -54,6 +54,14 @@ a:hover {
 	display:block;
 	padding:2px;
 }
+.status-checking,
+.status-unavailable,
+.status-success {
+	padding:8px;
+	background:#ddd;
+	color:#333;
+	font-size:1em;
+}
 
 /* New Reservation */
 ul.student-list {

@@ -3,6 +3,11 @@ _.templateSettings = {
     interpolate: /\{\{([\s\S]+?)\}\}/g
 };
 
+Marionette.Region.prototype.open = function(view){
+	this.$el.hide();
+	this.$el.html(view.el);
+	this.$el.slideDown("fast");
+};
 
 // create app
 var ptc = new Marionette.Application();

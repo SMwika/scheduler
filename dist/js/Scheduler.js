@@ -10,7 +10,14 @@ $(function () {
 			"singleStudent",
 			"singleTeacher",
 			"singleTimeSlot",
+			"studentListContainer",
+			"teacherListContainer",
+			"timeListContainer",
+			"submitChecking",
+			"submitUnavailable",
+			"submitSuccess",
 			"submitForm"
+
         ];
     
     if ( $("body").data("env") === "dev" ) {
@@ -51,6 +58,11 @@ _.templateSettings = {
     interpolate: /\{\{([\s\S]+?)\}\}/g
 };
 
+Marionette.Region.prototype.open = function(view){
+	this.$el.hide();
+	this.$el.html(view.el);
+	this.$el.slideDown("fast");
+};
 
 // create app
 var ptc = new Marionette.Application();
@@ -225,19 +237,18 @@ ptc.on("initialize:after", function () {
 							$.when(teacherSchedule).done(function(teacherScheduleList) {
 								App.trigger("user:message", "got teacher reservations");
 								Mod.Config.teacherSchedules = teacherScheduleList;
-								console.log("blocked times: ", teacherScheduleList.length);
 								
 								var times = App.request("teacher:gettimes", conferenceList);
 								$.when(times).done(function(timeList) {
-									console.log("raw times: ", timeList.length);
+
 									App.trigger("user:message", "get available time slots");
 									
 									Mod.Config.times = timeList;
 									
 									var availableTimes = App.request("times:getavailable");
 									$.when(availableTimes).done(function(newTimeList) {
-										console.log("filtered times: ", newTimeList.length);
-										Mod.Config.newTimes = timeList;
+
+										Mod.Config.newTimes = newTimeList;
 										App.trigger("user:message", "filtered the times");
 										defer.resolve();
 
@@ -455,7 +466,7 @@ ptc.on("initialize:after", function () {
 						_.each(studentArray, function(student) {
 							students.push({
 								studentID: student.StudentID,
-								teachers: student.NameValues.toLowerCase(),
+								teachers: student.NameValues.toLowerCase()
 							});
 						});
 						
@@ -570,7 +581,7 @@ ptc.on("initialize:after", function () {
 								conferenceName: conference.Title,
 								division: conference.Division,
 								roomNumber: conference.Room,
-								teacher1: teachers[1].split("\\")[1].toLowerCase(),
+								teacher1: teachers[1].split("\\")[1].toLowerCase()
 							});
 						}
 					});
@@ -622,7 +633,6 @@ ptc.on("initialize:after", function () {
 			return defer.promise();
 		},
 		getAvailableTimes: function() {
-			console.time('filtering times');
 			// we're trying to get filter the 'times' list and
 			// remove anything from the 'teacherSchedules' list that matches
 			var defer = $.Deferred(),
@@ -654,17 +664,19 @@ ptc.on("initialize:after", function () {
 			});
 			
 			// look through each of the reserved times
-			_.each(matchingBlockedTimes, function(time) {
+			_.each(matchingBlockedTimes, function(blockedtime) {
 				// for each one, iterate through all the oldTimes
-				_.each(oldTimes, function(oldtime, i) {
+				_.each(oldTimes, function(oldtime) {
+					var sameTime = blockedtime.unixStart === oldtime.unixStart;
+					var sameTeacher = blockedtime.teacherLogon === oldtime.teacherLogon;
 					// if the new time matches the old time
-					if(JSON.stringify(time) === JSON.stringify({teacherLogon: oldtime.teacherLogon, unixStart: oldtime.unixStart})) {
-						oldTimes.splice(i, 1);
+					if(!sameTime && !sameTeacher) {
+						newTimes.push(oldtime);
 					}
 				});
 			});
-			console.timeEnd('filtering times');
-			defer.resolve(oldTimes);
+
+			defer.resolve(newTimes);
 			
 			return defer.promise();
 		},
@@ -691,7 +703,7 @@ ptc.on("initialize:after", function () {
 												
 						if(teacherSchedule.length > 0) {
 							// if this teacher has reservations, add them to the master list
-							scheduleList = scheduleList.concat(teacherSchedule)
+							scheduleList = scheduleList.concat(teacherSchedule);
 						}
 						
 						counter++;
@@ -762,7 +774,8 @@ ptc.on("initialize:after", function () {
 						});
 						var y = self.formatScheduleDates(schedule[0]);
 						y.Division = x.division;
-						
+						App.Reservation.ReservingStatus = false;
+						App.trigger("submit:options", "success");
 						App.trigger("schedule:append", y);
 						App.trigger("user:message", "successfully reserved");
 					} else {
@@ -784,7 +797,7 @@ ptc.on("initialize:after", function () {
 			}
 			
 			// query SP division 
-			var defer = $.Deferred(), self = this,
+			var defer = $.Deferred(),
 				available = true, counter = 0,
 				divisions = _.keys(App.Config.Settings.reservationLists);
 				
@@ -800,7 +813,7 @@ ptc.on("initialize:after", function () {
 							includeAllAttrs: true,
 							removeOws: true
 						});
-						console.log(schedule);
+
 						if(schedule.length > 0) {
 							available = false;
 							defer.resolve(available);
@@ -809,7 +822,6 @@ ptc.on("initialize:after", function () {
 						counter++;
 						
 						if(counter === divisions.length) {
-							console.log(available);
 							defer.resolve(available);
 						}
 					}
@@ -831,7 +843,7 @@ ptc.on("initialize:after", function () {
 			}
 			
 			// query SP division 
-			var defer = $.Deferred(), self = this,
+			var defer = $.Deferred(),
 				available = true, counter = 0,
 				divisions = _.keys(App.Config.Settings.reservationLists);
 				
@@ -856,14 +868,13 @@ ptc.on("initialize:after", function () {
 						counter++;
 						
 						if(counter === divisions.length) {
-							console.log(available);
 							defer.resolve(available);
 						}
 					}
 				});
 			});
 			
-			return defer.promise()
+			return defer.promise();
 			// return true for available, or false
 		},
 		
@@ -916,8 +927,8 @@ ptc.on("initialize:after", function () {
 	App.on("times:list", function(teacherLogon) {
 		API.listTimes(teacherLogon);
 	});
-	App.on("submit:enable", function() {
-		API.enableSubmit();
+	App.on("submit:options", function(option) {
+		API.enableSubmit(option);
 	});
 	
 	App.reqres.setHandler("reservation:availability", function(res) {
@@ -944,6 +955,7 @@ ptc.on("initialize:after", function () {
 			Mod.Controller.startNewReservation();
 		},
 		createReservation: function() {
+			Mod.ReservingStatus = true;
 
 			// check if possible to create a reservation
 			var checkAvailability = App.request("reservation:availability", Mod.NewReservation);
@@ -952,13 +964,13 @@ ptc.on("initialize:after", function () {
 				if(status === true) {
 					Mod.Controller.createReservation();
 				} else {
-					alert("I'm sorry, that slot cannot be booked. Please try again.");
+					Mod.ReservingStatus = false;
+					App.trigger("submit:options", "unavailable");
 				}
 			});
 		},
 		checkAvailability: function(res) {
 		
-			Mod.ReservingStatus = true;
 			
 			var defer = $.Deferred();
 			
@@ -974,20 +986,14 @@ ptc.on("initialize:after", function () {
 					var checkStudentTeacherStatus = App.request("data:getStudentTeacherStatus", res);
 					$.when(checkStudentTeacherStatus).done(function(studentStatus) {
 						if(studentStatus === true) {
-							console.log("teacher yes, student yes");
 							availability = true;
-							Mod.ReservingStatus = false;
 							defer.resolve(availability);
 						} else {
-							console.log("teacher yes, student no");
 							availability = false;
-							Mod.ReservingStatus = false;
 							defer.resolve(availability);
 						}
 					});
 				} else {
-					console.log("teacher no");
-					Mod.ReservingStatus = false;
 					defer.resolve(availability);
 				}
 			});			
@@ -996,8 +1002,8 @@ ptc.on("initialize:after", function () {
 		},
 		
 		
-		enableSubmit: function() {
-			Mod.Controller.enableSubmit();
+		enableSubmit: function(option) {
+			Mod.Controller.enableSubmit(option);
 		}
 	};
 	
@@ -1020,9 +1026,6 @@ ptc.on("initialize:after", function () {
 				});
 			Mod.NewReservation.familyCode = App.Data.Config.students[0].FamilyCode;
 			
-			studentList.on("show", function() {
-				this.$el.before("Select a student: ");
-			});
 			// show view in student region
 			App.studentRegion.show(studentList);
 		},
@@ -1035,10 +1038,7 @@ ptc.on("initialize:after", function () {
 				teacherList = new Mod.Views.TeacherList({
 					collection: data
 				});
-		
-			teacherList.on("show", function() {
-				this.$el.before("Select a teacher: ");
-			});
+				
 			// show view in teacher region
 			App.teacherRegion.show(teacherList);
 			
@@ -1065,22 +1065,31 @@ ptc.on("initialize:after", function () {
 				timeList = new Mod.Views.TimeList({
 					collection: data
 				});
-			timeList.on("show", function() {
-				this.$el.before("Select a time slot: ");
-			});
+
 			// show view in time region
 			App.timeRegion.show(timeList);
 		},
 		
-		enableSubmit: function() {
-			var submitArea = new Mod.Views.SubmitView();
+		enableSubmit: function(option) {
+			var submitArea;
+			switch(option) {
+			case "submit":
+				submitArea = new Mod.Views.SubmitView();
+				break;
+			case "checking":
+				submitArea = new Mod.Views.SubmitChecking();
+				break;
+			case "unavailable":
+				submitArea = new Mod.Views.SubmitUnavailable();
+				break;
+			case "success":
+				submitArea = new Mod.Views.SubmitSuccess();
+				break;
+			}
 			
-			//console.log(submitArea);
 			App.submitRegion.show(submitArea);
 		}
-		
 	};
-	
 });;ptc.module("Reservation", function(Mod, App, Backbone){
 
 
@@ -1148,7 +1157,7 @@ ptc.on("initialize:after", function () {
 		regions: {
 			studentRegion: "#resStudents",
 			teacherRegion: "#resTeachers",
-			timeRegion: "#resTimes",
+			timeRegion: "#resTimes"
 		}
 	});
 	
@@ -1161,9 +1170,31 @@ ptc.on("initialize:after", function () {
 			e.preventDefault();
 			if(App.Reservation.ReservingStatus === false) {
 				App.trigger("reservation:create");
+				App.trigger("submit:options", "checking");
 			} else {
-				console.log("checking");
+				App.trigger("submit:options", "checking");
 			}
+		}
+	});
+	
+	Mod.SubmitChecking = Marionette.ItemView.extend({
+		template: "#submitChecking",
+		className: "status-checking"
+	});
+	Mod.SubmitUnavailable = Marionette.ItemView.extend({
+		template: "#submitUnavailable",
+		className: "status-unavailable",
+		initialize: function() {
+			App.teacherRegion.close();
+			App.timeRegion.close();
+		}
+	});
+	Mod.SubmitSuccess = Marionette.ItemView.extend({
+		template: "#submitSuccess",
+		className: "status-success",
+		initialize: function() {
+			App.teacherRegion.close();
+			App.timeRegion.close();
 		}
 	});
 	
@@ -1179,31 +1210,35 @@ ptc.on("initialize:after", function () {
 		}
 
 	});
-	Mod.StudentList = Marionette.CollectionView.extend({
-		tagName: "select",
+	Mod.StudentList = Marionette.CompositeView.extend({
+		itemViewContainer: ".student-selector",
+		template: "#studentListContainer",
 		className: "student-list",
 		itemView: Mod.StudentItem,
-		onRender: function() {
-			this.$el.prepend("<option></option>");
-		},
+
 		events: {
-			"change": "optionSelected"
+			"click button": "optionSelected",
+			"click select": "closeStuff"
 		},
 		optionSelected: function(e) {
-			if(!e.target.value || e.target.value == 0) {
-				console.log("no name selected");
-				App.teacherRegion.close();
-				App.timeRegion.close();
-				App.submitRegion.close();
+			e.preventDefault();
+			var x = $(e.currentTarget).siblings(".student-selector");
+			if(!x.val() || x.val() == 0) {
+				this.closeStuff();
 			} else {
-				var studentID = $(e.target).find(":selected").data("studentid");
-				var studentName = $(e.target).find(":selected").data("fullname");
-				var currGrade = $(e.target).find(":selected").data("currgrade");
+				var studentID = $(x).find(":selected").data("studentid");
+				var studentName = $(x).find(":selected").data("fullname");
+				var currGrade = $(x).find(":selected").data("currgrade");
 				App.Reservation.NewReservation.currGrade = currGrade;
 				App.Reservation.NewReservation.studentID = studentID;
 				App.Reservation.NewReservation.studentName = studentName;
 				App.trigger("teachers:list", studentID);
 			}
+		},
+		closeStuff: function() {
+			App.teacherRegion.close();
+			App.timeRegion.close();
+			App.submitRegion.close();
 		}
 	});
 	
@@ -1224,32 +1259,36 @@ ptc.on("initialize:after", function () {
 		}
 
 	});
-	Mod.TeacherList = Marionette.CollectionView.extend({
-		tagName: "select",
+	Mod.TeacherList = Marionette.CompositeView.extend({
+		itemViewContainer: ".teacher-selector",
+		template: "#teacherListContainer",
 		className: "teacher-list",
 		itemView: Mod.TeacherItem,
-		onRender: function() {
-			this.$el.prepend("<option></option>");
-		},
+		
 		events: {
-			"change": "optionSelected"
+			"click button": "optionSelected",
+			"click select": "closeStuff"
 		},
 		optionSelected: function(e) {
-			if(!e.target.value || e.target.value == 0) {
-				console.log("no name selected");
-				App.timeRegion.close();
-				App.submitRegion.close();
+			e.preventDefault();
+			var x = $(e.currentTarget).siblings(".teacher-selector");
+			if(!x.val() || x.val() == 0) {
+				this.closeStuff();
 			} else {
-				var teacherLogon = $(e.target).find(":selected").data("teacherlogon");
-				var roomNumber = $(e.target).find(":selected").data("roomnumber");
-				var division = $(e.target).find(":selected").data("division");
-				var teacherName = $(e.target).find(":selected").val();
+				var teacherLogon = $(x).find(":selected").data("teacherlogon");
+				var roomNumber = $(x).find(":selected").data("roomnumber");
+				var division = $(x).find(":selected").data("division");
+				var teacherName = $(x).find(":selected").val();
 				App.Reservation.NewReservation.teacherName = teacherName;
 				App.Reservation.NewReservation.teacherLogon = teacherLogon;
 				App.Reservation.NewReservation.roomNumber = roomNumber;
 				App.Reservation.NewReservation.division = division;
 				App.trigger("times:list", teacherLogon);
 			}
+		},
+		closeStuff: function() {
+			App.timeRegion.close();
+			App.submitRegion.close();
 		}
 		
 	});	
@@ -1268,28 +1307,32 @@ ptc.on("initialize:after", function () {
 		}
 
 	});
-	Mod.TimeList = Marionette.CollectionView.extend({
-		tagName: "select",
+	Mod.TimeList = Marionette.CompositeView.extend({
+		itemViewContainer: ".time-selector",
+		template: "#timeListContainer",
 		className: "time-list",
 		itemView: Mod.TimeItem,
-		onRender: function() {
-			this.$el.prepend("<option></option>");
-		},
+		
 		events: {
-			"change": "optionSelected"
+			"click button": "optionSelected",
+			"click select": "closeStuff"
 		},
 		optionSelected: function(e) {
-			if(!e.target.value || e.target.value == 0) {
-				console.log("no name selected");
-				App.submitRegion.close();
+			e.preventDefault();
+			var x = $(e.currentTarget).siblings(".time-selector");
+			if(!x.val() || x.val() == 0) {
+				this.closeStuff();
 			} else {
-				var startTime = $(e.target).find(":selected").data("start");
-				var endTime = $(e.target).find(":selected").data("end");
+				var startTime = $(x).find(":selected").data("start");
+				var endTime = $(x).find(":selected").data("end");
 				App.Reservation.NewReservation.startTime = startTime;
 				App.Reservation.NewReservation.endTime = endTime;
 				
-				App.trigger("submit:enable");
+				App.trigger("submit:options", "submit");
 			}
+		},
+		closeStuff: function() {
+			App.submitRegion.close();
 		}
 		
 	});	

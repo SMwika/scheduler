@@ -31,8 +31,8 @@ ptc.module("Reservation", function(Mod, App){
 	App.on("times:list", function(teacherLogon) {
 		API.listTimes(teacherLogon);
 	});
-	App.on("submit:enable", function() {
-		API.enableSubmit();
+	App.on("submit:options", function(option) {
+		API.enableSubmit(option);
 	});
 	
 	App.reqres.setHandler("reservation:availability", function(res) {
@@ -59,6 +59,7 @@ ptc.module("Reservation", function(Mod, App){
 			Mod.Controller.startNewReservation();
 		},
 		createReservation: function() {
+			Mod.ReservingStatus = true;
 
 			// check if possible to create a reservation
 			var checkAvailability = App.request("reservation:availability", Mod.NewReservation);
@@ -67,13 +68,13 @@ ptc.module("Reservation", function(Mod, App){
 				if(status === true) {
 					Mod.Controller.createReservation();
 				} else {
-					alert("I'm sorry, that slot cannot be booked. Please try again.");
+					Mod.ReservingStatus = false;
+					App.trigger("submit:options", "unavailable");
 				}
 			});
 		},
 		checkAvailability: function(res) {
 		
-			Mod.ReservingStatus = true;
 			
 			var defer = $.Deferred();
 			
@@ -89,20 +90,14 @@ ptc.module("Reservation", function(Mod, App){
 					var checkStudentTeacherStatus = App.request("data:getStudentTeacherStatus", res);
 					$.when(checkStudentTeacherStatus).done(function(studentStatus) {
 						if(studentStatus === true) {
-							console.log("teacher yes, student yes");
 							availability = true;
-							Mod.ReservingStatus = false;
 							defer.resolve(availability);
 						} else {
-							console.log("teacher yes, student no");
 							availability = false;
-							Mod.ReservingStatus = false;
 							defer.resolve(availability);
 						}
 					});
 				} else {
-					console.log("teacher no");
-					Mod.ReservingStatus = false;
 					defer.resolve(availability);
 				}
 			});			
@@ -111,8 +106,8 @@ ptc.module("Reservation", function(Mod, App){
 		},
 		
 		
-		enableSubmit: function() {
-			Mod.Controller.enableSubmit();
+		enableSubmit: function(option) {
+			Mod.Controller.enableSubmit(option);
 		}
 	};
 	

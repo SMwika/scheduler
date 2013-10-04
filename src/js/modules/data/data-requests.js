@@ -199,7 +199,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 						_.each(studentArray, function(student) {
 							students.push({
 								studentID: student.StudentID,
-								teachers: student.NameValues.toLowerCase(),
+								teachers: student.NameValues.toLowerCase()
 							});
 						});
 						
@@ -314,7 +314,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 								conferenceName: conference.Title,
 								division: conference.Division,
 								roomNumber: conference.Room,
-								teacher1: teachers[1].split("\\")[1].toLowerCase(),
+								teacher1: teachers[1].split("\\")[1].toLowerCase()
 							});
 						}
 					});
@@ -366,7 +366,6 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 			return defer.promise();
 		},
 		getAvailableTimes: function() {
-			console.time('filtering times');
 			// we're trying to get filter the 'times' list and
 			// remove anything from the 'teacherSchedules' list that matches
 			var defer = $.Deferred(),
@@ -398,17 +397,19 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 			});
 			
 			// look through each of the reserved times
-			_.each(matchingBlockedTimes, function(time) {
+			_.each(matchingBlockedTimes, function(blockedtime) {
 				// for each one, iterate through all the oldTimes
-				_.each(oldTimes, function(oldtime, i) {
+				_.each(oldTimes, function(oldtime) {
+					var sameTime = blockedtime.unixStart === oldtime.unixStart;
+					var sameTeacher = blockedtime.teacherLogon === oldtime.teacherLogon;
 					// if the new time matches the old time
-					if(JSON.stringify(time) === JSON.stringify({teacherLogon: oldtime.teacherLogon, unixStart: oldtime.unixStart})) {
-						oldTimes.splice(i, 1);
+					if(!sameTime && !sameTeacher) {
+						newTimes.push(oldtime);
 					}
 				});
 			});
-			console.timeEnd('filtering times');
-			defer.resolve(oldTimes);
+
+			defer.resolve(newTimes);
 			
 			return defer.promise();
 		},
@@ -435,7 +436,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 												
 						if(teacherSchedule.length > 0) {
 							// if this teacher has reservations, add them to the master list
-							scheduleList = scheduleList.concat(teacherSchedule)
+							scheduleList = scheduleList.concat(teacherSchedule);
 						}
 						
 						counter++;
@@ -506,7 +507,8 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 						});
 						var y = self.formatScheduleDates(schedule[0]);
 						y.Division = x.division;
-						
+						App.Reservation.ReservingStatus = false;
+						App.trigger("submit:options", "success");
 						App.trigger("schedule:append", y);
 						App.trigger("user:message", "successfully reserved");
 					} else {
@@ -528,7 +530,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 			}
 			
 			// query SP division 
-			var defer = $.Deferred(), self = this,
+			var defer = $.Deferred(),
 				available = true, counter = 0,
 				divisions = _.keys(App.Config.Settings.reservationLists);
 				
@@ -544,7 +546,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 							includeAllAttrs: true,
 							removeOws: true
 						});
-						console.log(schedule);
+
 						if(schedule.length > 0) {
 							available = false;
 							defer.resolve(available);
@@ -553,7 +555,6 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 						counter++;
 						
 						if(counter === divisions.length) {
-							console.log(available);
 							defer.resolve(available);
 						}
 					}
@@ -575,7 +576,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 			}
 			
 			// query SP division 
-			var defer = $.Deferred(), self = this,
+			var defer = $.Deferred(),
 				available = true, counter = 0,
 				divisions = _.keys(App.Config.Settings.reservationLists);
 				
@@ -600,14 +601,13 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 						counter++;
 						
 						if(counter === divisions.length) {
-							console.log(available);
 							defer.resolve(available);
 						}
 					}
 				});
 			});
 			
-			return defer.promise()
+			return defer.promise();
 			// return true for available, or false
 		},
 		

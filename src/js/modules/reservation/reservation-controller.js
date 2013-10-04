@@ -17,9 +17,6 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 				});
 			Mod.NewReservation.familyCode = App.Data.Config.students[0].FamilyCode;
 			
-			studentList.on("show", function() {
-				this.$el.before("Select a student: ");
-			});
 			// show view in student region
 			App.studentRegion.show(studentList);
 		},
@@ -32,10 +29,7 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 				teacherList = new Mod.Views.TeacherList({
 					collection: data
 				});
-		
-			teacherList.on("show", function() {
-				this.$el.before("Select a teacher: ");
-			});
+				
 			// show view in teacher region
 			App.teacherRegion.show(teacherList);
 			
@@ -62,20 +56,29 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 				timeList = new Mod.Views.TimeList({
 					collection: data
 				});
-			timeList.on("show", function() {
-				this.$el.before("Select a time slot: ");
-			});
+
 			// show view in time region
 			App.timeRegion.show(timeList);
 		},
 		
-		enableSubmit: function() {
-			var submitArea = new Mod.Views.SubmitView();
+		enableSubmit: function(option) {
+			var submitArea;
+			switch(option) {
+			case "submit":
+				submitArea = new Mod.Views.SubmitView();
+				break;
+			case "checking":
+				submitArea = new Mod.Views.SubmitChecking();
+				break;
+			case "unavailable":
+				submitArea = new Mod.Views.SubmitUnavailable();
+				break;
+			case "success":
+				submitArea = new Mod.Views.SubmitSuccess();
+				break;
+			}
 			
-			//console.log(submitArea);
 			App.submitRegion.show(submitArea);
 		}
-		
 	};
-	
 });

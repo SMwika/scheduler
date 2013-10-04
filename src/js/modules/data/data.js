@@ -68,19 +68,18 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 							$.when(teacherSchedule).done(function(teacherScheduleList) {
 								App.trigger("user:message", "got teacher reservations");
 								Mod.Config.teacherSchedules = teacherScheduleList;
-								console.log("blocked times: ", teacherScheduleList.length);
 								
 								var times = App.request("teacher:gettimes", conferenceList);
 								$.when(times).done(function(timeList) {
-									console.log("raw times: ", timeList.length);
+
 									App.trigger("user:message", "get available time slots");
 									
 									Mod.Config.times = timeList;
 									
 									var availableTimes = App.request("times:getavailable");
 									$.when(availableTimes).done(function(newTimeList) {
-										console.log("filtered times: ", newTimeList.length);
-										Mod.Config.newTimes = timeList;
+
+										Mod.Config.newTimes = newTimeList;
 										App.trigger("user:message", "filtered the times");
 										defer.resolve();
 

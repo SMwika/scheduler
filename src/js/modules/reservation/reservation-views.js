@@ -6,7 +6,7 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 		regions: {
 			studentRegion: "#resStudents",
 			teacherRegion: "#resTeachers",
-			timeRegion: "#resTimes",
+			timeRegion: "#resTimes"
 		}
 	});
 	
@@ -19,9 +19,31 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 			e.preventDefault();
 			if(App.Reservation.ReservingStatus === false) {
 				App.trigger("reservation:create");
+				App.trigger("submit:options", "checking");
 			} else {
-				console.log("checking");
+				App.trigger("submit:options", "checking");
 			}
+		}
+	});
+	
+	Mod.SubmitChecking = Marionette.ItemView.extend({
+		template: "#submitChecking",
+		className: "status-checking"
+	});
+	Mod.SubmitUnavailable = Marionette.ItemView.extend({
+		template: "#submitUnavailable",
+		className: "status-unavailable",
+		initialize: function() {
+			App.teacherRegion.close();
+			App.timeRegion.close();
+		}
+	});
+	Mod.SubmitSuccess = Marionette.ItemView.extend({
+		template: "#submitSuccess",
+		className: "status-success",
+		initialize: function() {
+			App.teacherRegion.close();
+			App.timeRegion.close();
 		}
 	});
 	
@@ -37,31 +59,35 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 		}
 
 	});
-	Mod.StudentList = Marionette.CollectionView.extend({
-		tagName: "select",
+	Mod.StudentList = Marionette.CompositeView.extend({
+		itemViewContainer: ".student-selector",
+		template: "#studentListContainer",
 		className: "student-list",
 		itemView: Mod.StudentItem,
-		onRender: function() {
-			this.$el.prepend("<option></option>");
-		},
+
 		events: {
-			"change": "optionSelected"
+			"click button": "optionSelected",
+			"click select": "closeStuff"
 		},
 		optionSelected: function(e) {
-			if(!e.target.value || e.target.value == 0) {
-				console.log("no name selected");
-				App.teacherRegion.close();
-				App.timeRegion.close();
-				App.submitRegion.close();
+			e.preventDefault();
+			var x = $(e.currentTarget).siblings(".student-selector");
+			if(!x.val() || x.val() == 0) {
+				this.closeStuff();
 			} else {
-				var studentID = $(e.target).find(":selected").data("studentid");
-				var studentName = $(e.target).find(":selected").data("fullname");
-				var currGrade = $(e.target).find(":selected").data("currgrade");
+				var studentID = $(x).find(":selected").data("studentid");
+				var studentName = $(x).find(":selected").data("fullname");
+				var currGrade = $(x).find(":selected").data("currgrade");
 				App.Reservation.NewReservation.currGrade = currGrade;
 				App.Reservation.NewReservation.studentID = studentID;
 				App.Reservation.NewReservation.studentName = studentName;
 				App.trigger("teachers:list", studentID);
 			}
+		},
+		closeStuff: function() {
+			App.teacherRegion.close();
+			App.timeRegion.close();
+			App.submitRegion.close();
 		}
 	});
 	
@@ -82,32 +108,36 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 		}
 
 	});
-	Mod.TeacherList = Marionette.CollectionView.extend({
-		tagName: "select",
+	Mod.TeacherList = Marionette.CompositeView.extend({
+		itemViewContainer: ".teacher-selector",
+		template: "#teacherListContainer",
 		className: "teacher-list",
 		itemView: Mod.TeacherItem,
-		onRender: function() {
-			this.$el.prepend("<option></option>");
-		},
+		
 		events: {
-			"change": "optionSelected"
+			"click button": "optionSelected",
+			"click select": "closeStuff"
 		},
 		optionSelected: function(e) {
-			if(!e.target.value || e.target.value == 0) {
-				console.log("no name selected");
-				App.timeRegion.close();
-				App.submitRegion.close();
+			e.preventDefault();
+			var x = $(e.currentTarget).siblings(".teacher-selector");
+			if(!x.val() || x.val() == 0) {
+				this.closeStuff();
 			} else {
-				var teacherLogon = $(e.target).find(":selected").data("teacherlogon");
-				var roomNumber = $(e.target).find(":selected").data("roomnumber");
-				var division = $(e.target).find(":selected").data("division");
-				var teacherName = $(e.target).find(":selected").val();
+				var teacherLogon = $(x).find(":selected").data("teacherlogon");
+				var roomNumber = $(x).find(":selected").data("roomnumber");
+				var division = $(x).find(":selected").data("division");
+				var teacherName = $(x).find(":selected").val();
 				App.Reservation.NewReservation.teacherName = teacherName;
 				App.Reservation.NewReservation.teacherLogon = teacherLogon;
 				App.Reservation.NewReservation.roomNumber = roomNumber;
 				App.Reservation.NewReservation.division = division;
 				App.trigger("times:list", teacherLogon);
 			}
+		},
+		closeStuff: function() {
+			App.timeRegion.close();
+			App.submitRegion.close();
 		}
 		
 	});	
@@ -126,28 +156,32 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 		}
 
 	});
-	Mod.TimeList = Marionette.CollectionView.extend({
-		tagName: "select",
+	Mod.TimeList = Marionette.CompositeView.extend({
+		itemViewContainer: ".time-selector",
+		template: "#timeListContainer",
 		className: "time-list",
 		itemView: Mod.TimeItem,
-		onRender: function() {
-			this.$el.prepend("<option></option>");
-		},
+		
 		events: {
-			"change": "optionSelected"
+			"click button": "optionSelected",
+			"click select": "closeStuff"
 		},
 		optionSelected: function(e) {
-			if(!e.target.value || e.target.value == 0) {
-				console.log("no name selected");
-				App.submitRegion.close();
+			e.preventDefault();
+			var x = $(e.currentTarget).siblings(".time-selector");
+			if(!x.val() || x.val() == 0) {
+				this.closeStuff();
 			} else {
-				var startTime = $(e.target).find(":selected").data("start");
-				var endTime = $(e.target).find(":selected").data("end");
+				var startTime = $(x).find(":selected").data("start");
+				var endTime = $(x).find(":selected").data("end");
 				App.Reservation.NewReservation.startTime = startTime;
 				App.Reservation.NewReservation.endTime = endTime;
 				
-				App.trigger("submit:enable");
+				App.trigger("submit:options", "submit");
 			}
+		},
+		closeStuff: function() {
+			App.submitRegion.close();
 		}
 		
 	});	
