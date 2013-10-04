@@ -69,7 +69,6 @@ ptc.module("Reservation", function(Mod, App){
 					Mod.Controller.createReservation();
 				} else {
 					Mod.ReservingStatus = false;
-					App.trigger("submit:options", "unavailable");
 				}
 			});
 		},
@@ -94,10 +93,12 @@ ptc.module("Reservation", function(Mod, App){
 							defer.resolve(availability);
 						} else {
 							availability = false;
+							App.trigger("submit:options", "unavailable");
 							defer.resolve(availability);
 						}
 					});
 				} else {
+					App.trigger("submit:options", "doublebooked");
 					defer.resolve(availability);
 				}
 			});			

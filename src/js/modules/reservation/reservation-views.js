@@ -26,24 +26,14 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 		}
 	});
 	
-	Mod.SubmitChecking = Marionette.ItemView.extend({
-		template: "#submitChecking",
-		className: "status-checking"
-	});
-	Mod.SubmitUnavailable = Marionette.ItemView.extend({
-		template: "#submitUnavailable",
-		className: "status-unavailable",
-		initialize: function() {
-			App.teacherRegion.close();
-			App.timeRegion.close();
-		}
-	});
-	Mod.SubmitSuccess = Marionette.ItemView.extend({
-		template: "#submitSuccess",
-		className: "status-success",
-		initialize: function() {
-			App.teacherRegion.close();
-			App.timeRegion.close();
+	Mod.SubmitMessage = Marionette.ItemView.extend({
+		template: "#submitMessage",
+		className: "status-message",
+		serializeData: function() {
+			return {
+				title: this.options.title || "Loading Data",
+				message: this.options.message || "please wait...data is loading"
+			}
 		}
 	});
 	

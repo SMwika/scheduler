@@ -1,1 +1,0 @@
-That time slot is unavailable...please choose another and try again.

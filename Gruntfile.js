@@ -12,11 +12,6 @@ module.exports = function(grunt) {
         dest: 'dist/templates/system.tpl'
       }
     },
-	shell: {
-      bumpVersion: {
-        command: 'npm version patch'
-      }
-    },
     concat: {
       options: {
         banner: '/*!\n <%= pkg.name %> Build version <%= pkg.version %>, <%= grunt.template.today("mm-dd-yyyy") %>\n*/\n',

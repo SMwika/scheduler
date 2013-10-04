@@ -35,24 +35,15 @@
 </div>
 </script>
 
-<!-- submitChecking -->
-<script id="submitChecking" type="text/template">
-Checking availability...
-</script>
-
 <!-- submitForm -->
 <script id="submitForm" type="text/template">
 <button id="submitRes" class="js-submit-form" value="submit">Submit Reservation</button>
 </script>
 
-<!-- submitSuccess -->
-<script id="submitSuccess" type="text/template">
-Success! Your reservation should appear to the right.
-</script>
-
-<!-- submitUnavailable -->
-<script id="submitUnavailable" type="text/template">
-That time slot is unavailable...please choose another and try again.
+<!-- submitMessage -->
+<script id="submitMessage" type="text/template">
+<strong>{{ title }}</strong><br/>
+{{ message }}
 </script>
 
 <!-- teacherListContainer -->

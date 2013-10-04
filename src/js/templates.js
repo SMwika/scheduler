@@ -10,9 +10,7 @@ $(function () {
 			"studentListContainer",
 			"teacherListContainer",
 			"timeListContainer",
-			"submitChecking",
-			"submitUnavailable",
-			"submitSuccess",
+			"submitMessage",
 			"submitForm"
 
         ];
