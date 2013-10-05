@@ -1,5 +1,5 @@
 /*!
- scheduler Build version 0.0.1, 10-03-2013
+ scheduler Build version 0.0.1, 10-04-2013
 */
 $(function () {
     
@@ -13,7 +13,10 @@ $(function () {
 			"studentListContainer",
 			"teacherListContainer",
 			"timeListContainer",
-			"submitMessage",
+			"submitChecking",
+			"submitUnavailable",
+			"submitDoubleBooked",
+			"submitSuccess",
 			"submitForm"
 
         ];
@@ -56,6 +59,11 @@ _.templateSettings = {
     interpolate: /\{\{([\s\S]+?)\}\}/g
 };
 
+Marionette.Region.prototype.open = function(view){
+	this.$el.hide();
+	this.$el.html(view.el);
+	this.$el.slideDown("medium");
+};
 
 // create app
 var ptc = new Marionette.Application();
@@ -183,6 +191,8 @@ ptc.on("initialize:after", function () {
 	
 	// local controller that manages data requests
 	var API = {
+		
+
 		getInitialData: function() {
 			
 			/*	This initial function is enormous.
@@ -193,7 +203,7 @@ ptc.on("initialize:after", function () {
 				a message is sent to the user.
 			*/
 			
-			var defer = $.Deferred();
+			var defer = $.Deferred(), self = this;
 
 			var user = App.request("user:getloggedin");
 			$.when(user).done(function(userLogon) {
@@ -201,61 +211,77 @@ ptc.on("initialize:after", function () {
 				
 				Mod.Config.loggedInUser = userLogon;
 
-				var students = App.request("user:getstudents", userLogon);
-				$.when(students).done(function(studentList) {
-					App.trigger("user:message", "get students");
+				var checkUser = App.request("teacher:getconf", userLogon);
+				
+				$.when(checkUser).done(function(conference) {
+					App.trigger("user:message", "check role and get conferences");
+					if(!conference) {
 					
-					Mod.Config.students = studentList;
-
-					var schedule = App.request("schedule:getmy", Mod.Config.students[0].FamilyCode);
-					$.when(schedule).done(function(scheduleList) {
-						App.trigger("user:message", "get schedule");
-						Mod.Config.schedule = scheduleList;
-					});
-
-					var teachers = App.request("student:getteachers", studentList);
-					$.when(teachers).done(function(teacherList) {
-						App.trigger("user:message", "get teachers");
+						console.log("user is not a teacher");
 						
-						Mod.Config.teachers = teacherList;
-						
-						var conferences = App.request("teacher:getconferences", teacherList);
-						$.when(conferences).done(function(conferenceList) {
-							App.trigger("user:message", "get conference details");
-
-							Mod.Config.conferences = conferenceList;
+						var students = App.request("user:getstudents", userLogon);
+						$.when(students).done(function(studentList) {
+							App.trigger("user:message", "get students");
 							
-							// get any booked appointments for any teachers
-							var teacherSchedule = App.request("teacher:getschedule", conferenceList);
-							$.when(teacherSchedule).done(function(teacherScheduleList) {
-								App.trigger("user:message", "got teacher reservations");
-								Mod.Config.teacherSchedules = teacherScheduleList;
+							Mod.Config.students = studentList;
+
+							var schedule = App.request("schedule:getmy", Mod.Config.students[0].FamilyCode);
+							$.when(schedule).done(function(scheduleList) {
+								App.trigger("user:message", "get schedule");
+								Mod.Config.schedule = scheduleList;
+							});
+
+							var teachers = App.request("student:getteachers", studentList);
+							$.when(teachers).done(function(teacherList) {
+								App.trigger("user:message", "get teachers");
 								
-								var times = App.request("teacher:gettimes", conferenceList);
-								$.when(times).done(function(timeList) {
+								Mod.Config.teachers = teacherList;
+								
+								var conferences = App.request("teacher:getconferences", teacherList);
+								$.when(conferences).done(function(conferenceList) {
+									App.trigger("user:message", "get conference details");
 
-									App.trigger("user:message", "get available time slots");
+									Mod.Config.conferences = conferenceList;
 									
-									Mod.Config.times = timeList;
-									
-									var availableTimes = App.request("times:getavailable");
-									$.when(availableTimes).done(function(newTimeList) {
+									// get any booked appointments for any teachers
+									var teacherSchedule = App.request("teacher:getschedule", conferenceList);
+									$.when(teacherSchedule).done(function(teacherScheduleList) {
+										App.trigger("user:message", "got teacher reservations");
+										Mod.Config.teacherSchedules = teacherScheduleList;
+										
+										var times = App.request("teacher:gettimes", conferenceList);
+										$.when(times).done(function(timeList) {
 
-										Mod.Config.newTimes = newTimeList;
-										App.trigger("user:message", "filtered the times");
-										defer.resolve();
+											App.trigger("user:message", "get available time slots");
+											
+											Mod.Config.times = timeList;
+											
+											var availableTimes = App.request("times:getavailable");
+											$.when(availableTimes).done(function(newTimeList) {
 
+												Mod.Config.newTimes = newTimeList;
+												App.trigger("user:message", "filtered the times");
+												defer.resolve();
+
+											});
+											
+										});
+										
 									});
-									
 								});
-								
+
 							});
 						});
+					} else {
+						console.log("user is a teacher");
+						Mod.Config.conference = conference;
+						defer.resolve();
 
-					});
+					}
 				});
 			});
 			return defer.promise();
+
 		}
 	};
 });;ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
@@ -271,6 +297,7 @@ ptc.on("initialize:after", function () {
 		return API.getLoggedInUser();
 	});
 	
+
 	App.reqres.setHandler("user:getstudents", function (userLogon) {
 		return API.getStudents(userLogon);
 	});
@@ -285,6 +312,10 @@ ptc.on("initialize:after", function () {
 	
 	App.reqres.setHandler("teacher:getschedule", function(teacher) {
 		return API.getTeacherSchedule(teacher);
+	});
+	
+	App.reqres.setHandler("teacher:getconf", function(teacherLogon) {
+		return API.getTeacherConf(teacherLogon);
 	});
 	
 	App.reqres.setHandler("teacher:getconferences", function (teacherList) {
@@ -365,7 +396,7 @@ ptc.on("initialize:after", function () {
 				});
 			parentLogon = parentLogon.split("\\")[1]; */
 
-			var parentLogon = "Lap.Tung"; // for testing
+			var parentLogon = "bweir"; // for testing
 			
 			defer.resolve(parentLogon);
 
@@ -671,6 +702,32 @@ ptc.on("initialize:after", function () {
 
 			defer.resolve(newTimes);
 			
+			return defer.promise();
+		},
+		getTeacherConf: function(teacherLogon) {
+			// get the conference for this teacher from SharePoint
+			var defer = $.Deferred();
+			$().SPServices({
+				operation: "GetListItems",
+				webURL: App.Config.Settings.conferenceList.webURL,
+				async:true,
+				listName: App.Config.Settings.conferenceList.listName,
+				CAMLRowLimit: 1,
+				CAMLQuery:"<Query><Where><In><FieldRef Name='Teachers' /><Values><Value Type='Text'>ISB\\" + teacherLogon +"</Value></Values></In></Where></Query>",
+				completefunc: function (xData) {
+					var conferenceArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+						includeAllAttrs: true,
+						removeOws: true
+					});
+					if(conferenceArray[0]) {
+						defer.resolve(conferenceArray[0]);
+					} else {
+						defer.resolve(false);
+					}
+
+				}
+			});
+
 			return defer.promise();
 		},
 		getTeacherSchedule: function(teachers) {
@@ -1066,46 +1123,25 @@ ptc.on("initialize:after", function () {
 		
 		enableSubmit: function(option) {
 			var submitArea;
-			
 			switch(option) {
 			case "submit":
 				submitArea = new Mod.Views.SubmitView();
-				App.submitRegion.show(submitArea);
 				break;
 			case "checking":
-				submitArea = new Mod.Views.SubmitMessage({
-					title: "Checking",
-					message: "Checking availability"
-				});
-				App.submitRegion.show(submitArea);
+				submitArea = new Mod.Views.SubmitChecking();
 				break;
 			case "unavailable":
-				submitArea = new Mod.Views.SubmitMessage({
-					title: "Unavailable",
-					message: "That time slot is no longer available. Please choose another and try again."
-				});
-				App.submitRegion.show(submitArea);
+				submitArea = new Mod.Views.SubmitUnavailable();
 				break;
 			case "doublebooked":
-				submitArea = new Mod.Views.SubmitMessage({
-					title: "Double Booked",
-					message: "This student already has an appointment with this teacher. Please choose another teacher or student and try again."
-				});
-				App.teacherRegion.close();
-				App.timeRegion.close();
-				App.submitRegion.show(submitArea);
+				submitArea = new Mod.Views.SubmitDoubleBooked();
 				break;
 			case "success":
-				submitArea = new Mod.Views.SubmitMessage({
-					title: "Success!",
-					message: "The reservation will appear in your schedule to the right."
-				});
-				App.teacherRegion.close();
-				App.timeRegion.close();
-				App.submitRegion.show(submitArea);
+				submitArea = new Mod.Views.SubmitSuccess();
 				break;
 			}
 			
+			App.submitRegion.show(submitArea);
 		}
 	};
 });;ptc.module("Reservation", function(Mod, App, Backbone){
@@ -1195,17 +1231,27 @@ ptc.on("initialize:after", function () {
 		}
 	});
 	
-	Mod.SubmitMessage = Marionette.ItemView.extend({
-		template: "#submitMessage",
-		className: "status-message",
-		onRender: function() {
-			console.log(this);
-		},
-		serializeData: function() {
-			return {
-				title: this.options.title || "Loading Data",
-				message: this.options.message || "please wait...data is loading"
-			}
+	Mod.SubmitChecking = Marionette.ItemView.extend({
+		template: "#submitChecking",
+		className: "status-res"
+	});
+	Mod.SubmitUnavailable = Marionette.ItemView.extend({
+		template: "#submitUnavailable",
+		className: "status-res"
+	});
+	Mod.SubmitDoubleBooked = Marionette.ItemView.extend({
+		template: "#submitDoubleBooked",
+		className: "status-res",
+		initialize: function() {
+			App.timeRegion.close();
+		}
+	});
+	Mod.SubmitSuccess = Marionette.ItemView.extend({
+		template: "#submitSuccess",
+		className: "status-res",
+		initialize: function() {
+			App.teacherRegion.close();
+			App.timeRegion.close();
 		}
 	});
 	

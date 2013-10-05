@@ -21,6 +21,8 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 	
 	// local controller that manages data requests
 	var API = {
+		
+
 		getInitialData: function() {
 			
 			/*	This initial function is enormous.
@@ -31,7 +33,7 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 				a message is sent to the user.
 			*/
 			
-			var defer = $.Deferred();
+			var defer = $.Deferred(), self = this;
 
 			var user = App.request("user:getloggedin");
 			$.when(user).done(function(userLogon) {
@@ -39,61 +41,77 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 				
 				Mod.Config.loggedInUser = userLogon;
 
-				var students = App.request("user:getstudents", userLogon);
-				$.when(students).done(function(studentList) {
-					App.trigger("user:message", "get students");
+				var checkUser = App.request("teacher:getconf", userLogon);
+				
+				$.when(checkUser).done(function(conference) {
+					App.trigger("user:message", "check role and get conferences");
+					if(!conference) {
 					
-					Mod.Config.students = studentList;
-
-					var schedule = App.request("schedule:getmy", Mod.Config.students[0].FamilyCode);
-					$.when(schedule).done(function(scheduleList) {
-						App.trigger("user:message", "get schedule");
-						Mod.Config.schedule = scheduleList;
-					});
-
-					var teachers = App.request("student:getteachers", studentList);
-					$.when(teachers).done(function(teacherList) {
-						App.trigger("user:message", "get teachers");
+						console.log("user is not a teacher");
 						
-						Mod.Config.teachers = teacherList;
-						
-						var conferences = App.request("teacher:getconferences", teacherList);
-						$.when(conferences).done(function(conferenceList) {
-							App.trigger("user:message", "get conference details");
-
-							Mod.Config.conferences = conferenceList;
+						var students = App.request("user:getstudents", userLogon);
+						$.when(students).done(function(studentList) {
+							App.trigger("user:message", "get students");
 							
-							// get any booked appointments for any teachers
-							var teacherSchedule = App.request("teacher:getschedule", conferenceList);
-							$.when(teacherSchedule).done(function(teacherScheduleList) {
-								App.trigger("user:message", "got teacher reservations");
-								Mod.Config.teacherSchedules = teacherScheduleList;
+							Mod.Config.students = studentList;
+
+							var schedule = App.request("schedule:getmy", Mod.Config.students[0].FamilyCode);
+							$.when(schedule).done(function(scheduleList) {
+								App.trigger("user:message", "get schedule");
+								Mod.Config.schedule = scheduleList;
+							});
+
+							var teachers = App.request("student:getteachers", studentList);
+							$.when(teachers).done(function(teacherList) {
+								App.trigger("user:message", "get teachers");
 								
-								var times = App.request("teacher:gettimes", conferenceList);
-								$.when(times).done(function(timeList) {
+								Mod.Config.teachers = teacherList;
+								
+								var conferences = App.request("teacher:getconferences", teacherList);
+								$.when(conferences).done(function(conferenceList) {
+									App.trigger("user:message", "get conference details");
 
-									App.trigger("user:message", "get available time slots");
+									Mod.Config.conferences = conferenceList;
 									
-									Mod.Config.times = timeList;
-									
-									var availableTimes = App.request("times:getavailable");
-									$.when(availableTimes).done(function(newTimeList) {
+									// get any booked appointments for any teachers
+									var teacherSchedule = App.request("teacher:getschedule", conferenceList);
+									$.when(teacherSchedule).done(function(teacherScheduleList) {
+										App.trigger("user:message", "got teacher reservations");
+										Mod.Config.teacherSchedules = teacherScheduleList;
+										
+										var times = App.request("teacher:gettimes", conferenceList);
+										$.when(times).done(function(timeList) {
 
-										Mod.Config.newTimes = newTimeList;
-										App.trigger("user:message", "filtered the times");
-										defer.resolve();
+											App.trigger("user:message", "get available time slots");
+											
+											Mod.Config.times = timeList;
+											
+											var availableTimes = App.request("times:getavailable");
+											$.when(availableTimes).done(function(newTimeList) {
 
+												Mod.Config.newTimes = newTimeList;
+												App.trigger("user:message", "filtered the times");
+												defer.resolve();
+
+											});
+											
+										});
+										
 									});
-									
 								});
-								
+
 							});
 						});
+					} else {
+						console.log("user is a teacher");
+						Mod.Config.conference = conference;
+						defer.resolve();
 
-					});
+					}
 				});
 			});
 			return defer.promise();
+
 		}
 	};
 });

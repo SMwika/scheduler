@@ -68,32 +68,16 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 				submitArea = new Mod.Views.SubmitView();
 				break;
 			case "checking":
-				submitArea = new Mod.Views.SubmitMessage({
-					title: "Checking",
-					message: "Checking availability"
-				});
+				submitArea = new Mod.Views.SubmitChecking();
 				break;
 			case "unavailable":
-				submitArea = new Mod.Views.SubmitMessage({
-					title: "Unavailable",
-					message: "That time slot is no longer available. Please choose another and try again."
-				});
+				submitArea = new Mod.Views.SubmitUnavailable();
 				break;
 			case "doublebooked":
-				submitArea = new Mod.Views.SubmitMessage({
-					title: "Double Booked",
-					message: "This student already has an appointment with this teacher. Please choose another teacher or student and try again."
-				});
-				App.teacherRegion.close();
-				App.timeRegion.close();
+				submitArea = new Mod.Views.SubmitDoubleBooked();
 				break;
 			case "success":
-				submitArea = new Mod.Views.SubmitMessage({
-					title: "Success!",
-					message: "The reservation will appear in your schedule to the right."
-				});
-				App.teacherRegion.close();
-				App.timeRegion.close();
+				submitArea = new Mod.Views.SubmitSuccess();
 				break;
 			}
 			

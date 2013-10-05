@@ -6,9 +6,10 @@
 
 <!-- scheduleApptSingle -->
 <script id="scheduleApptSingle" type="text/template">
-{{ StartTime }} - {{ EndTime }}&nbsp;&nbsp;&nbsp;<strong>{{ StudentName }}</strong><br/>
-{{ Title }}&nbsp;&nbsp;&nbsp;<em>Room: {{ RoomNumber }}</em><br/>
-<a href="" class="js-delete-appt">delete</a>
+<strong>{{ StartTime }} - {{ EndTime }}</strong><br/>
+({{ StudentName }}) {{ Title }}<br/>
+<em>Room: {{ RoomNumber }}</em><br/>
+<a href="" class="js-delete-appt">delete reservation</a>
 </script>
 
 <!-- singleStudent -->
@@ -35,15 +36,33 @@
 </div>
 </script>
 
+<!-- submitChecking -->
+<script id="submitChecking" type="text/template">
+<h2>Checking</h2>
+<span>Please wait...checking your reservation</span>
+</script>
+
+<!-- submitDoubleBooked -->
+<script id="submitDoubleBooked" type="text/template">
+<h2>Oops!</h2>
+<span>That student already has a reservation with that teacher. Please try again!</span>
+</script>
+
 <!-- submitForm -->
 <script id="submitForm" type="text/template">
 <button id="submitRes" class="js-submit-form" value="submit">Submit Reservation</button>
 </script>
 
-<!-- submitMessage -->
-<script id="submitMessage" type="text/template">
-<strong>{{ title }}</strong><br/>
-{{ message }}
+<!-- submitSuccess -->
+<script id="submitSuccess" type="text/template">
+<h2>Success!</h2>
+<span>Your reservation should appear in your schedule...</span>
+</script>
+
+<!-- submitUnavailable -->
+<script id="submitUnavailable" type="text/template">
+<h2>Unavailable</h2>
+<span>I'm sorry, that time slot is no longer available...please try again.</span>
 </script>
 
 <!-- teacherListContainer -->

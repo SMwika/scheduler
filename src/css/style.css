@@ -51,13 +51,20 @@ a:hover {
 	display:block;
 	padding:2px;
 }
-.status-checking,
-.status-unavailable,
-.status-success {
+
+.status-res {
+	margin-top:20px;
 	padding:8px;
 	background:#ddd;
 	color:#333;
 	font-size:1em;
+}
+.status-res h2 {
+	font-size:1em;
+	font-weight:bold;
+}
+.status-res span {
+	font-size:0.9em;
 }
 
 /* New Reservation */
@@ -103,5 +110,15 @@ ul.appt-schedule li {
 ul.appt-schedule li:last-child {
 	border:none;
 }
-
-/* Other Stuff Region */
+select, option {
+	max-width:100% !important;
+	overflow:hidden;
+}
+/* Media Queries */
+@media (max-width: 640px) {
+	.region-wrap.half,
+	.region-wrap.status {
+		width:100%;
+	}
+	
+}

@@ -10,7 +10,10 @@ $(function () {
 			"studentListContainer",
 			"teacherListContainer",
 			"timeListContainer",
-			"submitMessage",
+			"submitChecking",
+			"submitUnavailable",
+			"submitDoubleBooked",
+			"submitSuccess",
 			"submitForm"
 
         ];

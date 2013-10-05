@@ -17,7 +17,7 @@ module.exports = function(grunt) {
         banner: '/*!\n <%= pkg.name %> Build version <%= pkg.version %>, <%= grunt.template.today("mm-dd-yyyy") %>\n*/\n',
         separator: ';'
       },
-	  libs: {
+	/*  libs: {
         src: [
             'src/js/libs/jquery-1.8.3.js',
             'src/js/libs/json2.js',
@@ -28,7 +28,7 @@ module.exports = function(grunt) {
             'src/js/libs/moment.js'
         ],
         dest: 'dist/js/<%= pkg.name %>-libs.js'
-	  },
+	  }, */
       scheduler: {
         src: [
             'src/js/templates.js',
@@ -65,7 +65,7 @@ module.exports = function(grunt) {
       },
       dist: {
         files: {
-          'dist/js/<%= pkg.name %>-libs.min.js': ['<%= concat.libs.dest %>'],
+        //  'dist/js/<%= pkg.name %>-libs.min.js': ['<%= concat.libs.dest %>'],
           'dist/js/<%= pkg.name %>.min.js': ['<%= concat.scheduler.dest %>']
         }
       }

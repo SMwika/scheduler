@@ -6,7 +6,7 @@ _.templateSettings = {
 Marionette.Region.prototype.open = function(view){
 	this.$el.hide();
 	this.$el.html(view.el);
-	this.$el.slideDown("fast");
+	this.$el.slideDown("medium");
 };
 
 // create app

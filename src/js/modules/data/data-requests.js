@@ -11,6 +11,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 		return API.getLoggedInUser();
 	});
 	
+
 	App.reqres.setHandler("user:getstudents", function (userLogon) {
 		return API.getStudents(userLogon);
 	});
@@ -25,6 +26,10 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 	
 	App.reqres.setHandler("teacher:getschedule", function(teacher) {
 		return API.getTeacherSchedule(teacher);
+	});
+	
+	App.reqres.setHandler("teacher:getconf", function(teacherLogon) {
+		return API.getTeacherConf(teacherLogon);
 	});
 	
 	App.reqres.setHandler("teacher:getconferences", function (teacherList) {
@@ -105,7 +110,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 				});
 			parentLogon = parentLogon.split("\\")[1]; */
 
-			var parentLogon = "Lap.Tung"; // for testing
+			var parentLogon = "bweir"; // for testing
 			
 			defer.resolve(parentLogon);
 
@@ -411,6 +416,32 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 
 			defer.resolve(newTimes);
 			
+			return defer.promise();
+		},
+		getTeacherConf: function(teacherLogon) {
+			// get the conference for this teacher from SharePoint
+			var defer = $.Deferred();
+			$().SPServices({
+				operation: "GetListItems",
+				webURL: App.Config.Settings.conferenceList.webURL,
+				async:true,
+				listName: App.Config.Settings.conferenceList.listName,
+				CAMLRowLimit: 1,
+				CAMLQuery:"<Query><Where><In><FieldRef Name='Teachers' /><Values><Value Type='Text'>ISB\\" + teacherLogon +"</Value></Values></In></Where></Query>",
+				completefunc: function (xData) {
+					var conferenceArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+						includeAllAttrs: true,
+						removeOws: true
+					});
+					if(conferenceArray[0]) {
+						defer.resolve(conferenceArray[0]);
+					} else {
+						defer.resolve(false);
+					}
+
+				}
+			});
+
 			return defer.promise();
 		},
 		getTeacherSchedule: function(teachers) {
