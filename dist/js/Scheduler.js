@@ -97,7 +97,7 @@ ptc.on("initialize:after", function () {
 	Mod.Settings = {
 		
 		overrides: {
-			exclusions: ["(ASA)", "(MSE)", "dbeckstead(Homeroom)", "drussell(Homeroom)"],
+			exclusions: ["(ASA)", "(MSE)","hanichowski(Homeroom)", "mskinner(Homeroom)","fpanych(Homeroom)","scoe(Homeroom)","ehillmann(Homeroom)","GRussell(Homeroom)","bjogi(Homeroom)","jbinns(Homeroom)","breverman(Homeroom)","boreilly(Homeroom)","jkinsella(Homeroom)","DMonroe(Homeroom)","jmcroberts(Homeroom)","drussell(Homeroom)","mdawson(Homeroom)","gloynes(Homeroom)"],
 			inclusions: ["aflores"]
 		},
 		
