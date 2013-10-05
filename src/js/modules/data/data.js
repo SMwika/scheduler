@@ -38,18 +38,16 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 			var user = App.request("user:getloggedin");
 			$.when(user).done(function(userLogon) {
 				App.trigger("user:message", "get logged in user");
-				
 				Mod.Config.loggedInUser = userLogon;
 
 				var checkUser = App.request("teacher:getconf", userLogon);
-				
-				$.when(checkUser).done(function(conference) {
+				$.when(checkUser).done(function(conferences) {
 					App.trigger("user:message", "check role and get conferences");
 					
-					if(!conference) {
-					
-						console.log("user is not a teacher");
+					if(!conferences) {
 						
+						Mod.Config.userRole = "parent";
+								
 						var students = App.request("user:getstudents", userLogon);
 						$.when(students).done(function(studentList) {
 							App.trigger("user:message", "get students");
@@ -67,8 +65,12 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 								App.trigger("user:message", "get teachers");
 								
 								Mod.Config.teachers = teacherList;
+								var teacherArray = [];
+								_.each(teacherList, function(teacher) {
+									teacherArray.push(teacher.teacherLogon);
+								});
 								
-								var conferences = App.request("teacher:getconferences", teacherList);
+								var conferences = App.request("teacher:getconferences", teacherArray);
 								$.when(conferences).done(function(conferenceList) {
 									App.trigger("user:message", "get conference details");
 
@@ -79,7 +81,7 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 									$.when(teacherSchedule).done(function(teacherScheduleList) {
 										App.trigger("user:message", "got teacher reservations");
 										Mod.Config.teacherSchedules = teacherScheduleList;
-										
+
 										var times = App.request("teacher:gettimes", conferenceList);
 										$.when(times).done(function(timeList) {
 
@@ -104,16 +106,52 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 							});
 						});
 					} else {
-						console.log("user is a teacher");
-						Mod.Config.conference = conference;
+
+
+
+						Mod.Config.conferences = conferences;
+						Mod.Config.userRole = "teacher";
 						
-						var getschedule = App.request("teacher:getmyteacherschedule", conference);
+						// set reservation variables
+						App.Reservation.NewReservation.roomNumber = conferences[0].roomNumber;
+						App.Reservation.NewReservation.teacherName = conferences[0].conferenceName;
+						if (conferences[0].hasOwnProperty('teacher2')) {
+							App.Reservation.NewReservation.teacherLogon = conferences[0].teacher1 + "-" + conferences[0].teacher2;
+						} else {
+							App.Reservation.NewReservation.teacherLogon = conferences[0].teacher1;
+						}
+						App.Reservation.NewReservation.division = conferences[0].division;
+						App.Reservation.NewReservation.studentName = "-";
+						App.Reservation.NewReservation.reserver = Mod.Config.loggedInUser;
+						
+						var getschedule = App.request("teacher:getmyteacherschedule", conferences[0]);
 						$.when(getschedule).done(function(scheduleList) {
 							App.trigger("user:message", "get schedule");
 							Mod.Config.schedule = scheduleList;
-							console.log(scheduleList);
-							defer.resolve();
 						});
+						
+						var teacherSchedule = App.request("teacher:getschedule", conferences);
+						$.when(teacherSchedule).done(function(teacherScheduleList) {
+							App.trigger("user:message", "got teacher reservations");
+							Mod.Config.teacherSchedules = teacherScheduleList;
+
+							var times = App.request("teacher:gettimes", conferences);
+							$.when(times).done(function(timeList) {
+
+								App.trigger("user:message", "get available time slots");
+								
+								Mod.Config.times = timeList;
+								
+								var availableTimes = App.request("times:getavailable");
+								$.when(availableTimes).done(function(newTimeList) {
+
+									Mod.Config.newTimes = newTimeList;
+									App.trigger("user:message", "filtered the times");
+									defer.resolve();
+
+								});
+							});
+						});		
 					}
 				});
 			});

@@ -9,6 +9,10 @@ Marionette.Region.prototype.open = function(view){
 	this.$el.slideDown("medium");
 };
 
+Object.prototype.hasOwnProperty = function(property) {
+	return this[property] !== undefined;
+};
+
 // create app
 var ptc = new Marionette.Application();
 

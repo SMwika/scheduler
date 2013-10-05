@@ -2,7 +2,11 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 
 	Mod.Controller = {
 		startNewReservation: function() {
-			App.trigger("students:list");
+			if(App.Data.Config.userRole === "parent") {
+				App.trigger("students:list");
+			} else if(App.Data.Config.userRole === "teacher") {
+				App.trigger("times:list", App.Data.Config.loggedInUser);
+			}
 		},
 		
 		createReservation: function() {
@@ -50,8 +54,8 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 			return teacherData;
 		},
 		listTimes: function(teacherLogon) {
-			var timeArray = App.Data.Config.times,
-				filtered = _.where(timeArray, {teacherLogon: teacherLogon}),
+			var timeArray = App.Data.Config.newTimes,
+				filtered = _.where(timeArray, {teacherLogon: teacherLogon.toLowerCase()}),
 				data = new Mod.TimeCollection(filtered),
 				timeList = new Mod.Views.TimeList({
 					collection: data

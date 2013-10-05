@@ -1,5 +1,5 @@
 /*!
- scheduler Build version 0.0.1, 10-04-2013
+ scheduler Build version 0.0.1, 10-05-2013
 */
 $(function () {
     
@@ -63,6 +63,10 @@ Marionette.Region.prototype.open = function(view){
 	this.$el.hide();
 	this.$el.html(view.el);
 	this.$el.slideDown("medium");
+};
+
+Object.prototype.hasOwnProperty = function(property) {
+	return this[property] !== undefined;
 };
 
 // create app
@@ -208,18 +212,16 @@ ptc.on("initialize:after", function () {
 			var user = App.request("user:getloggedin");
 			$.when(user).done(function(userLogon) {
 				App.trigger("user:message", "get logged in user");
-				
 				Mod.Config.loggedInUser = userLogon;
 
 				var checkUser = App.request("teacher:getconf", userLogon);
-				
-				$.when(checkUser).done(function(conference) {
+				$.when(checkUser).done(function(conferences) {
 					App.trigger("user:message", "check role and get conferences");
 					
-					if(!conference) {
-					
-						console.log("user is not a teacher");
+					if(!conferences) {
 						
+						Mod.Config.userRole = "parent";
+								
 						var students = App.request("user:getstudents", userLogon);
 						$.when(students).done(function(studentList) {
 							App.trigger("user:message", "get students");
@@ -237,8 +239,12 @@ ptc.on("initialize:after", function () {
 								App.trigger("user:message", "get teachers");
 								
 								Mod.Config.teachers = teacherList;
+								var teacherArray = [];
+								_.each(teacherList, function(teacher) {
+									teacherArray.push(teacher.teacherLogon);
+								});
 								
-								var conferences = App.request("teacher:getconferences", teacherList);
+								var conferences = App.request("teacher:getconferences", teacherArray);
 								$.when(conferences).done(function(conferenceList) {
 									App.trigger("user:message", "get conference details");
 
@@ -249,7 +255,7 @@ ptc.on("initialize:after", function () {
 									$.when(teacherSchedule).done(function(teacherScheduleList) {
 										App.trigger("user:message", "got teacher reservations");
 										Mod.Config.teacherSchedules = teacherScheduleList;
-										
+
 										var times = App.request("teacher:gettimes", conferenceList);
 										$.when(times).done(function(timeList) {
 
@@ -274,16 +280,52 @@ ptc.on("initialize:after", function () {
 							});
 						});
 					} else {
-						console.log("user is a teacher");
-						Mod.Config.conference = conference;
+
+
+
+						Mod.Config.conferences = conferences;
+						Mod.Config.userRole = "teacher";
 						
-						var getschedule = App.request("teacher:getmyteacherschedule", conference);
+						// set reservation variables
+						App.Reservation.NewReservation.roomNumber = conferences[0].roomNumber;
+						App.Reservation.NewReservation.teacherName = conferences[0].conferenceName;
+						if (conferences[0].hasOwnProperty('teacher2')) {
+							App.Reservation.NewReservation.teacherLogon = conferences[0].teacher1 + "-" + conferences[0].teacher2;
+						} else {
+							App.Reservation.NewReservation.teacherLogon = conferences[0].teacher1;
+						}
+						App.Reservation.NewReservation.division = conferences[0].division;
+						App.Reservation.NewReservation.studentName = "-";
+						App.Reservation.NewReservation.reserver = Mod.Config.loggedInUser;
+						
+						var getschedule = App.request("teacher:getmyteacherschedule", conferences[0]);
 						$.when(getschedule).done(function(scheduleList) {
 							App.trigger("user:message", "get schedule");
 							Mod.Config.schedule = scheduleList;
-							console.log(scheduleList);
-							defer.resolve();
 						});
+						
+						var teacherSchedule = App.request("teacher:getschedule", conferences);
+						$.when(teacherSchedule).done(function(teacherScheduleList) {
+							App.trigger("user:message", "got teacher reservations");
+							Mod.Config.teacherSchedules = teacherScheduleList;
+
+							var times = App.request("teacher:gettimes", conferences);
+							$.when(times).done(function(timeList) {
+
+								App.trigger("user:message", "get available time slots");
+								
+								Mod.Config.times = timeList;
+								
+								var availableTimes = App.request("times:getavailable");
+								$.when(availableTimes).done(function(newTimeList) {
+
+									Mod.Config.newTimes = newTimeList;
+									App.trigger("user:message", "filtered the times");
+									defer.resolve();
+
+								});
+							});
+						});		
 					}
 				});
 			});
@@ -400,14 +442,14 @@ ptc.on("initialize:after", function () {
 		
 		getLoggedInUser: function () {
 			var defer = $.Deferred();
-	/*		var	parentLogon = $().SPServices.SPGetCurrentUser({
+			var	parentLogon = $().SPServices.SPGetCurrentUser({
 					fieldName: "Name",
 					debug: false,
 					async: true
 				});
-			parentLogon = parentLogon.split("\\")[1]; */
+			parentLogon = parentLogon.split("\\")[1];
 
-			var parentLogon = "rebecca.lei"; // for testing
+		//	var parentLogon = "bketchum"; // for testing
 			
 			defer.resolve(parentLogon);
 
@@ -580,13 +622,13 @@ ptc.on("initialize:after", function () {
 		},
 		
 		getConferences: function(teacherList) {
-			var defer = $.Deferred(),
+			var defer = $.Deferred(), self = this,
 				i, list = teacherList, listLength = list.length,
 				conferenceList = [], inQuery = "";
 
 			// for each teacher that we have
 			for(i = 0; i < listLength; i++) {
-				inQuery += "<Value Type='Text'>ISB\\" + list[i].teacherLogon + "</Value>";
+				inQuery += "<Value Type='Text'>ISB\\" + list[i] + "</Value>";
 			}
 			$().SPServices({
 				operation: "GetListItems",
@@ -600,26 +642,7 @@ ptc.on("initialize:after", function () {
 						removeOws: true
 					});
 					
-					_.each(conferenceArray, function(conference) {
-						var teachers = conference.Teachers.split(";");
-						
-						if(teachers.length > 2) {
-							conferenceList.push({
-								conferenceName: conference.Title,
-								division: conference.Division,
-								roomNumber: conference.Room,
-								teacher1: teachers[1].split("\\")[1].toLowerCase(),
-								teacher2: teachers[3].split("\\")[1].toLowerCase()
-							});
-						} else {
-							conferenceList.push({
-								conferenceName: conference.Title,
-								division: conference.Division,
-								roomNumber: conference.Room,
-								teacher1: teachers[1].split("\\")[1].toLowerCase()
-							});
-						}
-					});
+					var conferenceList = self.niceifyConferences(conferenceArray);
 
 					defer.resolve(conferenceList);
 				}
@@ -627,7 +650,30 @@ ptc.on("initialize:after", function () {
 
 			return defer.promise();
 		},
-		
+		niceifyConferences: function (conferenceArray) {
+			var conferenceList = [];
+			_.each(conferenceArray, function(conference) {
+				var teachers = conference.Teachers.split(";");
+				
+				if(teachers.length > 2) {
+					conferenceList.push({
+						conferenceName: conference.Title,
+						division: conference.Division,
+						roomNumber: conference.Room,
+						teacher1: teachers[1].split("\\")[1].toLowerCase(),
+						teacher2: teachers[3].split("\\")[1].toLowerCase()
+					});
+				} else {
+					conferenceList.push({
+						conferenceName: conference.Title,
+						division: conference.Division,
+						roomNumber: conference.Room,
+						teacher1: teachers[1].split("\\")[1].toLowerCase()
+					});
+				}
+			});
+			return conferenceList;
+		},
 		getTimes: function (conferenceList) {
 			var defer = $.Deferred(),
 				i, j,
@@ -697,18 +743,20 @@ ptc.on("initialize:after", function () {
 					unixStart: time.StartTime
 				});
 			});
-			
-			// look through each of the reserved times
-			_.each(matchingBlockedTimes, function(blockedtime) {
-				// for each one, iterate through all the oldTimes
-				_.each(oldTimes, function(oldtime) {
-					var sameTime = blockedtime.unixStart === oldtime.unixStart;
-					var sameTeacher = blockedtime.teacherLogon === oldtime.teacherLogon;
+				
+			newTimes = _.reject(oldTimes, function(oldtime) {
+				var output = false;
+				
+				_.each(matchingBlockedTimes, function(blockedtime) {
+					var sameTime = (blockedtime.unixStart === oldtime.unixStart);
+					var sameTeacher = (blockedtime.teacherLogon === oldtime.teacherLogon);
 					// if the new time matches the old time
-					if(!sameTime && !sameTeacher) {
-						newTimes.push(oldtime);
+					if(sameTime && sameTeacher) {
+						output = true;
 					}
 				});
+				
+				return output;
 			});
 
 			defer.resolve(newTimes);
@@ -717,7 +765,7 @@ ptc.on("initialize:after", function () {
 		},
 		getTeacherConf: function(teacherLogon) {
 			// get the conference for this teacher from SharePoint
-			var defer = $.Deferred();
+			var defer = $.Deferred(), self = this;
 			$().SPServices({
 				operation: "GetListItems",
 				webURL: App.Config.Settings.conferenceList.webURL,
@@ -730,8 +778,10 @@ ptc.on("initialize:after", function () {
 						includeAllAttrs: true,
 						removeOws: true
 					});
-					if(conferenceArray[0]) {
-						defer.resolve(conferenceArray[0]);
+					if(conferenceArray.length > 0) {
+						var conferenceList = self.niceifyConferences(conferenceArray);
+
+						defer.resolve(conferenceList);
 					} else {
 						defer.resolve(false);
 					}
@@ -747,9 +797,9 @@ ptc.on("initialize:after", function () {
 				
 			$().SPServices({
 				operation: "GetListItems",
-				webURL: App.Config.Settings.reservationLists[conference.Division].webURL,
+				webURL: App.Config.Settings.reservationLists[conference.division].webURL,
 				async:true,
-				listName: App.Config.Settings.reservationLists[conference.Division].listName,					
+				listName: App.Config.Settings.reservationLists[conference.division].listName,					
 				CAMLQuery:"<Query><Where><In><FieldRef Name='Teachers' /><Values><Value Type='Text'>ISB\\" + Mod.Config.loggedInUser + "</Value></Values></In></Where></Query>",
 				completefunc: function (xData) {
 					var teacherSchedule = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
@@ -760,9 +810,10 @@ ptc.on("initialize:after", function () {
 					if(teacherSchedule.length > 0) {
 						_.each(teacherSchedule, function(appt) {
 							var x = self.formatScheduleDates(appt);
-							x.Division = conference.Division;
+							x.Division = conference.division;
 							fullSchedule.push(x);
 						});
+						console.log(fullSchedule);
 						// if this teacher has reservations, add them to the master list
 						defer.resolve(fullSchedule);
 					} else {
@@ -1105,7 +1156,11 @@ ptc.on("initialize:after", function () {
 
 	Mod.Controller = {
 		startNewReservation: function() {
-			App.trigger("students:list");
+			if(App.Data.Config.userRole === "parent") {
+				App.trigger("students:list");
+			} else if(App.Data.Config.userRole === "teacher") {
+				App.trigger("times:list", App.Data.Config.loggedInUser);
+			}
 		},
 		
 		createReservation: function() {
@@ -1153,8 +1208,8 @@ ptc.on("initialize:after", function () {
 			return teacherData;
 		},
 		listTimes: function(teacherLogon) {
-			var timeArray = App.Data.Config.times,
-				filtered = _.where(timeArray, {teacherLogon: teacherLogon}),
+			var timeArray = App.Data.Config.newTimes,
+				filtered = _.where(timeArray, {teacherLogon: teacherLogon.toLowerCase()}),
 				data = new Mod.TimeCollection(filtered),
 				timeList = new Mod.Views.TimeList({
 					collection: data
@@ -1286,15 +1341,19 @@ ptc.on("initialize:after", function () {
 		template: "#submitDoubleBooked",
 		className: "status-res",
 		initialize: function() {
-			App.timeRegion.close();
+			if(App.Data.Config.userRole === "parent") {
+				App.timeRegion.close();
+			}
 		}
 	});
 	Mod.SubmitSuccess = Marionette.ItemView.extend({
 		template: "#submitSuccess",
 		className: "status-res",
 		initialize: function() {
-			App.teacherRegion.close();
-			App.timeRegion.close();
+			if(App.Data.Config.userRole === "parent") {
+				App.teacherRegion.close();
+				App.timeRegion.close();
+			}
 		}
 	});
 	

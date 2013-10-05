@@ -38,15 +38,19 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 		template: "#submitDoubleBooked",
 		className: "status-res",
 		initialize: function() {
-			App.timeRegion.close();
+			if(App.Data.Config.userRole === "parent") {
+				App.timeRegion.close();
+			}
 		}
 	});
 	Mod.SubmitSuccess = Marionette.ItemView.extend({
 		template: "#submitSuccess",
 		className: "status-res",
 		initialize: function() {
-			App.teacherRegion.close();
-			App.timeRegion.close();
+			if(App.Data.Config.userRole === "parent") {
+				App.teacherRegion.close();
+				App.timeRegion.close();
+			}
 		}
 	});
 	

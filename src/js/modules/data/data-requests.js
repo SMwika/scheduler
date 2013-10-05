@@ -107,14 +107,14 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 		
 		getLoggedInUser: function () {
 			var defer = $.Deferred();
-	/*		var	parentLogon = $().SPServices.SPGetCurrentUser({
+			var	parentLogon = $().SPServices.SPGetCurrentUser({
 					fieldName: "Name",
 					debug: false,
 					async: true
 				});
-			parentLogon = parentLogon.split("\\")[1]; */
+			parentLogon = parentLogon.split("\\")[1];
 
-			var parentLogon = "rebecca.lei"; // for testing
+		//	var parentLogon = "bketchum"; // for testing
 			
 			defer.resolve(parentLogon);
 
@@ -287,13 +287,13 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 		},
 		
 		getConferences: function(teacherList) {
-			var defer = $.Deferred(),
+			var defer = $.Deferred(), self = this,
 				i, list = teacherList, listLength = list.length,
 				conferenceList = [], inQuery = "";
 
 			// for each teacher that we have
 			for(i = 0; i < listLength; i++) {
-				inQuery += "<Value Type='Text'>ISB\\" + list[i].teacherLogon + "</Value>";
+				inQuery += "<Value Type='Text'>ISB\\" + list[i] + "</Value>";
 			}
 			$().SPServices({
 				operation: "GetListItems",
@@ -307,26 +307,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 						removeOws: true
 					});
 					
-					_.each(conferenceArray, function(conference) {
-						var teachers = conference.Teachers.split(";");
-						
-						if(teachers.length > 2) {
-							conferenceList.push({
-								conferenceName: conference.Title,
-								division: conference.Division,
-								roomNumber: conference.Room,
-								teacher1: teachers[1].split("\\")[1].toLowerCase(),
-								teacher2: teachers[3].split("\\")[1].toLowerCase()
-							});
-						} else {
-							conferenceList.push({
-								conferenceName: conference.Title,
-								division: conference.Division,
-								roomNumber: conference.Room,
-								teacher1: teachers[1].split("\\")[1].toLowerCase()
-							});
-						}
-					});
+					var conferenceList = self.niceifyConferences(conferenceArray);
 
 					defer.resolve(conferenceList);
 				}
@@ -334,7 +315,30 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 
 			return defer.promise();
 		},
-		
+		niceifyConferences: function (conferenceArray) {
+			var conferenceList = [];
+			_.each(conferenceArray, function(conference) {
+				var teachers = conference.Teachers.split(";");
+				
+				if(teachers.length > 2) {
+					conferenceList.push({
+						conferenceName: conference.Title,
+						division: conference.Division,
+						roomNumber: conference.Room,
+						teacher1: teachers[1].split("\\")[1].toLowerCase(),
+						teacher2: teachers[3].split("\\")[1].toLowerCase()
+					});
+				} else {
+					conferenceList.push({
+						conferenceName: conference.Title,
+						division: conference.Division,
+						roomNumber: conference.Room,
+						teacher1: teachers[1].split("\\")[1].toLowerCase()
+					});
+				}
+			});
+			return conferenceList;
+		},
 		getTimes: function (conferenceList) {
 			var defer = $.Deferred(),
 				i, j,
@@ -404,18 +408,20 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 					unixStart: time.StartTime
 				});
 			});
-			
-			// look through each of the reserved times
-			_.each(matchingBlockedTimes, function(blockedtime) {
-				// for each one, iterate through all the oldTimes
-				_.each(oldTimes, function(oldtime) {
-					var sameTime = blockedtime.unixStart === oldtime.unixStart;
-					var sameTeacher = blockedtime.teacherLogon === oldtime.teacherLogon;
+				
+			newTimes = _.reject(oldTimes, function(oldtime) {
+				var output = false;
+				
+				_.each(matchingBlockedTimes, function(blockedtime) {
+					var sameTime = (blockedtime.unixStart === oldtime.unixStart);
+					var sameTeacher = (blockedtime.teacherLogon === oldtime.teacherLogon);
 					// if the new time matches the old time
-					if(!sameTime && !sameTeacher) {
-						newTimes.push(oldtime);
+					if(sameTime && sameTeacher) {
+						output = true;
 					}
 				});
+				
+				return output;
 			});
 
 			defer.resolve(newTimes);
@@ -424,7 +430,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 		},
 		getTeacherConf: function(teacherLogon) {
 			// get the conference for this teacher from SharePoint
-			var defer = $.Deferred();
+			var defer = $.Deferred(), self = this;
 			$().SPServices({
 				operation: "GetListItems",
 				webURL: App.Config.Settings.conferenceList.webURL,
@@ -437,8 +443,10 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 						includeAllAttrs: true,
 						removeOws: true
 					});
-					if(conferenceArray[0]) {
-						defer.resolve(conferenceArray[0]);
+					if(conferenceArray.length > 0) {
+						var conferenceList = self.niceifyConferences(conferenceArray);
+
+						defer.resolve(conferenceList);
 					} else {
 						defer.resolve(false);
 					}
@@ -454,9 +462,9 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 				
 			$().SPServices({
 				operation: "GetListItems",
-				webURL: App.Config.Settings.reservationLists[conference.Division].webURL,
+				webURL: App.Config.Settings.reservationLists[conference.division].webURL,
 				async:true,
-				listName: App.Config.Settings.reservationLists[conference.Division].listName,					
+				listName: App.Config.Settings.reservationLists[conference.division].listName,					
 				CAMLQuery:"<Query><Where><In><FieldRef Name='Teachers' /><Values><Value Type='Text'>ISB\\" + Mod.Config.loggedInUser + "</Value></Values></In></Where></Query>",
 				completefunc: function (xData) {
 					var teacherSchedule = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
@@ -467,9 +475,10 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 					if(teacherSchedule.length > 0) {
 						_.each(teacherSchedule, function(appt) {
 							var x = self.formatScheduleDates(appt);
-							x.Division = conference.Division;
+							x.Division = conference.division;
 							fullSchedule.push(x);
 						});
+						console.log(fullSchedule);
 						// if this teacher has reservations, add them to the master list
 						defer.resolve(fullSchedule);
 					} else {
