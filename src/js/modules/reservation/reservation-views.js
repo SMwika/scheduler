@@ -81,6 +81,7 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 				var studentID = $(x).find(":selected").data("studentid");
 				var studentName = $(x).find(":selected").data("fullname");
 				var currGrade = $(x).find(":selected").data("currgrade");
+				App.Reservation.NewReservation.reserver = App.Data.Config.loggedInUser;
 				App.Reservation.NewReservation.currGrade = currGrade;
 				App.Reservation.NewReservation.studentID = studentID;
 				App.Reservation.NewReservation.studentName = studentName;

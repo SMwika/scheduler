@@ -11,8 +11,12 @@ ptc.module("Schedule.View", function(Mod, App, Backbone, Marionette){
 		
 		deleteClicked: function(e) {
 			e.preventDefault();
-			App.trigger("schedule:appt:delete", this.model);
-			this.remove();
+			if(this.model.get("Reserver") === App.Data.Config.loggedInUser) {
+				App.trigger("schedule:appt:delete", this.model);
+				this.remove();
+			} else {
+				alert("Sorry, you cannot delete reservations you did not create");
+			}
 		}
 	});
 	Mod.ApptList = Marionette.CollectionView.extend({

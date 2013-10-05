@@ -45,6 +45,7 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 				
 				$.when(checkUser).done(function(conference) {
 					App.trigger("user:message", "check role and get conferences");
+					
 					if(!conference) {
 					
 						console.log("user is not a teacher");
@@ -105,8 +106,14 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 					} else {
 						console.log("user is a teacher");
 						Mod.Config.conference = conference;
-						defer.resolve();
-
+						
+						var getschedule = App.request("teacher:getmyteacherschedule", conference);
+						$.when(getschedule).done(function(scheduleList) {
+							App.trigger("user:message", "get schedule");
+							Mod.Config.schedule = scheduleList;
+							console.log(scheduleList);
+							defer.resolve();
+						});
 					}
 				});
 			});

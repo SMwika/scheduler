@@ -36,6 +36,10 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 		return API.getConferences(teacherList);
 	});
 	
+	App.reqres.setHandler("teacher:getmyteacherschedule", function (conference) {
+		return API.getMyTeacherSchedule(conference);
+	});
+	
 	App.reqres.setHandler("schedule:getmy", function (familyCode) {
 		return API.getSchedule(familyCode);
 	});
@@ -110,7 +114,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 				});
 			parentLogon = parentLogon.split("\\")[1]; */
 
-			var parentLogon = "bweir"; // for testing
+			var parentLogon = "rebecca.lei"; // for testing
 			
 			defer.resolve(parentLogon);
 
@@ -444,6 +448,37 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 
 			return defer.promise();
 		},
+		getMyTeacherSchedule: function(conference) {
+			var defer = $.Deferred(), self = this,
+				fullSchedule = [];
+				
+			$().SPServices({
+				operation: "GetListItems",
+				webURL: App.Config.Settings.reservationLists[conference.Division].webURL,
+				async:true,
+				listName: App.Config.Settings.reservationLists[conference.Division].listName,					
+				CAMLQuery:"<Query><Where><In><FieldRef Name='Teachers' /><Values><Value Type='Text'>ISB\\" + Mod.Config.loggedInUser + "</Value></Values></In></Where></Query>",
+				completefunc: function (xData) {
+					var teacherSchedule = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+						includeAllAttrs: true,
+						removeOws: true
+					});
+											
+					if(teacherSchedule.length > 0) {
+						_.each(teacherSchedule, function(appt) {
+							var x = self.formatScheduleDates(appt);
+							x.Division = conference.Division;
+							fullSchedule.push(x);
+						});
+						// if this teacher has reservations, add them to the master list
+						defer.resolve(fullSchedule);
+					} else {
+						defer.resolve(false);
+					}
+				}
+			});
+			return defer.promise();
+		},
 		getTeacherSchedule: function(teachers) {
 			// get all of the reservations for this/these teacher(s) in their list
 			var defer = $.Deferred(),
@@ -520,6 +555,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 				["StartTime", x.startTime],
 				["EndTime", x.endTime],
 				["FamilyCode", x.familyCode],
+				["Reserver", x.reserver],
 				["Teachers", teachers]
 			];
 			

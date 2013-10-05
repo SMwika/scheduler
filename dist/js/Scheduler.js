@@ -215,6 +215,7 @@ ptc.on("initialize:after", function () {
 				
 				$.when(checkUser).done(function(conference) {
 					App.trigger("user:message", "check role and get conferences");
+					
 					if(!conference) {
 					
 						console.log("user is not a teacher");
@@ -275,8 +276,14 @@ ptc.on("initialize:after", function () {
 					} else {
 						console.log("user is a teacher");
 						Mod.Config.conference = conference;
-						defer.resolve();
-
+						
+						var getschedule = App.request("teacher:getmyteacherschedule", conference);
+						$.when(getschedule).done(function(scheduleList) {
+							App.trigger("user:message", "get schedule");
+							Mod.Config.schedule = scheduleList;
+							console.log(scheduleList);
+							defer.resolve();
+						});
 					}
 				});
 			});
@@ -320,6 +327,10 @@ ptc.on("initialize:after", function () {
 	
 	App.reqres.setHandler("teacher:getconferences", function (teacherList) {
 		return API.getConferences(teacherList);
+	});
+	
+	App.reqres.setHandler("teacher:getmyteacherschedule", function (conference) {
+		return API.getMyTeacherSchedule(conference);
 	});
 	
 	App.reqres.setHandler("schedule:getmy", function (familyCode) {
@@ -396,7 +407,7 @@ ptc.on("initialize:after", function () {
 				});
 			parentLogon = parentLogon.split("\\")[1]; */
 
-			var parentLogon = "bweir"; // for testing
+			var parentLogon = "rebecca.lei"; // for testing
 			
 			defer.resolve(parentLogon);
 
@@ -730,6 +741,37 @@ ptc.on("initialize:after", function () {
 
 			return defer.promise();
 		},
+		getMyTeacherSchedule: function(conference) {
+			var defer = $.Deferred(), self = this,
+				fullSchedule = [];
+				
+			$().SPServices({
+				operation: "GetListItems",
+				webURL: App.Config.Settings.reservationLists[conference.Division].webURL,
+				async:true,
+				listName: App.Config.Settings.reservationLists[conference.Division].listName,					
+				CAMLQuery:"<Query><Where><In><FieldRef Name='Teachers' /><Values><Value Type='Text'>ISB\\" + Mod.Config.loggedInUser + "</Value></Values></In></Where></Query>",
+				completefunc: function (xData) {
+					var teacherSchedule = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
+						includeAllAttrs: true,
+						removeOws: true
+					});
+											
+					if(teacherSchedule.length > 0) {
+						_.each(teacherSchedule, function(appt) {
+							var x = self.formatScheduleDates(appt);
+							x.Division = conference.Division;
+							fullSchedule.push(x);
+						});
+						// if this teacher has reservations, add them to the master list
+						defer.resolve(fullSchedule);
+					} else {
+						defer.resolve(false);
+					}
+				}
+			});
+			return defer.promise();
+		},
 		getTeacherSchedule: function(teachers) {
 			// get all of the reservations for this/these teacher(s) in their list
 			var defer = $.Deferred(),
@@ -806,6 +848,7 @@ ptc.on("initialize:after", function () {
 				["StartTime", x.startTime],
 				["EndTime", x.endTime],
 				["FamilyCode", x.familyCode],
+				["Reserver", x.reserver],
 				["Teachers", teachers]
 			];
 			
@@ -1286,6 +1329,7 @@ ptc.on("initialize:after", function () {
 				var studentID = $(x).find(":selected").data("studentid");
 				var studentName = $(x).find(":selected").data("fullname");
 				var currGrade = $(x).find(":selected").data("currgrade");
+				App.Reservation.NewReservation.reserver = App.Data.Config.loggedInUser;
 				App.Reservation.NewReservation.currGrade = currGrade;
 				App.Reservation.NewReservation.studentID = studentID;
 				App.Reservation.NewReservation.studentName = studentName;
@@ -1472,8 +1516,12 @@ ptc.on("initialize:after", function () {
 		
 		deleteClicked: function(e) {
 			e.preventDefault();
-			App.trigger("schedule:appt:delete", this.model);
-			this.remove();
+			if(this.model.get("Reserver") === App.Data.Config.loggedInUser) {
+				App.trigger("schedule:appt:delete", this.model);
+				this.remove();
+			} else {
+				alert("Sorry, you cannot delete reservations you did not create");
+			}
 		}
 	});
 	Mod.ApptList = Marionette.CollectionView.extend({
