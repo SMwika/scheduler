@@ -14,6 +14,7 @@ $(function () {
 			"submitUnavailable",
 			"submitDoubleBooked",
 			"submitSuccess",
+			"submitError",
 			"submitForm"
 
         ];

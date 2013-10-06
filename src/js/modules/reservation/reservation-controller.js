@@ -83,6 +83,9 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 			case "success":
 				submitArea = new Mod.Views.SubmitSuccess();
 				break;
+			case "error":
+				submitArea = new Mod.Views.SubmitError();
+				break;
 			}
 			
 			App.submitRegion.show(submitArea);

@@ -449,7 +449,7 @@ ptc.on("initialize:after", function () {
 				});
 			parentLogon = parentLogon.split("\\")[1];
 
-		//	var parentLogon = "bketchum"; // for testing
+			var parentLogon = "rebecca.lei"; // for testing
 			
 			defer.resolve(parentLogon);
 

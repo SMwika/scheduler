@@ -114,7 +114,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 				});
 			parentLogon = parentLogon.split("\\")[1];
 
-		//	var parentLogon = "bketchum"; // for testing
+		//	var parentLogon = "rebecca.lei"; // for testing
 			
 			defer.resolve(parentLogon);
 
@@ -478,7 +478,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 							x.Division = conference.division;
 							fullSchedule.push(x);
 						});
-						console.log(fullSchedule);
+
 						// if this teacher has reservations, add them to the master list
 						defer.resolve(fullSchedule);
 					} else {
@@ -588,6 +588,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 						App.trigger("schedule:append", y);
 						App.trigger("user:message", "successfully reserved");
 					} else {
+						App.trigger("submit:options", "error");
 						App.trigger("user:message", "error saving your reservation");
 					}
 				}

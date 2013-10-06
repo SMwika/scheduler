@@ -1,0 +1,2 @@
+<h2>Error</h2>
+<span>So sorry, there was an error making your reservation. If you have tried multiple times, please contact the divisional office to setup a time with your teacher, and email dragonsgate@isb.bj.edu.cn to report the error.</span>
