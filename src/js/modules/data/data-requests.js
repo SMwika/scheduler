@@ -78,7 +78,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 					var start = moment(dates[j].startDateTime, "YYYY-MM-DD HH:mm"),
 						end = moment(dates[j].endDateTime, "YYYY-MM-DD HH:mm"),
 						diff = end.diff(start, "m", true),
-						slotCount = diff / times[i].duration;
+						slotCount = diff / (times[i].duration + times[i].padding);
 					for (k = 0; k <= slotCount; k++) {
 						var minuteCount = (times[i].duration + times[i].padding) * k,
 							newStart = moment(start).add(minuteCount, "m"),
