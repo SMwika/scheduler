@@ -48,6 +48,12 @@
 <span>Double booking...please try again!</span>
 </script>
 
+<!-- submitError -->
+<script id="submitError" type="text/template">
+<h2>Error</h2>
+<span>So sorry, there was an error making your reservation. If you have tried multiple times, please contact the divisional office to setup a time with your teacher, and email dragonsgate@isb.bj.edu.cn to report the error.</span>
+</script>
+
 <!-- submitForm -->
 <script id="submitForm" type="text/template">
 <button id="submitRes" class="js-submit-form" value="submit">Submit Reservation</button>

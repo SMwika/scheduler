@@ -17,6 +17,7 @@ $(function () {
 			"submitUnavailable",
 			"submitDoubleBooked",
 			"submitSuccess",
+			"submitError",
 			"submitForm"
 
         ];
@@ -97,7 +98,10 @@ ptc.on("initialize:after", function () {
 	Mod.Settings = {
 		
 		overrides: {
+			// exclusions are processed first
 			exclusions: ["(ASA)", "(MSE)","hanichowski(Homeroom)", "mskinner(Homeroom)","fpanych(Homeroom)","scoe(Homeroom)","ehillmann(Homeroom)","GRussell(Homeroom)","bjogi(Homeroom)","jbinns(Homeroom)","breverman(Homeroom)","boreilly(Homeroom)","jkinsella(Homeroom)","DMonroe(Homeroom)","jmcroberts(Homeroom)","drussell(Homeroom)","mdawson(Homeroom)","gloynes(Homeroom)"],
+			
+			// then inclusions override any exclusions
 			inclusions: ["aflores"]
 		},
 		
@@ -136,11 +140,11 @@ ptc.on("initialize:after", function () {
 			padding:10, // minutes after a conference where no bookings can be made
 			dates: [ // in 24hr Beijing time
 				{
-					startDateTime: "2013-10-21 12:00",
-					endDateTime: "2013-10-21 20:00"
+					startDateTime: "2013-10-21 12:00", // first conference START time
+					endDateTime: "2013-10-21 19:30" // last conference START time
 				}, {
-					startDateTime: "2013-10-22 08:00",
-					endDateTime: "2013-10-22 15:30"
+					startDateTime: "2013-10-22 08:00", // first conference START time
+					endDateTime: "2013-10-22 15:00" // last conference START time
 				}
 			]
 		}, {
@@ -149,11 +153,11 @@ ptc.on("initialize:after", function () {
 			padding: 0, // minutes after a conference where no bookings can be made
 			dates: [ // in 24hr Beijing time
 				{
-					startDateTime: "2013-10-21 12:00",
-					endDateTime: "2013-10-21 20:00"
+					startDateTime: "2013-10-21 12:00", // first conference START time
+					endDateTime: "2013-10-21 19:45" // last conference START time
 				}, {
-					startDateTime: "2013-10-22 08:00",
-					endDateTime: "2013-10-22 15:30"
+					startDateTime: "2013-10-22 08:00", // first conference START time
+					endDateTime: "2013-10-22 15:15" // last conference START time
 				}
 			]
 		}, {
@@ -162,11 +166,11 @@ ptc.on("initialize:after", function () {
 			padding: 0, // minutes after a conference where no bookings can be made
 			dates: [ // in 24hr Beijing time
 				{
-					startDateTime: "2013-10-21 12:00",
-					endDateTime: "2013-10-21 20:00"
+					startDateTime: "2013-10-21 12:00", // first conference START time
+					endDateTime: "2013-10-21 19:50" // last conference START time
 				}, {
-					startDateTime: "2013-10-22 08:00",
-					endDateTime: "2013-10-22 15:30"
+					startDateTime: "2013-10-22 08:00", // first conference START time
+					endDateTime: "2013-10-22 15:20" // last conference START time
 				}
 			]
 		}]
@@ -449,7 +453,7 @@ ptc.on("initialize:after", function () {
 				});
 			parentLogon = parentLogon.split("\\")[1];
 
-			var parentLogon = "rebecca.lei"; // for testing
+		//	var parentLogon = "rebecca.lei"; // for testing
 			
 			defer.resolve(parentLogon);
 
@@ -813,7 +817,7 @@ ptc.on("initialize:after", function () {
 							x.Division = conference.division;
 							fullSchedule.push(x);
 						});
-						console.log(fullSchedule);
+
 						// if this teacher has reservations, add them to the master list
 						defer.resolve(fullSchedule);
 					} else {
@@ -923,6 +927,7 @@ ptc.on("initialize:after", function () {
 						App.trigger("schedule:append", y);
 						App.trigger("user:message", "successfully reserved");
 					} else {
+						App.trigger("submit:options", "error");
 						App.trigger("user:message", "error saving your reservation");
 					}
 				}
@@ -1236,6 +1241,9 @@ ptc.on("initialize:after", function () {
 				break;
 			case "success":
 				submitArea = new Mod.Views.SubmitSuccess();
+				break;
+			case "error":
+				submitArea = new Mod.Views.SubmitError();
 				break;
 			}
 			

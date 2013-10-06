@@ -65,7 +65,7 @@ module.exports = function(grunt) {
       },
       dist: {
         files: {
-        //  'dist/js/<%= pkg.name %>-libs.min.js': ['<%= concat.libs.dest %>'],
+          'dist/js/<%= pkg.name %>-libs.min.js': ['<%= concat.libs.dest %>'],
           'dist/js/<%= pkg.name %>.min.js': ['<%= concat.scheduler.dest %>']
         }
       }
