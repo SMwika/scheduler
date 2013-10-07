@@ -114,7 +114,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 				});
 			parentLogon = parentLogon.split("\\")[1];
 
-		//	var parentLogon = "rebecca.lei"; // for testing
+		//	var parentLogon = "rebecca.lei";
 			
 			defer.resolve(parentLogon);
 

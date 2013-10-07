@@ -54,9 +54,25 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 			return teacherData;
 		},
 		listTimes: function(teacherLogon) {
-			var timeArray = App.Data.Config.newTimes,
-				filtered = _.where(timeArray, {teacherLogon: teacherLogon.toLowerCase()}),
-				data = new Mod.TimeCollection(filtered),
+			var timeArray = App.Data.Config.newTimes;
+			//	filtered = _.where(timeArray, {teacherLogon: teacherLogon.toLowerCase()});
+				
+			var filtered = _.filter(timeArray, function(time) {
+				var teachers = time.teacherLogon.split("-");
+				var output = false;
+				var teacher = teacherLogon.toLowerCase();
+				if(teachers.length > 1) {
+					if(teacher === teachers[0] || teacher === teachers[1]) {
+						output = true;
+					}
+				} else {
+					if(teacher === teachers[0]) {
+						output = true;
+					}
+				}
+				return output;
+			});
+			var data = new Mod.TimeCollection(filtered),
 				timeList = new Mod.Views.TimeList({
 					collection: data
 				});

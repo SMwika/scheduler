@@ -140,7 +140,7 @@ ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 				App.Reservation.NewReservation.teacherLogon = teacherLogon;
 				App.Reservation.NewReservation.roomNumber = roomNumber;
 				App.Reservation.NewReservation.division = division;
-				App.trigger("times:list", teacherLogon);
+				App.trigger("times:list", teacherLogon.split("-")[0]);
 			}
 		},
 		closeStuff: function() {

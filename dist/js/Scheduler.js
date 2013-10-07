@@ -1,5 +1,5 @@
 /*!
- scheduler Build version 0.0.1, 10-05-2013
+ scheduler Build version 0.0.1, 10-06-2013
 */
 $(function () {
     
@@ -417,7 +417,7 @@ ptc.on("initialize:after", function () {
 					var start = moment(dates[j].startDateTime, "YYYY-MM-DD HH:mm"),
 						end = moment(dates[j].endDateTime, "YYYY-MM-DD HH:mm"),
 						diff = end.diff(start, "m", true),
-						slotCount = diff / times[i].duration;
+						slotCount = diff / (times[i].duration + times[i].padding);
 					for (k = 0; k <= slotCount; k++) {
 						var minuteCount = (times[i].duration + times[i].padding) * k,
 							newStart = moment(start).add(minuteCount, "m"),
@@ -453,7 +453,7 @@ ptc.on("initialize:after", function () {
 				});
 			parentLogon = parentLogon.split("\\")[1];
 
-		//	var parentLogon = "rebecca.lei"; // for testing
+		//	var parentLogon = "rebecca.lei";
 			
 			defer.resolve(parentLogon);
 
@@ -1213,9 +1213,25 @@ ptc.on("initialize:after", function () {
 			return teacherData;
 		},
 		listTimes: function(teacherLogon) {
-			var timeArray = App.Data.Config.newTimes,
-				filtered = _.where(timeArray, {teacherLogon: teacherLogon.toLowerCase()}),
-				data = new Mod.TimeCollection(filtered),
+			var timeArray = App.Data.Config.newTimes;
+			//	filtered = _.where(timeArray, {teacherLogon: teacherLogon.toLowerCase()});
+				
+			var filtered = _.filter(timeArray, function(time) {
+				var teachers = time.teacherLogon.split("-");
+				var output = false;
+				var teacher = teacherLogon.toLowerCase();
+				if(teachers.length > 1) {
+					if(teacher === teachers[0] || teacher === teachers[1]) {
+						output = true;
+					}
+				} else {
+					if(teacher === teachers[0]) {
+						output = true;
+					}
+				}
+				return output;
+			});
+			var data = new Mod.TimeCollection(filtered),
 				timeList = new Mod.Views.TimeList({
 					collection: data
 				});
@@ -1451,7 +1467,7 @@ ptc.on("initialize:after", function () {
 				App.Reservation.NewReservation.teacherLogon = teacherLogon;
 				App.Reservation.NewReservation.roomNumber = roomNumber;
 				App.Reservation.NewReservation.division = division;
-				App.trigger("times:list", teacherLogon);
+				App.trigger("times:list", teacherLogon.split("-")[0]);
 			}
 		},
 		closeStuff: function() {
