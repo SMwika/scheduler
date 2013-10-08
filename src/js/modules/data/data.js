@@ -128,30 +128,31 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 						$.when(getschedule).done(function(scheduleList) {
 							App.trigger("user:message", "get schedule");
 							Mod.Config.schedule = scheduleList;
-						});
 						
-						var teacherSchedule = App.request("teacher:getschedule", conferences);
-						$.when(teacherSchedule).done(function(teacherScheduleList) {
-							App.trigger("user:message", "got teacher reservations");
-							Mod.Config.teacherSchedules = teacherScheduleList;
+							var teacherSchedule = App.request("teacher:getschedule", conferences);
+							$.when(teacherSchedule).done(function(teacherScheduleList) {
+								App.trigger("user:message", "got teacher reservations");
+								Mod.Config.teacherSchedules = teacherScheduleList;
 
-							var times = App.request("teacher:gettimes", conferences);
-							$.when(times).done(function(timeList) {
+								var times = App.request("teacher:gettimes", conferences);
+								$.when(times).done(function(timeList) {
 
-								App.trigger("user:message", "get available time slots");
-								
-								Mod.Config.times = timeList;
-								
-								var availableTimes = App.request("times:getavailable");
-								$.when(availableTimes).done(function(newTimeList) {
+									App.trigger("user:message", "get available time slots");
+									
+									Mod.Config.times = timeList;
+									
+									var availableTimes = App.request("times:getavailable");
+									$.when(availableTimes).done(function(newTimeList) {
 
-									Mod.Config.newTimes = newTimeList;
-									App.trigger("user:message", "filtered the times");
-									defer.resolve();
+										Mod.Config.newTimes = newTimeList;
+										App.trigger("user:message", "filtered the times");
+										defer.resolve();
 
+									});
 								});
-							});
-						});		
+							});		
+						});
+
 					}
 				});
 			});

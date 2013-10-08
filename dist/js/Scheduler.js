@@ -1,6 +1,8 @@
 /*!
- scheduler Build version 0.0.1, 10-06-2013
+ scheduler Build version 0.0.1, 10-07-2013
 */
+// all of the templates for the app should be referenced here
+// this keeps index.html clean
 $(function () {
     
     var i, z, 
@@ -60,20 +62,22 @@ _.templateSettings = {
     interpolate: /\{\{([\s\S]+?)\}\}/g
 };
 
+// make the regions slide down as they open - fancy fancy!
 Marionette.Region.prototype.open = function(view){
 	this.$el.hide();
 	this.$el.html(view.el);
 	this.$el.slideDown("medium");
 };
 
+// just a method to check if an object has a property
 Object.prototype.hasOwnProperty = function(property) {
 	return this[property] !== undefined;
 };
 
-// create app
+// create the marionette app
 var ptc = new Marionette.Application();
 
-// add regions to app for displaying data
+// add regions to the app for displaying data
 ptc.addRegions({
     studentRegion: "#studentRegion",
     teacherRegion: "#teacherRegion",
@@ -83,11 +87,20 @@ ptc.addRegions({
     scheduleRegion: "#scheduleRegion"
 });
 
+// when the app runs for the first time, do this stuff
 ptc.on("initialize:after", function () {
+	
+	// generate the time stored in app-config.js
 	ptc.trigger("times:generate");
+	
+	// get the initial set of data (a big function)
 	var datafetch = ptc.request("data:getinitial");
-	$.when(datafetch).done(function(){
+	$.when(datafetch).done(function(data){
+		console.log(data);
+		// when all data has been fetched, tell the user
 		ptc.trigger("user:message", "successfully retrieved all data");
+		
+		// then begin to list the schedule and show the reservation form
 		ptc.trigger("schedule:listAppts");
 		ptc.trigger("reservation:new");
 	});
@@ -120,6 +133,7 @@ ptc.on("initialize:after", function () {
 			webURL: "https://g.isb.bj.edu.cn/test/conferencing/",
 			listName: "ConferenceList"
 		},
+		// where all of the reservations are stored
 		reservationLists: {
 			"HS": {
 				webURL: "https://g.isb.bj.edu.cn/test/conferencing/",
@@ -306,30 +320,31 @@ ptc.on("initialize:after", function () {
 						$.when(getschedule).done(function(scheduleList) {
 							App.trigger("user:message", "get schedule");
 							Mod.Config.schedule = scheduleList;
-						});
 						
-						var teacherSchedule = App.request("teacher:getschedule", conferences);
-						$.when(teacherSchedule).done(function(teacherScheduleList) {
-							App.trigger("user:message", "got teacher reservations");
-							Mod.Config.teacherSchedules = teacherScheduleList;
+							var teacherSchedule = App.request("teacher:getschedule", conferences);
+							$.when(teacherSchedule).done(function(teacherScheduleList) {
+								App.trigger("user:message", "got teacher reservations");
+								Mod.Config.teacherSchedules = teacherScheduleList;
 
-							var times = App.request("teacher:gettimes", conferences);
-							$.when(times).done(function(timeList) {
+								var times = App.request("teacher:gettimes", conferences);
+								$.when(times).done(function(timeList) {
 
-								App.trigger("user:message", "get available time slots");
-								
-								Mod.Config.times = timeList;
-								
-								var availableTimes = App.request("times:getavailable");
-								$.when(availableTimes).done(function(newTimeList) {
+									App.trigger("user:message", "get available time slots");
+									
+									Mod.Config.times = timeList;
+									
+									var availableTimes = App.request("times:getavailable");
+									$.when(availableTimes).done(function(newTimeList) {
 
-									Mod.Config.newTimes = newTimeList;
-									App.trigger("user:message", "filtered the times");
-									defer.resolve();
+										Mod.Config.newTimes = newTimeList;
+										App.trigger("user:message", "filtered the times");
+										defer.resolve();
 
+									});
 								});
-							});
-						});		
+							});		
+						});
+
 					}
 				});
 			});
@@ -1043,12 +1058,18 @@ ptc.on("initialize:after", function () {
 			});
 		}
 	};
-});;ptc.module("Reservation", function(Mod, App){
+});;/*
+	This is the reservation module. It has 4 pieces:
+	a controller, the models, the views, and this main
+	file here.
+*/
+ptc.module("Reservation", function(Mod, App){
 	
 	// used when reserving/checking reservations
-	// so that the app doesn't continually check
+	// so that the app doesn't continually check while it's checking
 	Mod.ReservingStatus = false;
 	
+	// a holder for the reservation. gets populated along the way.
 	Mod.NewReservation = {
 		studentID: "",
 		studentName: "",
@@ -1061,6 +1082,7 @@ ptc.on("initialize:after", function () {
 		roomNumber: ""
 	};
 	
+	// triggers
 	App.on("reservation:new", function() {
 		API.newReservation();
 	});
@@ -1080,45 +1102,60 @@ ptc.on("initialize:after", function () {
 		API.enableSubmit(option);
 	});
 	
+	// request handlers
 	App.reqres.setHandler("reservation:availability", function(res) {
 		return API.checkAvailability(res);
 	});
 	
+	// local API, not accessible outside of this function
 	var API = {
 		listStudents: function() {
+			// close all the other regions
 			App.teacherRegion.close();
 			App.timeRegion.close();
 			App.submitRegion.close();
+			
+			// then tell the controller to list the students
 			Mod.Controller.listStudents();
 		},
 		listTeachers: function(studentID) {
+			// close some of the other regions
 			App.timeRegion.close();
 			App.submitRegion.close();
+			
+			// then tell the controller to list the teachers
 			Mod.Controller.listTeachers(studentID);
 		},
 		listTimes: function(teacherLogon) {
+			// close the submit region
 			App.submitRegion.close();
+			
+			// then tell the controller to list all the times
 			Mod.Controller.listTimes(teacherLogon);
 		},
 		newReservation: function() {
+			// tell the controller to start a new reservation
 			Mod.Controller.startNewReservation();
 		},
 		createReservation: function() {
+			// when a reservation is submitted, set the status to true
+			// this just means that the app is currently in process of reserving
 			Mod.ReservingStatus = true;
 
 			// check if possible to create a reservation
 			var checkAvailability = App.request("reservation:availability", Mod.NewReservation);
 			$.when(checkAvailability).done(function(status) {
-				// if so, then create it
 				if(status === true) {
+					// if so, then tell the controller to create it
 					Mod.Controller.createReservation();
 				} else {
+					// otherwise allow reserving to happen again
 					Mod.ReservingStatus = false;
 				}
 			});
 		},
 		checkAvailability: function(res) {
-		
+			// this function is passed the reservation object
 			
 			var defer = $.Deferred();
 			
@@ -1127,22 +1164,25 @@ ptc.on("initialize:after", function () {
 			
 			// see if this slot is reserved for this teacher
 			var checkTeacherAvailability = App.request("data:getTeacherAvailability", res);
-			
 			$.when(checkTeacherAvailability).done(function(teacherStatus) {
 				if(teacherStatus === true) {
-					// then see if this student and teacher already have a reservation together
+					// if the teacher is available during that time
+					// see if this student and teacher already have a reservation together
 					var checkStudentTeacherStatus = App.request("data:getStudentTeacherStatus", res);
 					$.when(checkStudentTeacherStatus).done(function(studentStatus) {
 						if(studentStatus === true) {
+							// if the student and teacher are both available, then return true
 							availability = true;
 							defer.resolve(availability);
 						} else {
+							// otherwise return false and trigger a response to the user
 							availability = false;
 							App.trigger("submit:options", "unavailable");
 							defer.resolve(availability);
 						}
 					});
 				} else {
+					// if the teacher already has a time, then tell the user it's already booked
 					App.trigger("submit:options", "doublebooked");
 					defer.resolve(availability);
 				}
@@ -1151,15 +1191,20 @@ ptc.on("initialize:after", function () {
 			return defer.promise();
 		},
 		
-		
 		enableSubmit: function(option) {
+			// tell the controller to enable the submit button, passing options
 			Mod.Controller.enableSubmit(option);
 		}
 	};
 	
-});;ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
+});;/*
+	This is the controller for the reservation module. It's accessible
+	to the entire app, but mostly it is called from the module's API.
+*/
+ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 
 	Mod.Controller = {
+		// dependengin on role, start listing things for the reservation form
 		startNewReservation: function() {
 			if(App.Data.Config.userRole === "parent") {
 				App.trigger("students:list");
@@ -1174,10 +1219,13 @@ ptc.on("initialize:after", function () {
 		},
 		
 		listStudents: function() {
+			// instantiate a new collection from the stored list of students
+			// then put that collection in a view
 			var data = new Mod.StudentCollection(App.Data.Config.students),
 				studentList = new Mod.Views.StudentList({
 					collection: data
 				});
+			// set the family of the temporary reservation object
 			Mod.NewReservation.familyCode = App.Data.Config.students[0].FamilyCode;
 			
 			// show view in student region
@@ -1185,9 +1233,11 @@ ptc.on("initialize:after", function () {
 		},
 		
 		listTeachers: function(studentID) {
-			
+			// get a studentID, list their teachers
 			var teacherData = this.customizeTeacherList(studentID);
 			
+			// instantiate a new Backbone collection with the returned teacherData,
+			// then display it in a view
 			var data = new Mod.TeacherCollection(teacherData),
 				teacherList = new Mod.Views.TeacherList({
 					collection: data
@@ -1198,7 +1248,7 @@ ptc.on("initialize:after", function () {
 			
 		},
 		customizeTeacherList: function(studentID) {
-			// get teacherids of current student
+			// get teacherids of studentID passed in parameter
 			var teacherids = _.pluck(_.where(App.Data.Config.teachers, {studentID: String(studentID)}), "teacherLogon"),
 				teacherData = [], i;
 			// iterate through each of the returned teachers
@@ -1207,40 +1257,54 @@ ptc.on("initialize:after", function () {
 				var y = _.findWhere(App.Data.Config.conferences, {teacher1: teacherids[i]});
 
 				if(y) {
+					// if they do, then push them into the teacherData array
 					teacherData.push(y);
 				}
 			}
 			return teacherData;
 		},
 		listTimes: function(teacherLogon) {
+			// store the array of new times that were generated earlier
 			var timeArray = App.Data.Config.newTimes;
-			//	filtered = _.where(timeArray, {teacherLogon: teacherLogon.toLowerCase()});
-				
+			
+			// first, we're expecting a single teacher logon in the parameter
+			// so we iterate through the newTimes
 			var filtered = _.filter(timeArray, function(time) {
+				// split the teachers into an array (even if only one)
 				var teachers = time.teacherLogon.split("-");
+				// set the default output to false (meaning they won't show up in the filter)
 				var output = false;
 				var teacher = teacherLogon.toLowerCase();
 				if(teachers.length > 1) {
+					// if the array we created earlier has more than one,
+					// then if the teacher name is equal to the teacherLogon that was passed,
+					// then we have a match, and we should make sure that time passes the truth test
 					if(teacher === teachers[0] || teacher === teachers[1]) {
 						output = true;
 					}
 				} else {
+					// otherwise, if the teachers don't match, then pass that time by
 					if(teacher === teachers[0]) {
 						output = true;
 					}
 				}
+				// finally, this return tells the _.filter function to return this time slot
 				return output;
 			});
+			// then we instantiate a new Backbone collection with this array,
+			// and put it into a view.
 			var data = new Mod.TimeCollection(filtered),
 				timeList = new Mod.Views.TimeList({
 					collection: data
 				});
 
-			// show view in time region
+			// finallym we show the view in time region
 			App.timeRegion.show(timeList);
 		},
 		
 		enableSubmit: function(option) {
+			// the option passed to this function determines
+			// which view is shown in the submit region
 			var submitArea;
 			switch(option) {
 			case "submit":
@@ -1266,7 +1330,13 @@ ptc.on("initialize:after", function () {
 			App.submitRegion.show(submitArea);
 		}
 	};
-});;ptc.module("Reservation", function(Mod, App, Backbone){
+});;/*
+	This is the model and collections area of the module.
+	It's super simple. It just stores all the models and collections
+	of the Reservation module. Notice how empty this page is? You really
+	shouldn't ever need to mess with it...
+*/
+ptc.module("Reservation", function(Mod, App, Backbone){
 
 
 	// Appointment Model and Collection ************************************
@@ -1325,8 +1395,14 @@ ptc.on("initialize:after", function () {
 		model: Mod.Time
 	});
 
-});;ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
+});;/*
+	This is a submodule of the Reservations module. It holds all of the
+	Backbone and Marionette views. They are instantiated typically
+	from the controller.
+*/
+ptc.module("Reservation.Views", function(Mod, App, Backbone, Marionette, $){
 	
+	// this layout will eventually hold three other views in its regions
 	Mod.Layout = Marionette.Layout.extend({
 		template: "#reservationLayout",
 		
@@ -1337,6 +1413,11 @@ ptc.on("initialize:after", function () {
 		}
 	});
 	
+	/*
+		the following five views are the views for the different
+		stages of the submit area. some of them merely call a template,
+		but they are kept here all together to keep things organized.
+	*/
 	Mod.SubmitView = Marionette.ItemView.extend({
 		template: "#submitForm",
 		events: {
@@ -1344,6 +1425,7 @@ ptc.on("initialize:after", function () {
 		},
 		submitFormClicked: function(e) {
 			e.preventDefault();
+			// as long as the app is not reserving, then carry on
 			if(App.Reservation.ReservingStatus === false) {
 				App.trigger("reservation:create");
 				App.trigger("submit:options", "checking");
@@ -1365,6 +1447,8 @@ ptc.on("initialize:after", function () {
 		template: "#submitDoubleBooked",
 		className: "status-res",
 		initialize: function() {
+			// while the "double booked" message is up,
+			// close the time region so the parent can try again
 			if(App.Data.Config.userRole === "parent") {
 				App.timeRegion.close();
 			}
@@ -1374,6 +1458,7 @@ ptc.on("initialize:after", function () {
 		template: "#submitSuccess",
 		className: "status-res",
 		initialize: function() {
+			// while the "success" message is up, close some regions
 			if(App.Data.Config.userRole === "parent") {
 				App.teacherRegion.close();
 				App.timeRegion.close();
@@ -1381,6 +1466,8 @@ ptc.on("initialize:after", function () {
 		}
 	});
 	
+	// this is a single student view. notice we set it's data-*
+	// attributes on render based on the model. we use these later.
 	Mod.StudentItem = Marionette.ItemView.extend({
 		tagName: "option",
 		className: "student",
@@ -1393,6 +1480,11 @@ ptc.on("initialize:after", function () {
 		}
 
 	});
+	
+	// this is the student list view. it holds the select menu, 
+	// as well as the select button. the button was implemented
+	// because older browser...ahem...IE7 and IE8...don't really
+	// handle the "change" event very well on select menus
 	Mod.StudentList = Marionette.CompositeView.extend({
 		itemViewContainer: ".student-selector",
 		template: "#studentListContainer",
@@ -1412,20 +1504,26 @@ ptc.on("initialize:after", function () {
 				var studentID = $(x).find(":selected").data("studentid");
 				var studentName = $(x).find(":selected").data("fullname");
 				var currGrade = $(x).find(":selected").data("currgrade");
+				// set properties of our temporary reservation object
 				App.Reservation.NewReservation.reserver = App.Data.Config.loggedInUser;
 				App.Reservation.NewReservation.currGrade = currGrade;
 				App.Reservation.NewReservation.studentID = studentID;
 				App.Reservation.NewReservation.studentName = studentName;
+				// list teachers once the student is selected
 				App.trigger("teachers:list", studentID);
 			}
 		},
 		closeStuff: function() {
+			// when a student is selected, we should close any
+			// remaining regions that were previously opened for other students
 			App.teacherRegion.close();
 			App.timeRegion.close();
 			App.submitRegion.close();
 		}
 	});
 	
+	// a single teacher view. notice that on render we perform a little logic
+	// to set the data-* of the teacher and their details
 	Mod.TeacherItem = Marionette.ItemView.extend({
 		tagName: "option",
 		className: "teacher",
@@ -1443,6 +1541,8 @@ ptc.on("initialize:after", function () {
 		}
 
 	});
+	
+	// the view that holds the list of teachers and the select button
 	Mod.TeacherList = Marionette.CompositeView.extend({
 		itemViewContainer: ".teacher-selector",
 		template: "#teacherListContainer",
@@ -1463,10 +1563,13 @@ ptc.on("initialize:after", function () {
 				var roomNumber = $(x).find(":selected").data("roomnumber");
 				var division = $(x).find(":selected").data("division");
 				var teacherName = $(x).find(":selected").val();
+				// set variables on our temporary reservation object
 				App.Reservation.NewReservation.teacherName = teacherName;
 				App.Reservation.NewReservation.teacherLogon = teacherLogon;
 				App.Reservation.NewReservation.roomNumber = roomNumber;
 				App.Reservation.NewReservation.division = division;
+				
+				// list the times menu when a teacher is selected
 				App.trigger("times:list", teacherLogon.split("-")[0]);
 			}
 		},
@@ -1477,7 +1580,7 @@ ptc.on("initialize:after", function () {
 		
 	});	
 	
-	
+	// single time item view. we store the unix date in data-* attributes
 	Mod.TimeItem = Marionette.ItemView.extend({
 		tagName: "option",
 		className: "time",
@@ -1489,8 +1592,9 @@ ptc.on("initialize:after", function () {
 				.attr("data-start", this.model.get("unixStart"))
 				.attr("data-end", this.model.get("unixEnd"));
 		}
-
 	});
+	
+	// the list of times and the select button
 	Mod.TimeList = Marionette.CompositeView.extend({
 		itemViewContainer: ".time-selector",
 		template: "#timeListContainer",
@@ -1509,9 +1613,11 @@ ptc.on("initialize:after", function () {
 			} else {
 				var startTime = $(x).find(":selected").data("start");
 				var endTime = $(x).find(":selected").data("end");
+				// set variables of our temporary reservation object
 				App.Reservation.NewReservation.startTime = startTime;
 				App.Reservation.NewReservation.endTime = endTime;
 				
+				// show the submit button
 				App.trigger("submit:options", "submit");
 			}
 		},
@@ -1520,7 +1626,11 @@ ptc.on("initialize:after", function () {
 		}
 		
 	});	
-});;ptc.module("Schedule", function(Mod, App){
+});;/*
+	This is the Schedule module. It's pretty basic,
+	and involves some basic Backbone and Marionette juggling.
+*/
+ptc.module("Schedule", function(Mod, App){
 
 	App.on("schedule:listAppts", function() {
 		API.showSchedule();
@@ -1533,7 +1643,8 @@ ptc.on("initialize:after", function () {
 		API.appendAppt(data);
 	});
 	
-	
+	// local API only availabl in this function
+	// accessed by the triggers in this module.
 	var API = {
 		showSchedule: function() {
 			Mod.Controller.showSchedule();
@@ -1542,20 +1653,27 @@ ptc.on("initialize:after", function () {
 			Mod.Controller.deleteAppt(appt);
 		},
 		appendAppt: function(data) {
+			// instantiate a new model of the passed appointment data
 			var appt = new Mod.Appt(data);
+			// trigger a collection.add() with this model
 			App.trigger("schedule:collection:add", appt);
 		}
 	};
 	
-});;ptc.module("Schedule", function(Mod, App){
+});;/*
+	Again, a super basic piece of the Schedule module.
+*/
+ptc.module("Schedule", function(Mod, App){
 
 	Mod.Controller = {
 		showSchedule: function() {
-			var data = new Mod.ApptCollection(App.Data.Config.schedule);
-
-			var scheduleView = new Mod.View.ApptList({
-				collection: data
-			});
+			// instantiate a new collection from the stored schedule
+			// and put it in a view.
+			var data = new Mod.ApptCollection(App.Data.Config.schedule),
+				scheduleView = new Mod.View.ApptList({
+					collection: data
+				});
+			// when a model is added to the collection, add it to the collection
 			App.on("schedule:collection:add", function(model) {
 				data.add(model);
 			});
@@ -1563,11 +1681,15 @@ ptc.on("initialize:after", function () {
 			App.scheduleRegion.show(scheduleView);
 		},
 		deleteAppt: function(appt) {
+			// just trigger the delete on the data module
 			App.trigger("data:reservation:delete", appt);
 		}
 	};
 	
-});;ptc.module("Schedule", function(Mod, App, Backbone){
+});;/*
+	Super basic model/collection of the Schedule module.
+*/
+ptc.module("Schedule", function(Mod, App, Backbone){
 
 	// Model and Collection **********************************************
 	Mod.Appt = Backbone.Model.extend({
@@ -1582,11 +1704,17 @@ ptc.on("initialize:after", function () {
 	Mod.ApptCollection = Backbone.Collection.extend({
 		model: Mod.Appt,
 		comparator: function (model) {
+			// sorts our collection by its start time
             return model.get("StartTime");
         }
 	});
 
-});;ptc.module("Schedule.View", function(Mod, App, Backbone, Marionette){
+});;/*
+	This is the View submodule of the Schedule module.
+	It handles just the appointment single view, and its
+	list view. These views are instantiated in the controller.
+*/
+ptc.module("Schedule.View", function(Mod, App, Backbone, Marionette){
 	
 	Mod.ApptItem = Marionette.ItemView.extend({
 		tagName: "li",
@@ -1599,8 +1727,11 @@ ptc.on("initialize:after", function () {
 		
 		deleteClicked: function(e) {
 			e.preventDefault();
+			// first, check if the deleter is also the reserver :)
 			if(this.model.get("Reserver") === App.Data.Config.loggedInUser) {
+				// trigger a delete on the server
 				App.trigger("schedule:appt:delete", this.model);
+				// then remove it from the list
 				this.remove();
 			} else {
 				alert("Sorry, you cannot delete reservations you did not create");
@@ -1611,9 +1742,6 @@ ptc.on("initialize:after", function () {
 		tagName: "ul",
 		className: "appt-schedule",
 		itemView: Mod.ApptItem,
-		onRender: function(){
-			this.$el.fadeIn();
-		},
 		appendHtml: function(collectionView, itemView, index){
 			// puts a new model into the collection view in sort order
 			var childrenContainer = $(collectionView.childrenContainer || collectionView.el);
@@ -1626,6 +1754,7 @@ ptc.on("initialize:after", function () {
 		}
 	});
 	
-});;$(function() {
+});;// as simple as that...start the app
+$(function() {
 	ptc.start();
 });

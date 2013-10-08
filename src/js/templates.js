@@ -1,3 +1,5 @@
+// all of the templates for the app should be referenced here
+// this keeps index.html clean
 $(function () {
     
     var i, z, 

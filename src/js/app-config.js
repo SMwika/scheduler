@@ -26,6 +26,7 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 			webURL: "https://g.isb.bj.edu.cn/test/conferencing/",
 			listName: "ConferenceList"
 		},
+		// where all of the reservations are stored
 		reservationLists: {
 			"HS": {
 				webURL: "https://g.isb.bj.edu.cn/test/conferencing/",

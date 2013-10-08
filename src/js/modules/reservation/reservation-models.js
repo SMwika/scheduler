@@ -1,3 +1,9 @@
+/*
+	This is the model and collections area of the module.
+	It's super simple. It just stores all the models and collections
+	of the Reservation module. Notice how empty this page is? You really
+	shouldn't ever need to mess with it...
+*/
 ptc.module("Reservation", function(Mod, App, Backbone){
 
 
