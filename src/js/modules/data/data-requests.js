@@ -75,8 +75,8 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 				var dates = times[i].dates,
 					datesLength = dates.length;
 				for (j = 0; j < datesLength; j++) {
-					var start = moment(dates[j].startDateTime, "YYYY-MM-DD HH:mm"),
-						end = moment(dates[j].endDateTime, "YYYY-MM-DD HH:mm"),
+					var start = moment(dates[j].startDateTime, "YYYY-MM-DD HH:mm Z"),
+						end = moment(dates[j].endDateTime, "YYYY-MM-DD HH:mm Z"),
 						diff = end.diff(start, "m", true),
 						slotCount = diff / (times[i].duration + times[i].padding);
 					for (k = 0; k <= slotCount; k++) {
@@ -84,10 +84,10 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 							newStart = moment(start).add(minuteCount, "m"),
 							newEnd = moment(start).add(minuteCount + times[i].duration, "m"),
 							
-							niceStart = newStart.format("ddd D MMM h:mm"),
+							niceStart = newStart.zone("+08:00").format("ddd D MMM h:mm"),
 							unixStart = newStart.format("X"),
 							
-							niceEnd = newEnd.format("h:mm a"),
+							niceEnd = newEnd.zone("+08:00").format("h:mm a"),
 							unixEnd = newEnd.format("X");
 		
 						appts.push({
@@ -183,8 +183,8 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 		},
 		
 		formatScheduleDates: function(appt) {
-			appt.StartTime = moment.unix(parseInt(appt.StartTime, 10)).format("ddd D MMM h:mm");
-			appt.EndTime = moment.unix(parseInt(appt.EndTime, 10)).format("h:mm a");
+			appt.StartTime = moment.unix(parseInt(appt.StartTime, 10)).zone("+08:00").format("ddd D MMM h:mm");
+			appt.EndTime = moment.unix(parseInt(appt.EndTime, 10)).zone("+08:00").format("h:mm a");
 			return appt;
 		},
 

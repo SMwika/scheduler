@@ -47,11 +47,11 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 			padding:10, // minutes after a conference where no bookings can be made
 			dates: [ // in 24hr Beijing time
 				{
-					startDateTime: "2013-10-21 12:00", // first conference START time
-					endDateTime: "2013-10-21 19:30" // last conference START time
+					startDateTime: "2013-10-21 12:00 +0800", // first conference START time
+					endDateTime: "2013-10-21 19:30 +0800" // last conference START time
 				}, {
-					startDateTime: "2013-10-22 08:00", // first conference START time
-					endDateTime: "2013-10-22 15:00" // last conference START time
+					startDateTime: "2013-10-22 08:00 +0800", // first conference START time
+					endDateTime: "2013-10-22 15:00 +0800" // last conference START time
 				}
 			]
 		}, {
@@ -60,11 +60,11 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 			padding: 0, // minutes after a conference where no bookings can be made
 			dates: [ // in 24hr Beijing time
 				{
-					startDateTime: "2013-10-21 12:00", // first conference START time
-					endDateTime: "2013-10-21 19:45" // last conference START time
+					startDateTime: "2013-10-21 12:00 +0800", // first conference START time
+					endDateTime: "2013-10-21 19:45 +0800" // last conference START time
 				}, {
-					startDateTime: "2013-10-22 08:00", // first conference START time
-					endDateTime: "2013-10-22 15:15" // last conference START time
+					startDateTime: "2013-10-22 08:00 +0800", // first conference START time
+					endDateTime: "2013-10-22 15:15 +0800" // last conference START time
 				}
 			]
 		}, {
@@ -73,11 +73,11 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 			padding: 0, // minutes after a conference where no bookings can be made
 			dates: [ // in 24hr Beijing time
 				{
-					startDateTime: "2013-10-21 12:00", // first conference START time
-					endDateTime: "2013-10-21 19:50" // last conference START time
+					startDateTime: "2013-10-21 12:00 +0800", // first conference START time
+					endDateTime: "2013-10-21 19:50 +0800" // last conference START time
 				}, {
-					startDateTime: "2013-10-22 08:00", // first conference START time
-					endDateTime: "2013-10-22 15:20" // last conference START time
+					startDateTime: "2013-10-22 08:00 +0800", // first conference START time
+					endDateTime: "2013-10-22 15:20 +0800" // last conference START time
 				}
 			]
 		}]

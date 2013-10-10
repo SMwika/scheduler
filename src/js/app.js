@@ -37,7 +37,6 @@ ptc.on("initialize:after", function () {
 	// get the initial set of data (a big function)
 	var datafetch = ptc.request("data:getinitial");
 	$.when(datafetch).done(function(data){
-		console.log(data);
 		// when all data has been fetched, tell the user
 		ptc.trigger("user:message", "successfully retrieved all data");
 		

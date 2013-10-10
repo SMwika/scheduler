@@ -1,5 +1,5 @@
 /*!
- scheduler Build version 0.0.1, 10-07-2013
+ scheduler Build version 0.0.1, 10-09-2013
 */
 // all of the templates for the app should be referenced here
 // this keeps index.html clean
@@ -96,7 +96,6 @@ ptc.on("initialize:after", function () {
 	// get the initial set of data (a big function)
 	var datafetch = ptc.request("data:getinitial");
 	$.when(datafetch).done(function(data){
-		console.log(data);
 		// when all data has been fetched, tell the user
 		ptc.trigger("user:message", "successfully retrieved all data");
 		
@@ -154,11 +153,11 @@ ptc.on("initialize:after", function () {
 			padding:10, // minutes after a conference where no bookings can be made
 			dates: [ // in 24hr Beijing time
 				{
-					startDateTime: "2013-10-21 12:00", // first conference START time
-					endDateTime: "2013-10-21 19:30" // last conference START time
+					startDateTime: "2013-10-21 12:00 +0800", // first conference START time
+					endDateTime: "2013-10-21 19:30 +0800" // last conference START time
 				}, {
-					startDateTime: "2013-10-22 08:00", // first conference START time
-					endDateTime: "2013-10-22 15:00" // last conference START time
+					startDateTime: "2013-10-22 08:00 +0800", // first conference START time
+					endDateTime: "2013-10-22 15:00 +0800" // last conference START time
 				}
 			]
 		}, {
@@ -167,11 +166,11 @@ ptc.on("initialize:after", function () {
 			padding: 0, // minutes after a conference where no bookings can be made
 			dates: [ // in 24hr Beijing time
 				{
-					startDateTime: "2013-10-21 12:00", // first conference START time
-					endDateTime: "2013-10-21 19:45" // last conference START time
+					startDateTime: "2013-10-21 12:00 +0800", // first conference START time
+					endDateTime: "2013-10-21 19:45 +0800" // last conference START time
 				}, {
-					startDateTime: "2013-10-22 08:00", // first conference START time
-					endDateTime: "2013-10-22 15:15" // last conference START time
+					startDateTime: "2013-10-22 08:00 +0800", // first conference START time
+					endDateTime: "2013-10-22 15:15 +0800" // last conference START time
 				}
 			]
 		}, {
@@ -180,11 +179,11 @@ ptc.on("initialize:after", function () {
 			padding: 0, // minutes after a conference where no bookings can be made
 			dates: [ // in 24hr Beijing time
 				{
-					startDateTime: "2013-10-21 12:00", // first conference START time
-					endDateTime: "2013-10-21 19:50" // last conference START time
+					startDateTime: "2013-10-21 12:00 +0800", // first conference START time
+					endDateTime: "2013-10-21 19:50 +0800" // last conference START time
 				}, {
-					startDateTime: "2013-10-22 08:00", // first conference START time
-					endDateTime: "2013-10-22 15:20" // last conference START time
+					startDateTime: "2013-10-22 08:00 +0800", // first conference START time
+					endDateTime: "2013-10-22 15:20 +0800" // last conference START time
 				}
 			]
 		}]
@@ -429,8 +428,8 @@ ptc.on("initialize:after", function () {
 				var dates = times[i].dates,
 					datesLength = dates.length;
 				for (j = 0; j < datesLength; j++) {
-					var start = moment(dates[j].startDateTime, "YYYY-MM-DD HH:mm"),
-						end = moment(dates[j].endDateTime, "YYYY-MM-DD HH:mm"),
+					var start = moment(dates[j].startDateTime, "YYYY-MM-DD HH:mm Z"),
+						end = moment(dates[j].endDateTime, "YYYY-MM-DD HH:mm Z"),
 						diff = end.diff(start, "m", true),
 						slotCount = diff / (times[i].duration + times[i].padding);
 					for (k = 0; k <= slotCount; k++) {
@@ -438,10 +437,10 @@ ptc.on("initialize:after", function () {
 							newStart = moment(start).add(minuteCount, "m"),
 							newEnd = moment(start).add(minuteCount + times[i].duration, "m"),
 							
-							niceStart = newStart.format("ddd D MMM h:mm"),
+							niceStart = newStart.zone("+08:00").format("ddd D MMM h:mm"),
 							unixStart = newStart.format("X"),
 							
-							niceEnd = newEnd.format("h:mm a"),
+							niceEnd = newEnd.zone("+08:00").format("h:mm a"),
 							unixEnd = newEnd.format("X");
 		
 						appts.push({
@@ -537,8 +536,8 @@ ptc.on("initialize:after", function () {
 		},
 		
 		formatScheduleDates: function(appt) {
-			appt.StartTime = moment.unix(parseInt(appt.StartTime, 10)).format("ddd D MMM h:mm");
-			appt.EndTime = moment.unix(parseInt(appt.EndTime, 10)).format("h:mm a");
+			appt.StartTime = moment.unix(parseInt(appt.StartTime, 10)).zone("+08:00").format("ddd D MMM h:mm");
+			appt.EndTime = moment.unix(parseInt(appt.EndTime, 10)).zone("+08:00").format("h:mm a");
 			return appt;
 		},
 
