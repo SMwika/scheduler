@@ -1,5 +1,5 @@
 /*!
- scheduler Build version 0.0.1, 10-09-2013
+ scheduler Build version 0.0.1, 10-13-2013
 */
 // all of the templates for the app should be referenced here
 // this keeps index.html clean
@@ -1258,8 +1258,19 @@ ptc.module("Reservation", function(Mod, App, Backbone, Marionette, $, _){
 				if(y) {
 					// if they do, then push them into the teacherData array
 					teacherData.push(y);
+				} else {
+					// otherwise, they don't have the first teacher, so check the 2nd
+					var x = _.findWhere(App.Data.Config.conferences, {teacher2: teacherids[i]});
+					if(x) {
+						teacherData.push(x);
+					}
 				}
 			}
+			
+			teacherData = _.uniq(teacherData,function(item,key,a){
+				return item.conferenceName;
+			});
+			
 			return teacherData;
 		},
 		listTimes: function(teacherLogon) {
