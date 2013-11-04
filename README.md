@@ -78,6 +78,20 @@ Basically, development should happen in the /src directory. The grunt process wi
 
 One thing to keep in mind is that because this is a SharePoint-based solution, it will only work in a SharePoint environment (because you can't make calls to SharePoint web services from outside the environment). So the recommendation would be to run this code on a VM that is running SharePoint, or to continue to grunt the files and replace them on the SharePoint site. 
 
+Setup
+-----
+1. Create/Modify 4 lists (should already be in place)
+* ConferenceList - this holds each individual teacher, the name of the class, the room number, and the division)
+* ReservationsES - this list holds all ES reservations (including teacher self-reservations as well as parent reservations)
+* ReservationsMS - this list holds all MS reservations (including teacher self-reservations as well as parent reservations)
+* ReservationsHS - this list holds all HS reservations (including teacher self-reservations as well as parent reservations)
+2. Upload and run files from a document library that contains all of the production files
+3. Set permissions
+* Set "read" permissions on all 4 lists
+* Set "contribute" permissions on the 3 reservation lists as dictated by the divisions (eg, faculty and faculty parents first, sibling parents next, and finally open up for all parents)
+* Remove "contribute" permissions for everybody as dictated by the divisions (usually the day or day before conferences)
+4. Put link on Dragons' Gate somewhere for parents to access (usually in My Gate)
+
 Conclusion
 ----------
 This readme file is by no means conclusive. The app is quite complex, but still relatively small. Before minification it clocks in at around 1,500 lines of code. So it's not unmanageable, but you should spend some time reading through the code to get how all of the relationships work between the modules.
