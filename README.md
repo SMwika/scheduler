@@ -84,6 +84,7 @@ Confirm that parent and student data is correct, and that all parents and employ
 
 Setup
 -----
+** Backend setup **
 1. Reservation List setup
   * Create "Reservation" Lists. These lists will hold all parent reservations. Because of the amount of reservations, create 3 lists of this type (one for each division).
   * The names of these lists are irrelevant, as they will be referenced in app-config.js. However, it is recommended to name them all similarly, appending the name of the division at the end (eg, ReservationsES, ReservationsMS, ReservationsHS)
@@ -100,24 +101,34 @@ Setup
 2. Conference List setup
   * Create a list to hold all of the conference name and details.
   * This list should hold one record for each reservable teacher.
+  * This list is manually managed and updated. The secretaries for each division should have access to this list and be able to update it from conference to conference. This is the easiest way to maintain "who" is leading conferences, and what that conference should be called. In some cases a conference name may be altered to make the most sense (for example, some teachers teach multiple courses, so maybe the conference name should just include that teacher's name). It's best to have each secretary look over this list before each conference, so they can confirm that the conference names, room numbers, and divisions are correct.
   * This list contains the following columns:
-    * Teachers (multiple select person picker field with "Account" format)
-    * TeacherLogon (text - to hold the AD Logon name (eg, btedder, ahurd, or rlei) of the teacher)
+    * Teachers (multiple select person picker field with "Account" format. it is multiple select to account for teachers who have team-teaching conferences)
     * Division (text)
     * Room (text)
 	* Title (text - for name of conference. appears in drop-down menu for students)
+3. Data setup
+  * 
+** Front-end setup **
+4. HTML, javascript, etc.
+  * There are two files/folders that are necessary to copy from this package into SharePoint for this to work.
+    * /index.html
+    * /dist (folder)
+  * Put a copy of these two things into *any* SharePoint document library. You can create a blank Document Library specifically for this purpose. Then drop index.html and the *dist* folder into this document library (easiest to do with SharePoint Designer).
+  * Point your browser to the document library you just created, and navigate to index.html. From there, the scheduler should run. See below for configuring the javascript to read your lists, time slots, etc.
+  * Make sure all employees and parents have READ access to this Document Library so they can access index.html when the time comes.
+  * The easiest way to direct users to this index.html file is to put a direct link to it in the drop-down menu of My Gate, put it in an email, link from the home page, etc.
+  * The location of this document library is irrelevant. It is the call of the developer as to where it should sit. As long as the files are in the same site collection as the Reservation Lists, Conference List, and external Data lists, then it will work fine.
+5. Permissions
+  * During development, and prior to opening up for reservations, nobody should have permissions to the Reservations List or Conference List besides those directly involved in development.
+  * Typically one or two weeks before conferences begin, faculty are given "contribute" permissions to the Reservations Lists so they can book their own slots.
+  * Usually either at the same time or right after, faculty parents are givent "contribute" permissions to the same lists. This allows those teachers who have kids to book slots first, which helps when arranging their own teaching schedule.
+  * A few days after that parents of siblings (parents with more than one child) are given "contribute" permissions to the Reservations Lists in order to book slots for their children.
+  * Finally, at a certain point all parents will be given "contribute" permissions to the Reservations Lists.
+  * Usually a day before, or the day of the conferences, all parents and employees will need to have "contribute" permissions removed, and only have READ permissions on those lists. This way they can **see** their schedules, but cannot edit anything.
+  * This staggered permission approach is to try and keep things fair for everybody.
 
-1. Create/Modify 4 lists (should already be in place)
- * ConferenceList - this holds each individual teacher, the name of the class, the room number, and the division)
- * ReservationsES - this list holds all ES reservations (including teacher self-reservations as well as parent reservations)
- * ReservationsMS - this list holds all MS reservations (including teacher self-reservations as well as parent reservations)
- * ReservationsHS - this list holds all HS reservations (including teacher self-reservations as well as parent reservations)
-2. Upload and run files from a document library that contains all of the production files
-3. Set permissions
- * Set "read" permissions on all 4 lists
- * Set "contribute" permissions on the 3 reservation lists as dictated by the divisions (eg, faculty and faculty parents first, sibling parents next, and finally open up for all parents)
- * Remove "contribute" permissions for everybody as dictated by the divisions (usually the day or day before conferences)
-4. Put link on Dragons' Gate somewhere for parents to access (usually in My Gate)
+
 
 Conclusion
 ----------
