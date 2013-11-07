@@ -111,7 +111,21 @@ Back-end Setup
 	* Title (text - for name of conference. appears in drop-down menu for students)
 	
 3. Data setup
-  * test
+  * There are two lists that should come from the external data source.
+    * **FamilyInfo** - for linking parents to students
+    * **SchedulingApplicationTeachersList** - for linking students to teachers
+  * These two lists contain live data from the database system. If these list alter their structure or data, this app needs to be refactored. If column names, etc change, then the app needs to be updated.
+  * At a minimum, here are the requirements for the FamilyInfo list:
+    * One record for each of the parents of each student (so potentially 2 records for student)
+	* StudentName
+	* StudentID
+	* ParentLogonName (the AD Logon for the parent (ie, rebecca.lei) )
+	* FamilyCode
+  * The requirements for the student-teacher relationship field are this:
+    * StudentID
+    * **NameValues** (a semicolon-separated list of teachers of that student)
+    * FamilyCode
+  * The **NameValues** field is of utmost importance. This is the query that is returned from the database, and needs to be as accurate as possible. This is the field that will be overriden by the exclusions and inclusions of the javascript config file (see below). Most of the errors that occur during conference reservations are due to inconsistencies in this list.
 
 Front-end Setup
 -------------
@@ -146,7 +160,7 @@ Assuming there are no changes to requirements, all modifications will happen in 
   * The overrides object is potentially the most confusing piece of the app. Basically, this object serves to manipulate the data retrieved from the external data sources. If the data retrieved from the external sources were perfect, this section would be unnecessary.
     * The **exclusions** array is used to filter **out** any teachers or courses that are connected to students that match any of the objects. Example: *exclusions: ["(ASA)", "(MSE)"]* will filter out any ASA or MSE courses that are linked to students.
     * The **inclusions** array simply overrides and takes precedence over anything in the **exclusions** array.
-Ideally the data that comes in needs no manipulation, but due to the restrictions when this app was developed, this was a necessary evil to create an overrides setting.
+    *Ideally the data that comes in needs no manipulation, but due to the restrictions when this app was developed, this was a necessary evil to create an overrides setting.
 
 3. Time Slots
   * In order to keep things flexible, the time slots are generated dynamically. Each time slot category (ES, MS, HS) has a "duration" (number), a "padding" (number), and a dates array. The dates array keeps things extremely flexible. It means you can have any amount of dates. However, pay attention to how dates should be formatted:
@@ -156,9 +170,8 @@ Ideally the data that comes in needs no manipulation, but due to the restriction
 		endDateTime: "2013-10-21 19:30 +0800" // last conference START time
 	}
 </pre>
-Date are formatted in 24hr time, and with the timezone offset after. This is critical. You can create as many date ranges as needed, but they must adhere to this pattern.
+Date are formatted in 24hr time, and with the timezone offset after. This is critical. You can create as many date ranges as needed, but they must adhere to this pattern. Time slots will most definitely be altered for each conference.
 
-This will most definitely be altered for each conference.
 
 ***
 
