@@ -110,16 +110,15 @@ Back-end Setup
 
 Front-end Setup
 -------------
-1. HTML, javascript, etc.
+1. Where to put the files
   * There are two files/folders that are necessary to copy from this package into SharePoint for this to work.
     * /index.html
     * /dist (folder)
-  * Put a copy of these two things into *any* SharePoint document library. You can create a blank Document Library specifically for this purpose. Then drop index.html and the *dist* folder into this document library (easiest to do with SharePoint Designer).
+  * Put a copy of these two things into *any* SharePoint document library. You can create a blank Document Library specifically for this purpose. Then drop *index.html* and the *dist* folder into this document library (easiest to do with SharePoint Designer). The location of this document library is irrelevant. It is the call of the developer as to where it should sit. As long as the files are in the same site collection as the Reservation Lists, Conference List, and external Data lists, then it will work fine.
   * Point your browser to the document library you just created, and navigate to index.html. From there, the scheduler should run. See below for configuring the javascript to read your lists, time slots, etc.
-  * Make sure all employees and parents have READ access to this Document Library so they can access index.html when the time comes.
-  * The easiest way to direct users to this index.html file is to put a direct link to it in the drop-down menu of My Gate, put it in an email, link from the home page, etc.
-  * The location of this document library is irrelevant. It is the call of the developer as to where it should sit. As long as the files are in the same site collection as the Reservation Lists, Conference List, and external Data lists, then it will work fine.
-2. Permissions
+  * Make sure all employees and parents have READ access to this Document Library so they can access index.html when the time comes. The easiest way to direct users to this index.html file is to put a direct link to it in the drop-down menu of My Gate, put it in an email, link from the home page, etc.
+
+2. Setting Permissions
   * During development, and prior to opening up for reservations, nobody should have permissions to the Reservations List or Conference List besides those directly involved in development.
   * Typically one or two weeks before conferences begin, faculty are given "contribute" permissions to the Reservations Lists so they can book their own slots.
   * Usually either at the same time or right after, faculty parents are givent "contribute" permissions to the same lists. This allows those teachers who have kids to book slots first, which helps when arranging their own teaching schedule.
@@ -127,6 +126,9 @@ Front-end Setup
   * Finally, at a certain point all parents will be given "contribute" permissions to the Reservations Lists.
   * Usually a day before, or the day of the conferences, all parents and employees will need to have "contribute" permissions removed, and only have READ permissions on those lists. This way they can **see** their schedules, but cannot edit anything.
   * This staggered permission approach is to try and keep things fair for everybody.
+
+Javascript setup/configuration
+------------------------------
 
 
 
