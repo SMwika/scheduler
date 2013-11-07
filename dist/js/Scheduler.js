@@ -1,5 +1,5 @@
 /*!
- scheduler Build version 0.0.1, 10-13-2013
+ scheduler Build version 0.0.1, 11-07-2013
 */
 // all of the templates for the app should be referenced here
 // this keeps index.html clean
@@ -200,6 +200,14 @@ ptc.on("initialize:after", function () {
 		schedule: []
 	};
 	
+	/**
+	 * Function does this...
+	 *
+	 * @param {Object} config
+	 * @param {String} config.greeting
+	 * @param {String} config.person
+	 * @returns {String}
+	 */
 	App.on("user:message", function(message) {
 		var statustemplate = $("#loading").html();
 		$(".status-bar").append(_.template(statustemplate, {"message": message}));
