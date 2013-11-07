@@ -85,18 +85,18 @@ Confirm that parent and student data is correct, and that all parents and employ
 Setup
 -----
 1. List setup
- * Create a "Reservation" List. This list will hold all parent reservations. Because of the amount of reservations, create 3 lists of this type (one for each division).
-  * This list contains the following columns:
-   ** Title
-   * StudentName (text)
-   * StudentID (text)
-   * StartTime (text...not date field)
-   * EndTime (text...not date field)
-   * FamilyCode (text)
-   * Teachers (Multiple select person picker field with "Account Name" format)
-   * RoomNumber (text)
-   * Reserver (text)
-  * The names of these lists are irrelevant, as they will be referenced in app-config.js. However, it is recommended to name them all similarly, appending the name of the division at the end (eg, ReservationsES, ReservationsMS, ReservationsHS)
+  * Create a "Reservation" List. This list will hold all parent reservations. Because of the amount of reservations, create 3 lists of this type (one for each division).
+    * This list contains the following columns:
+      * Title
+      * StudentName (text)
+      * StudentID (text)
+      * StartTime (text...not date field)
+      * EndTime (text...not date field)
+      * FamilyCode (text)
+      * Teachers (Multiple select person picker field with "Account Name" format)
+      * RoomNumber (text)
+      * Reserver (text)
+    * The names of these lists are irrelevant, as they will be referenced in app-config.js. However, it is recommended to name them all similarly, appending the name of the division at the end (eg, ReservationsES, ReservationsMS, ReservationsHS)
 
 1. Create/Modify 4 lists (should already be in place)
  * ConferenceList - this holds each individual teacher, the name of the class, the room number, and the division)
