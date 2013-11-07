@@ -9,6 +9,14 @@ ptc.module("Data", function(Mod, App, Backbone, Marionette, $, _){
 		schedule: []
 	};
 	
+	/**
+	 * Function does this...
+	 *
+	 * @param {Object} config
+	 * @param {String} config.greeting
+	 * @param {String} config.person
+	 * @returns {String}
+	 */
 	App.on("user:message", function(message) {
 		var statustemplate = $("#loading").html();
 		$(".status-bar").append(_.template(statustemplate, {"message": message}));

@@ -19,13 +19,13 @@ module.exports = function(grunt) {
       },
 	  libs: {
         src: [
-            'src/js/libs/jquery-1.8.3.js',
-            'src/js/libs/json2.js',
-            'src/js/libs/underscore.js',
-            'src/js/libs/backbone.js',
-            'src/js/libs/marionette-1.0.4.js',
-            'src/js/libs/jquery.SPServices-0.7.2.js',
-            'src/js/libs/moment.js'
+            'src/libs/jquery-1.8.3.js',
+            'src/libs/json2.js',
+            'src/libs/underscore.js',
+            'src/libs/backbone.js',
+            'src/libs/marionette-1.0.4.js',
+            'src/libs/jquery.SPServices-0.7.2.js',
+            'src/libs/moment.js'
         ],
         dest: 'dist/js/<%= pkg.name %>-libs.js'
 	  },
