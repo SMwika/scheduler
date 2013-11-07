@@ -157,6 +157,8 @@ In order to keep things flexible, the time slots are generated dynamically. Each
 </pre>
 Date are formatted in 24hr time, and with the timezone offset after. This is critical. You can create as many date ranges as needed, but they must adhere to this pattern.
 
+This will most definitely be altered for each conference.
+
 ***
 
 
