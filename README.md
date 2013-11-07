@@ -84,7 +84,7 @@ Confirm that parent and student data is correct, and that all parents and employ
 
 Setup
 -----
-** Backend setup **
+**Backend setup**
 1. Reservation List setup
   * Create "Reservation" Lists. These lists will hold all parent reservations. Because of the amount of reservations, create 3 lists of this type (one for each division).
   * The names of these lists are irrelevant, as they will be referenced in app-config.js. However, it is recommended to name them all similarly, appending the name of the division at the end (eg, ReservationsES, ReservationsMS, ReservationsHS)
