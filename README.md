@@ -85,6 +85,7 @@ Confirm that parent and student data is correct, and that all parents and employ
 Setup
 -----
 **Backend setup**
+
 1. Reservation List setup
   * Create "Reservation" Lists. These lists will hold all parent reservations. Because of the amount of reservations, create 3 lists of this type (one for each division).
   * The names of these lists are irrelevant, as they will be referenced in app-config.js. However, it is recommended to name them all similarly, appending the name of the division at the end (eg, ReservationsES, ReservationsMS, ReservationsHS)
@@ -98,6 +99,7 @@ Setup
     * Teachers (Multiple select person picker field with "Account" format)
     * RoomNumber (text)
     * Reserver (text)
+
 2. Conference List setup
   * Create a list to hold all of the conference name and details.
   * This list should hold one record for each reservable teacher.
@@ -107,9 +109,12 @@ Setup
     * Division (text)
     * Room (text)
 	* Title (text - for name of conference. appears in drop-down menu for students)
+	
 3. Data setup
-  * 
+  * test
+
 ** Front-end setup **
+
 4. HTML, javascript, etc.
   * There are two files/folders that are necessary to copy from this package into SharePoint for this to work.
     * /index.html
