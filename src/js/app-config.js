@@ -2,15 +2,6 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 
 	// set these settings on a per-conference basis
 	Mod.Settings = {
-		
-		overrides: {
-			// exclusions are processed first
-			exclusions: ["(ASA)", "(MSE)","hanichowski(Homeroom)", "mskinner(Homeroom)","fpanych(Homeroom)","scoe(Homeroom)","ehillmann(Homeroom)","GRussell(Homeroom)","bjogi(Homeroom)","jbinns(Homeroom)","breverman(Homeroom)","boreilly(Homeroom)","jkinsella(Homeroom)","DMonroe(Homeroom)","jmcroberts(Homeroom)","drussell(Homeroom)","mdawson(Homeroom)","gloynes(Homeroom)"],
-			
-			// then inclusions override any exclusions
-			inclusions: ["aflores"]
-		},
-		
 		familyList: {
 			// used to get family information
 			webURL: "https://g.isb.bj.edu.cn/my/",
@@ -41,6 +32,15 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 				listName: "ReservationsES"
 			}
 		},
+		
+		overrides: {
+			// exclusions are processed first
+			exclusions: ["(ASA)", "(MSE)","hanichowski(Homeroom)", "mskinner(Homeroom)","fpanych(Homeroom)","scoe(Homeroom)","ehillmann(Homeroom)","GRussell(Homeroom)","bjogi(Homeroom)","jbinns(Homeroom)","breverman(Homeroom)","boreilly(Homeroom)","jkinsella(Homeroom)","DMonroe(Homeroom)","jmcroberts(Homeroom)","drussell(Homeroom)","mdawson(Homeroom)","gloynes(Homeroom)"],
+			
+			// then inclusions override any exclusions
+			inclusions: ["aflores"]
+		},
+		
 		timeSlots: [{
 			category: "ES",
 			duration: 20, // conference duration in minutes
