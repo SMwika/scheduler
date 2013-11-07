@@ -78,14 +78,9 @@ Basically, development should happen in the /src directory. The grunt process wi
 
 One thing to keep in mind is that because this is a SharePoint-based solution, it will only work in a SharePoint environment (because you can't make calls to SharePoint web services from outside the environment). So the recommendation would be to run this code on a VM that is running SharePoint, or to continue to grunt the files and replace them on the SharePoint site. 
 
-Pre-Setup
----------
-Confirm that parent and student data is correct, and that all parents and employees have READ permissions on those lists (external data lists from Education Edge).
 
-Setup
------
-**Backend setup**
-
+Back-end Setup
+-------------
 1. Reservation List setup
   * Create "Reservation" Lists. These lists will hold all parent reservations. Because of the amount of reservations, create 3 lists of this type (one for each division).
   * The names of these lists are irrelevant, as they will be referenced in app-config.js. However, it is recommended to name them all similarly, appending the name of the division at the end (eg, ReservationsES, ReservationsMS, ReservationsHS)
@@ -113,9 +108,9 @@ Setup
 3. Data setup
   * test
 
-** Front-end setup **
-
-4. HTML, javascript, etc.
+Front-end Setup
+-------------
+1. HTML, javascript, etc.
   * There are two files/folders that are necessary to copy from this package into SharePoint for this to work.
     * /index.html
     * /dist (folder)
@@ -124,7 +119,7 @@ Setup
   * Make sure all employees and parents have READ access to this Document Library so they can access index.html when the time comes.
   * The easiest way to direct users to this index.html file is to put a direct link to it in the drop-down menu of My Gate, put it in an email, link from the home page, etc.
   * The location of this document library is irrelevant. It is the call of the developer as to where it should sit. As long as the files are in the same site collection as the Reservation Lists, Conference List, and external Data lists, then it will work fine.
-5. Permissions
+2. Permissions
   * During development, and prior to opening up for reservations, nobody should have permissions to the Reservations List or Conference List besides those directly involved in development.
   * Typically one or two weeks before conferences begin, faculty are given "contribute" permissions to the Reservations Lists so they can book their own slots.
   * Usually either at the same time or right after, faculty parents are givent "contribute" permissions to the same lists. This allows those teachers who have kids to book slots first, which helps when arranging their own teaching schedule.
