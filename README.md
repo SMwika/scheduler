@@ -135,20 +135,21 @@ Front-end Setup
 Javascript setup/configuration
 ------------------------------
 Assuming there are no changes to requirements, all modifications will happen in the **app-config.js** file. This should store everything you need to customize in order for the scheduler to function properly.
+
 1. List Locations
-There are 4 different javascript object that contain list URLs and names (for use in the ajax requests).
-  * The first two (**FamilyList** and **studentTeacherList**) are the two external data lists that contain family information and student-teacher information. 
-  * The conferenceList object stores the URL and name of the conference list you created above
-  * The reservationLists store each of the reservation lists, categorized by the division they belong to.
+  *There are 4 different javascript object that contain list URLs and names (for use in the ajax requests).
+    * The first two (**FamilyList** and **studentTeacherList**) are the two external data lists that contain family information and student-teacher information. 
+    * The conferenceList object stores the URL and name of the conference list you created above
+    * The reservationLists store each of the reservation lists, categorized by the division they belong to.
 
 2. Overrides
-The overrides object is potentially the most confusing piece of the app. Basically, this object serves to manipulate the data retrieved from the external data sources. If the data retrieved from the external sources were perfect, this section would be unnecessary.
-  * The **exclusions** array is used to filter **out** any teachers or courses that are connected to students that match any of the objects. Example: *exclusions: ["(ASA)", "(MSE)"]* will filter out any ASA or MSE courses that are linked to students.
-  * The **inclusions** array simply overrides and takes precedence over anything in the **exclusions** array.
+  * The overrides object is potentially the most confusing piece of the app. Basically, this object serves to manipulate the data retrieved from the external data sources. If the data retrieved from the external sources were perfect, this section would be unnecessary.
+    * The **exclusions** array is used to filter **out** any teachers or courses that are connected to students that match any of the objects. Example: *exclusions: ["(ASA)", "(MSE)"]* will filter out any ASA or MSE courses that are linked to students.
+    * The **inclusions** array simply overrides and takes precedence over anything in the **exclusions** array.
 Ideally the data that comes in needs no manipulation, but due to the restrictions when this app was developed, this was a necessary evil to create an overrides setting.
 
 3. Time Slots
-In order to keep things flexible, the time slots are generated dynamically. Each time slot category (ES, MS, HS) has a "duration" (number), a "padding" (number), and a dates array. The dates array keeps things extremely flexible. It means you can have any amount of dates. However, pay attention to how dates should be formatted:
+  * In order to keep things flexible, the time slots are generated dynamically. Each time slot category (ES, MS, HS) has a "duration" (number), a "padding" (number), and a dates array. The dates array keeps things extremely flexible. It means you can have any amount of dates. However, pay attention to how dates should be formatted:
 <pre>
 	{
 		startDateTime: "2013-10-21 12:00 +0800", // first conference START time
