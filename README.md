@@ -137,7 +137,7 @@ Javascript setup/configuration
 Assuming there are no changes to requirements, all modifications will happen in the **app-config.js** file. This should store everything you need to customize in order for the scheduler to function properly.
 
 1. List Locations
-  *There are 4 different javascript object that contain list URLs and names (for use in the ajax requests).
+  * There are 4 different javascript object that contain list URLs and names (for use in the ajax requests).
     * The first two (**FamilyList** and **studentTeacherList**) are the two external data lists that contain family information and student-teacher information. 
     * The conferenceList object stores the URL and name of the conference list you created above
     * The reservationLists store each of the reservation lists, categorized by the division they belong to.
