@@ -78,6 +78,10 @@ Basically, development should happen in the /src directory. The grunt process wi
 
 One thing to keep in mind is that because this is a SharePoint-based solution, it will only work in a SharePoint environment (because you can't make calls to SharePoint web services from outside the environment). So the recommendation would be to run this code on a VM that is running SharePoint, or to continue to grunt the files and replace them on the SharePoint site. 
 
+***
+
+Setup
+=====
 
 Back-end Setup
 -------------
