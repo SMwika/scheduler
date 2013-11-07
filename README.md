@@ -148,7 +148,7 @@ Front-end Setup
 
 Javascript setup/configuration
 ------------------------------
-Assuming there are no changes to requirements, all modifications will happen in the **app-config.js** file. This should store everything you need to customize in order for the scheduler to function properly.
+Assuming there are no changes to requirements, all modifications will happen in the **app-config.js** file. This should store everything you need to customize in order for the scheduler to function properly. Also, once changes are applied to javascript files inside the "src/js" folder, the package must be rebuilt (using grunt) and the **dist** and **index.html** files uploaded to the document library again.
 
 1. List Locations
   * There are 4 different javascript object that contain list URLs and names (for use in the ajax requests).
