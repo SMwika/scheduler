@@ -196,7 +196,7 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
 				webURL: App.Config.Settings.studentTeacherList.webURL,
 				async:true,
 				listName: App.Config.Settings.studentTeacherList.listName,
-				CAMLQuery:"<Query><Where><Eq><FieldRef Name='FamilyCode' /><Value>" + studentList[0].FamilyCode +"</Value></Eq></Where></Query>",
+				CAMLQuery:"<Query><Where><Eq><FieldRef Name='FamilyCode' /><Value Type='Text'>" + studentList[0].FamilyCode +"</Value></Eq></Where></Query>",
 				completefunc: function (xData) {
 					var studentArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
 						includeAllAttrs: true,
