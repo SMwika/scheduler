@@ -1,5 +1,5 @@
 /*!
- scheduler Build version 0.0.1, 11-07-2013
+ scheduler Build version 0.0.1, 01-26-2014
 */
 // all of the templates for the app should be referenced here
 // this keeps index.html clean
@@ -108,15 +108,6 @@ ptc.on("initialize:after", function () {
 
 	// set these settings on a per-conference basis
 	Mod.Settings = {
-		
-		overrides: {
-			// exclusions are processed first
-			exclusions: ["(ASA)", "(MSE)","hanichowski(Homeroom)", "mskinner(Homeroom)","fpanych(Homeroom)","scoe(Homeroom)","ehillmann(Homeroom)","GRussell(Homeroom)","bjogi(Homeroom)","jbinns(Homeroom)","breverman(Homeroom)","boreilly(Homeroom)","jkinsella(Homeroom)","DMonroe(Homeroom)","jmcroberts(Homeroom)","drussell(Homeroom)","mdawson(Homeroom)","gloynes(Homeroom)"],
-			
-			// then inclusions override any exclusions
-			inclusions: ["aflores"]
-		},
-		
 		familyList: {
 			// used to get family information
 			webURL: "https://g.isb.bj.edu.cn/my/",
@@ -147,6 +138,15 @@ ptc.on("initialize:after", function () {
 				listName: "ReservationsES"
 			}
 		},
+		
+		overrides: {
+			// exclusions are processed first
+			exclusions: ["(ASA)", "(MSE)","hanichowski(Homeroom)", "mskinner(Homeroom)","fpanych(Homeroom)","scoe(Homeroom)","ehillmann(Homeroom)","GRussell(Homeroom)","bjogi(Homeroom)","jbinns(Homeroom)","breverman(Homeroom)","boreilly(Homeroom)","jkinsella(Homeroom)","DMonroe(Homeroom)","jmcroberts(Homeroom)","drussell(Homeroom)","mdawson(Homeroom)","gloynes(Homeroom)"],
+			
+			// then inclusions override any exclusions
+			inclusions: ["aflores"]
+		},
+		
 		timeSlots: [{
 			category: "ES",
 			duration: 20, // conference duration in minutes
@@ -557,7 +557,7 @@ ptc.on("initialize:after", function () {
 				webURL: App.Config.Settings.studentTeacherList.webURL,
 				async:true,
 				listName: App.Config.Settings.studentTeacherList.listName,
-				CAMLQuery:"<Query><Where><Eq><FieldRef Name='FamilyCode' /><Value>" + studentList[0].FamilyCode +"</Value></Eq></Where></Query>",
+				CAMLQuery:"<Query><Where><Eq><FieldRef Name='FamilyCode' /><Value Type='Text'>" + studentList[0].FamilyCode +"</Value></Eq></Where></Query>",
 				completefunc: function (xData) {
 					var studentArray = $(xData.responseXML).SPFilterNode("z:row").SPXmlToJson({
 						includeAllAttrs: true,
