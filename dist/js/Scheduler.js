@@ -1,5 +1,5 @@
 /*!
- scheduler Build version 0.0.1, 01-26-2014
+ scheduler Build version 0.0.1, 01-27-2014
 */
 // all of the templates for the app should be referenced here
 // this keeps index.html clean
@@ -139,6 +139,9 @@ ptc.on("initialize:after", function () {
 			}
 		},
 		
+		// only the students in the following grades will be shown
+		gradeFilter: ["EC3", "EC4", "KG", "01", "02", "03", "04", "05"],
+
 		overrides: {
 			// exclusions are processed first
 			exclusions: ["(ASA)", "(MSE)","hanichowski(Homeroom)", "mskinner(Homeroom)","fpanych(Homeroom)","scoe(Homeroom)","ehillmann(Homeroom)","GRussell(Homeroom)","bjogi(Homeroom)","jbinns(Homeroom)","breverman(Homeroom)","boreilly(Homeroom)","jkinsella(Homeroom)","DMonroe(Homeroom)","jmcroberts(Homeroom)","drussell(Homeroom)","mdawson(Homeroom)","gloynes(Homeroom)"],
@@ -151,6 +154,7 @@ ptc.on("initialize:after", function () {
 			category: "ES",
 			duration: 20, // conference duration in minutes
 			padding:10, // minutes after a conference where no bookings can be made
+			override: true, // scripts will use the dates array as-is, no time generation
 			dates: [ // in 24hr Beijing time
 				{
 					startDateTime: "2013-10-21 12:00 +0800", // first conference START time
@@ -164,6 +168,7 @@ ptc.on("initialize:after", function () {
 			category: "MS",
 			duration: 15, // conference duration in minutes
 			padding: 0, // minutes after a conference where no bookings can be made
+			override: false,
 			dates: [ // in 24hr Beijing time
 				{
 					startDateTime: "2013-10-21 12:00 +0800", // first conference START time
@@ -177,6 +182,7 @@ ptc.on("initialize:after", function () {
 			category: "HS",
 			duration: 10, // conference duration in minutes
 			padding: 0, // minutes after a conference where no bookings can be made
+			override: false,
 			dates: [ // in 24hr Beijing time
 				{
 					startDateTime: "2013-10-21 12:00 +0800", // first conference START time
@@ -428,40 +434,85 @@ ptc.on("initialize:after", function () {
 	
 	var API = {
 		generateTimeSlots: function () {
-			var i, j, k,
-				times = App.Config.Settings.timeSlots,
-				timesLength = times.length,
-				appts = [];
-			for (i = 0; i < timesLength; i++) {
-				var dates = times[i].dates,
-					datesLength = dates.length;
-				for (j = 0; j < datesLength; j++) {
-					var start = moment(dates[j].startDateTime, "YYYY-MM-DD HH:mm Z"),
-						end = moment(dates[j].endDateTime, "YYYY-MM-DD HH:mm Z"),
-						diff = end.diff(start, "m", true),
-						slotCount = diff / (times[i].duration + times[i].padding);
-					for (k = 0; k <= slotCount; k++) {
-						var minuteCount = (times[i].duration + times[i].padding) * k,
-							newStart = moment(start).add(minuteCount, "m"),
-							newEnd = moment(start).add(minuteCount + times[i].duration, "m"),
-							
-							niceStart = newStart.zone("+08:00").format("ddd D MMM h:mm"),
-							unixStart = newStart.format("X"),
-							
-							niceEnd = newEnd.zone("+08:00").format("h:mm a"),
-							unixEnd = newEnd.format("X");
-		
-						appts.push({
-							category: times[i].category,
-							startTime: niceStart,
-							endTime: niceEnd,
-							unixStart: unixStart,
-							unixEnd: unixEnd
-						});
-						
-					}
-				}
-			}
+			
+		    var i, j, k,
+		    times = settings.timeSlots,
+		    timesLength = times.length,
+		    appts = [],
+		    start, end, diff, slotCount,
+		    minuteCount, newStart, newEnd, niceStart, unixStart, niceEnd, unixEnd;
+
+		    // iterate through each timeslot object
+		    for (i = 0; i < timesLength; i++) {
+
+		        // store number of days as a length
+		        var dates = times[i].dates,
+		            datesLength = dates.length;
+
+
+		        // if override is true, then use specific dates
+		        if(times[i].override == true) {
+		            
+		            // iterate through the dates, and create a timeslot for each one
+		            for (j = 0; j < datesLength; j++) {
+
+		                // store start date, end date
+		                start = moment(dates[j].startDateTime, "YYYY-MM-DD HH:mm Z");
+		                end = moment(dates[j].endDateTime, "YYYY-MM-DD HH:mm Z");
+
+		                // format the dates to look nice and have UNIX versions
+		                niceStart = start.zone("+08:00").format("ddd D MMM h:mm");
+		                unixStart = start.format("X");
+		                niceEnd = end.zone("+08:00").format("h:mm a");
+		                unixEnd = end.format("X");
+		                
+		                // push each created appt to the appts array
+		                appts.push({
+		                    category: times[i].category,
+		                    startTime: niceStart,
+		                    endTime: niceEnd,
+		                    unixStart: unixStart,
+		                    unixEnd: unixEnd
+		                });
+		            }
+
+		        } else {
+
+		            // iterate through each "day"
+		            for (j = 0; j < datesLength; j++) {
+		                // store start date, end date, the difference in days, and the amount of slots that result
+		                start = moment(dates[j].startDateTime, "YYYY-MM-DD HH:mm Z");
+		                end = moment(dates[j].endDateTime, "YYYY-MM-DD HH:mm Z");
+		                diff = end.diff(start, "m", true);
+		                slotCount = diff / (times[i].duration + times[i].padding);
+
+		                // iterate through the slot count and create a time slot for each one
+		                for (k = 0; k <= slotCount; k++) {
+
+		                    // store length of slot, and create back-to-back slots by adding the amount
+		                    minuteCount = (times[i].duration + times[i].padding) * k;
+		                    newStart = moment(start).add(minuteCount, "m");
+		                    newEnd = moment(start).add(minuteCount + times[i].duration, "m");
+		                    
+		                    // format the dates to look nice and have UNIX versions
+		                    niceStart = newStart.zone("+08:00").format("ddd D MMM h:mm");
+		                    unixStart = newStart.format("X");
+		                    niceEnd = newEnd.zone("+08:00").format("h:mm a");
+		                    unixEnd = newEnd.format("X");
+
+		                    // push each created appt to the appts array
+		                    appts.push({
+		                        category: times[i].category,
+		                        startTime: niceStart,
+		                        endTime: niceEnd,
+		                        unixStart: unixStart,
+		                        unixEnd: unixEnd
+		                    });
+		                        
+		                }
+		            }
+		        }              
+		    }
 			App.trigger("user:message", "generate time slots");
 			Mod.TimeSlots = appts;
 		},

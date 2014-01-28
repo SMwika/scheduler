@@ -33,6 +33,9 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 			}
 		},
 		
+		// only the students in the following grades will be shown
+		gradeFilter: ["EC3", "EC4", "KG", "01", "02", "03", "04", "05"],
+
 		overrides: {
 			// exclusions are processed first
 			exclusions: ["(ASA)", "(MSE)","hanichowski(Homeroom)", "mskinner(Homeroom)","fpanych(Homeroom)","scoe(Homeroom)","ehillmann(Homeroom)","GRussell(Homeroom)","bjogi(Homeroom)","jbinns(Homeroom)","breverman(Homeroom)","boreilly(Homeroom)","jkinsella(Homeroom)","DMonroe(Homeroom)","jmcroberts(Homeroom)","drussell(Homeroom)","mdawson(Homeroom)","gloynes(Homeroom)"],
@@ -45,6 +48,7 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 			category: "ES",
 			duration: 20, // conference duration in minutes
 			padding:10, // minutes after a conference where no bookings can be made
+			override: true, // scripts will use the dates array as-is, no time generation
 			dates: [ // in 24hr Beijing time
 				{
 					startDateTime: "2013-10-21 12:00 +0800", // first conference START time
@@ -58,6 +62,7 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 			category: "MS",
 			duration: 15, // conference duration in minutes
 			padding: 0, // minutes after a conference where no bookings can be made
+			override: false,
 			dates: [ // in 24hr Beijing time
 				{
 					startDateTime: "2013-10-21 12:00 +0800", // first conference START time
@@ -71,6 +76,7 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 			category: "HS",
 			duration: 10, // conference duration in minutes
 			padding: 0, // minutes after a conference where no bookings can be made
+			override: false,
 			dates: [ // in 24hr Beijing time
 				{
 					startDateTime: "2013-10-21 12:00 +0800", // first conference START time
