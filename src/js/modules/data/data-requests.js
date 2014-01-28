@@ -212,7 +212,9 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
                		}
                		
         		});
-        	}
+        	} else {
+                filteredFamily = familyJSON;
+            }
         	return filteredFamily;
 
         },
