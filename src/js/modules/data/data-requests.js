@@ -171,7 +171,8 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
             // the list should be formatted as an array of objects
             // each student should have an ID, name, and familyCode
             var defer = $.Deferred(),
-                familyJSON = [];
+                familyJSON = [],
+                self = this;
 
             $().SPServices({
                 operation: "GetListItems",
@@ -184,11 +185,36 @@ ptc.module("Data", function (Mod, App, Backbone, Marionette, $, _) {
                         includeAllAttrs: true,
                         removeOws: true
                     });
-                    defer.resolve(familyJSON);
+
+                    // filter through and only return students in the gradeFilter in the config file
+                    var filteredFamily = self.gradeFilter(familyJSON);
+
+                    defer.resolve(filteredFamily);
                 }
             });
 
             return defer.promise();
+        },
+
+        gradeFilter: function(familyJSON) {
+
+        	var grades = App.Config.Settings.gradeFilter,
+        		filteredFamily = [];
+
+        	// make sure grades have been provided
+        	if(grades.length > 0) {
+               	// iterate through each student
+               	_.each(familyJSON, function(student) {
+               		var studentInGrade = _.contains(grades, student.CurrentGrade);
+
+               		if(studentInGrade) {
+               			filteredFamily.push(student);
+               		}
+               		
+        		});
+        	}
+        	return filteredFamily;
+
         },
 
         getSchedule: function (familyCode) {
