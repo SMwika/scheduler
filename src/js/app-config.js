@@ -5,12 +5,12 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 		familyList: {
 			// used to get family information
 			webURL: "https://g.isb.bj.edu.cn/my/",
-			listName: "FamilyInfo"
+			listName: "FamilyInfoStatic"
 		},
 		studentTeacherList: {
 			// used to get list of teachers of studentids
 			webURL: "https://g.isb.bj.edu.cn/my/",
-			listName: "SchedulingApplicationTeachersList"
+			listName: "SchedulingApplicationTeachersListStatic"
 		},
 		conferenceList: {
 			// used to get list of conferences
@@ -34,7 +34,7 @@ ptc.module("Config", function (Mod, App, Backbone, Marionette, $) {
 		},
 		
 		// only the students in the following grades will be shown
-		gradeFilter: ["EC3", "EC4", "KG", "01", "02", "03", "04", "05"],
+		gradeFilter: ["EC3", "EC4", "KG", "1", "2", "3", "4", "5"],
 
 		overrides: {
 			// exclusions are processed first
